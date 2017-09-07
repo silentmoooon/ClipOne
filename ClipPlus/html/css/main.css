@@ -1,0 +1,103 @@
+* {
+    font-family: "Microsoft YaHei" ! important;
+    font-size: 12px;
+}
+
+::-webkit-scrollbar { 
+    width: 5px;
+    height: 6px;
+    opacity: 0.5
+}
+
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    border-radius: 10px; /*滚动条的背景区域的圆角*/
+    background-color: red; /*滚动条的背景颜色*/
+}
+
+::-webkit-scrollbar-track-piece {
+    background-color: #eee;
+    margin: -2px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #aaa;
+    min-height: 150px;
+    min-width: 150px;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:vertical:hover {
+    background: #555555
+}
+
+::-webkit-scrollbar-thumb:horizontal:hover {
+    background: #555555
+}
+
+.image {
+    max-height: 150px;
+    max-width: 390px;
+    vertical-align: middle;
+    text-align: left;
+    margin: 0px !important;
+    padding: 0px !important;
+}
+
+.td_content {
+    cursor: default;
+    width: 400px;
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+    border-right: 1px solid #dddddd;
+
+}
+
+.td_content > img {
+    max-height: 150px;
+    max-width: 390px;
+    vertical-align: middle;
+    text-align: left;
+    margin: 0px !important;
+    padding: 0px !important;
+}
+
+.td_index {
+    width: 25px !important;
+    vertical-align: middle !important;
+    text-align: center !important;
+    margin: 0px !important;
+    padding: 0px !important;
+}
+
+.tr_hover {
+    -webkit-box-shadow: 0 0 5px #000 inset;
+    background-color: #FFFFFF;
+}
+.tr_hover td {
+    background: none !important;
+    font-size: 14px;
+}
+
+.table_main {
+    width: 440px;
+    cursor: default;
+    border: 1px;
+    border-radius: 10px;
+    table-layout: fixed;
+    word-wrap: break-word;
+}
+
+tr:hover {
+    -webkit-box-shadow: 0 0 5px #000 inset;
+    background-color: #FFFFFF;
+    border-radius: 2px;
+
+}
+
+tr:hover td {
+    background: none !important;
+    font-size: 14px;
+}
