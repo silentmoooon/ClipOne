@@ -21,7 +21,8 @@ function scrollTop(){
     window.scrollTo(0, 0);
 }
 function fun(json) {
-    $("body").css("overflow","hidden");
+   
+    //$("body").css("overflow-x","hidden");
     json = decodeURIComponent(json.replace(/\+/g, '%20'));
 
     var obj = JSON.parse(json);
@@ -87,13 +88,14 @@ function fun(json) {
         });
     }
 
-    $("body").css("overflow","auto");
+  //  $("body").css("overflow","auto");
 
 
 }
 
 function callback(e) {
-
+	
+	$("#tr1").removeClass("tr_hover");
     $("#" + e.id).parent().addClass("tr_hover");
     callbackObj.pasteValue(e.id);
 }

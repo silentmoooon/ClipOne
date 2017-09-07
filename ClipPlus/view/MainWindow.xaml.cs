@@ -173,6 +173,8 @@ namespace ClipPlus
 
         public static bool isShowPreview = false;
 
+        private bool needCloseHandle = false;
+
         /// <summary>
         /// 预览窗口
         /// </summary>
@@ -254,7 +256,7 @@ namespace ClipPlus
                     thread.Start();
                 }
             }
-
+            needCloseHandle = true;
 
             List<string> fileList = Directory.EnumerateFiles(htmlDir).ToList();
 
@@ -803,6 +805,7 @@ namespace ClipPlus
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            if (!needCloseHandle) { return; }
             if (notifyIcon != null)
             {
                 notifyIcon.Dispose();
@@ -984,7 +987,7 @@ namespace ClipPlus
         /// </summary>
         private void WindowLostFocusHandle()
         {
-
+            
             webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("scrollTop()");
             this.Hide();
             lastSelectedIndex = -1;
