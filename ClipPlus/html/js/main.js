@@ -3,7 +3,7 @@ var timeout = '';
 document.onselectstart = function () {
     event.returnValue = false;
 }
-function enter1(event) {
+function tdEnter(event) {
 
     timeout = setTimeout(function () {
 
@@ -11,17 +11,17 @@ function enter1(event) {
     }, 600);
 }
 
-function out1() {
+function tdOut() {
     clearTimeout(timeout);
 	callbackObj.hidePreview();
 }
-
+ 
 function scrollTop(){
 
     window.scrollTo(0, 0);
 }
 function fun(json) {
-   
+  // window.scrollTo(0, 0);
     //$("body").css("overflow-x","hidden");
     json = decodeURIComponent(json.replace(/\+/g, '%20'));
 
@@ -39,7 +39,7 @@ function fun(json) {
         }
         if (obj[i].indexOf("``+image|") == 0) {
             trs = obj[i].replace("``+image|", "");
-            trs = " <tr style='cursor: default'  id='tr" + i + "' > <td  class='td_content' id='td" + i + "' onclick='callback(this)'  onmouseenter='enter1(this)' onmouseleave='out1()' > <img class='image' src='../" + trs + "' /> </td><td class='td_index'  >" + num + "</td> </tr>";
+            trs = " <tr style='cursor: default'  id='tr" + i + "' > <td  class='td_content' id='td" + i + "' onclick='callback(this)'  onmouseenter='tdEnter(this)' onmouseleave='tdOut()' > <img class='image' src='../" + trs + "' /> </td><td class='td_index'  >" + num + "</td> </tr>";
         } else if (obj[i].indexOf("``+html|") == 0) {
             trs = " <tr style='cursor: default'  id='tr" + i + "' > <td  class='td_content' id='td" + i + "' onclick='callback(this)' >  </td><td class='td_index'  >" + num + "</td> </tr>";
 
@@ -80,13 +80,19 @@ function fun(json) {
         $(".myTable").html(tbody);
 
     }else{
-        $("#tr1").addClass("tr_hover");
+	setTimeout(function(){
+		$("#tr1").addClass("tr_hover");
 
         $("#tr1").one("mouseout",function () {
             $("#tr1").removeClass("tr_hover");
 
         });
+
+	},0);
+        
     }
+	 window.scrollTo(0, 0);
+	//callbackObj.changeWindowHeight($(".table_main").height(),$(".table_main").css("background-color"));
 
   //  $("body").css("overflow","auto");
 
@@ -98,5 +104,6 @@ function callback(e) {
 	$("#tr1").removeClass("tr_hover");
     $("#" + e.id).parent().addClass("tr_hover");
     callbackObj.pasteValue(e.id);
+
 }
 

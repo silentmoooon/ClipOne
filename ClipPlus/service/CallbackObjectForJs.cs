@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 
 namespace ClipPlus
 {
@@ -23,10 +24,10 @@ namespace ClipPlus
         {
             string id = msg.Replace("td", "");
 
-          
-            window.PasteValueByIndex(int.Parse(id));
            
- 
+            window.PasteValueByIndex(int.Parse(id));
+
+
         }
 
         /// <summary>
@@ -37,7 +38,7 @@ namespace ClipPlus
         {
             string id = msg.Replace("td", "");
 
-            
+
             window.PreviewByIndex(int.Parse(id));
 
 
@@ -54,6 +55,25 @@ namespace ClipPlus
 
         }
 
+        public void ChangeWindowHeight(double height,string colorStr)
+        {
+            Console.WriteLine(colorStr);
+            string [] str = colorStr.Replace("rgb(", "").Replace(")", "").Split(',');
+            int r = int.Parse(str[0].Trim());
+            int g = int.Parse(str[1].Trim());
+            int b = int.Parse(str[2].Trim());
+            SolidColorBrush brush = new SolidColorBrush(Color.FromRgb((byte)r, (byte)g, (byte)b));
+           
+             
+            window.Dispatcher.Invoke(
+        new Action(
+      delegate
+      {
+          window.Height = height+10;
+          
+      }));
 
+
+        }
     }
 }

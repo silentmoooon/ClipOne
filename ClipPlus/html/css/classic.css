@@ -1,9 +1,11 @@
+
+/*全局字体*/
 * {
     font-family: "Microsoft YaHei";
     font-size: 12px;
 	 
 }
-
+/* 滚动条*/
 ::-webkit-scrollbar { 
     width: 4px;
     opacity: 0.1;
@@ -16,7 +18,7 @@
 }
 
 ::-webkit-scrollbar-track-piece {
-    background-color: #eee;
+    background-color: #EbF1Fb;
     margin: -2px;
 }
 
@@ -34,15 +36,20 @@
 ::-webkit-scrollbar-thumb:horizontal:hover {
     background: #555555
 }
+
+
+/*表格边框*/
 td{
-	border-top: 1px solid #A9CBEE;
-	border-bottom: 1px solid #A9CBEE; 
+	border-top: 1px solid #ddd;
+	border-bottom: 1px solid #ddd; 
+	min-height: 25px;
+
 }
 
+/*内容表格*/
 .td_content {
     cursor: default;
     width: 398px;
-	
     margin-left: 0px !important;
     margin-right: 0px !important;
     padding-left: 3px !important;
@@ -50,19 +57,19 @@ td{
     padding-top: 8px;
 	padding-bottom: 8px;
 	
-	
-
 }
+
+/*索引表格*/
 .td_index {
     width: 25px !important;
     vertical-align: middle !important;
     text-align: center !important;
     margin: 0px !important;
     padding: 0px !important;
-
-	 
-	 
+ 
 }
+
+/*图片*/
 .td_content > img,.image {
     max-height: 150px;
     max-width: 390px;
@@ -74,34 +81,35 @@ td{
 }
  
 
-
-
+ /*鼠标悬浮*/
 .tr_hover,tr:hover {
     -webkit-box-shadow: 0 0 0 2px #0078d7 ;
-     
+     border-radius: 2px;
+	
 }
-.tr_hover td, tr:hover td{
-    
-    font-size: 14px;
-}
- 
+ .tr_hover > td ,tr:hover >td{
+ 	 font-size: 14px;
+ }
 
 
+ /*table*/
 .table_main {
     width: 440px;
     cursor: default;
-	  background-color: #FFFFFF;
+	  background-color: #EbF1Fb;
    border: 1px;
    border-collapse:collapse;
-    border-radius: 10px;
     table-layout: fixed;
     word-wrap: break-word;
 }
  
  
-
-body{
+  /*body*/
+	body{
+	background-color: #EbF1Fb;
 	overflow-x: hidden;
 	margin-left: 1px;
 	margin-top:1px;
+	margin-right: 0px;
+	margin-bottom: 2px;
 }
