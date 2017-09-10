@@ -41,6 +41,11 @@ namespace ClipPlus.service
         /// Q文本类型
         /// </summary>
         public const string TEXT_TYPE = "text";
+
+        /// <summary>
+        /// 缓存目录
+        /// </summary>
+        public static string cacheDir = "cache";
         /// <summary>
         /// 设置开机启动
         /// </summary>
@@ -75,7 +80,22 @@ namespace ClipPlus.service
             File.WriteAllText(storePath, json);
         }
 
+        /// <summary>
+        /// 保存图片到缓存目录
+        /// </summary>
+        /// <param name="bs"></param>
+        /// <returns></returns>
+        public static string SaveImage(BitmapSource bs)
+        {
+            string path = cacheDir + "/" + Guid.NewGuid().ToString() + ".bmp";
+            BitmapEncoder encoder = new BmpBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bs));
 
+            FileStream fs = new FileStream(path, FileMode.Create);
+            encoder.Save(fs);
+            fs.Close();
+            return path;
+        }
         /// <summary>
         /// 设置条目到剪切板
         /// </summary>
@@ -160,14 +180,14 @@ namespace ClipPlus.service
         /// </summary>
         /// <param name="cacheDir">缓存目录</param>
         /// <param name="lastSaveImg">已经持久化的图片信息</param>
-        public static void ClearExpireImage(string cacheDir,string lastSaveImg)
+        public static void ClearExpireImage( object lastSaveImg)
         {
 
 
             List<string> imageList = Directory.EnumerateFiles(cacheDir).ToList();
             foreach (string str in imageList)
             {
-                if (!lastSaveImg.Contains(str.Replace("\\", "/")))
+                if (!lastSaveImg.ToString().Contains(str.Replace("\\", "/")))
                 {
                     File.Delete(str);
                 }

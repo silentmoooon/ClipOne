@@ -46,11 +46,7 @@ namespace ClipPlus
         /// 持久化目录
         /// </summary>
         private static string storeDir = "store";
-        /// <summary>
-        /// 缓存目录
-        /// </summary>
-        private static string cacheDir = "cache";
-
+        
 
         /// <summary>
         /// css目录
@@ -72,7 +68,7 @@ namespace ClipPlus
         /// <summary>
         /// 复制条目保存记录
         /// </summary>
-        List<ClipModel> resultList = new List<ClipModel>(maxRecords + 2);
+        List<ClipModel> clipList = new List<ClipModel>(maxRecords + 2);
 
 
         /// <summary>
@@ -80,10 +76,7 @@ namespace ClipPlus
         /// </summary>
         CallbackObjectForJs cbOjb;
 
-        /// <summary>
-        /// 上次退出时保存的图片记录，用来清理缓存中的图片
-        /// </summary>
-        string lastSaveImg = string.Empty;
+       
 
         /// <summary>
         /// 剪切板事件
@@ -255,13 +248,15 @@ namespace ClipPlus
         /// </summary>
         private void InitStore()
         {
+            string lastSaveImg = string.Empty;
+
             //从持久化文件中读取复制条目，并将图片类型的条目记录至lastSaveImag，供清除过期图片用
             string json = File.ReadAllText(storePath);
 
             List<ClipModel> list = JsonConvert.DeserializeObject<List<ClipModel>>(json);
             foreach (ClipModel clip in list)
             {
-                resultList.Add(clip);
+                clipList.Add(clip);
                 if (clip.Type == IMAGE_TYPE)
                 {
                     lastSaveImg += clip.ClipValue;
@@ -270,8 +265,8 @@ namespace ClipPlus
             saveDataTimer.Tick += BatchPasteTimer_Tick;
             saveDataTimer.Interval = 60000;
             saveDataTimer.Start();
-            Thread thread = new Thread(ClearExpireImage);
-            thread.Start();
+            new Thread(new ParameterizedThreadStart(ClearExpireImage)).Start(lastSaveImg);
+             
         }
 
         /// <summary>
@@ -342,16 +337,8 @@ namespace ClipPlus
 
         private void BatchPasteTimer_Tick(object sender, EventArgs e)
         {
-            SaveData(resultList, storePath);
+            SaveData(clipList, storePath);
         }
-
-
-        private void ClearExpireImage()
-        {
-            CommonService.ClearExpireImage(cacheDir, lastSaveImg);
-        }
-
-
 
 
         /// <summary>
@@ -389,7 +376,7 @@ namespace ClipPlus
 
             clear.Click += Clear_Click;
             reload.Click += new EventHandler(Reload);
-            exit.Click += new EventHandler(exit_Click);
+            exit.Click += new EventHandler(Exit_Click);
             hotkey.Click += Hotkey_Click;
             startup.Click += Startup_Click;
             startup.Checked = autoStartup;
@@ -530,8 +517,8 @@ namespace ClipPlus
         /// <param name="e"></param>
         private void Clear_Click(object sender, EventArgs e)
         {
-            resultList.Clear();
-            SaveData(resultList, storePath);
+            clipList.Clear();
+            SaveData(clipList, storePath);
         }
 
         /// <summary>
@@ -544,26 +531,14 @@ namespace ClipPlus
             webView.GetBrowser().Reload(true);
         }
 
-        private void exit_Click(object sender, EventArgs e)
+        private void Exit_Click(object sender, EventArgs e)
         {
-
-
 
             Application.Current.Shutdown();
 
         }
 
-        private string SaveImage(BitmapSource bs)
-        {
-            string path = cacheDir + "/" + Guid.NewGuid().ToString() + ".bmp";
-            BitmapEncoder encoder = new BmpBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(bs));
-
-            FileStream fs = new FileStream(path, FileMode.Create);
-            encoder.Save(fs);
-            fs.Close();
-            return path;
-        }
+        
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
@@ -835,7 +810,7 @@ namespace ClipPlus
                 {
                     return IntPtr.Zero;
                 }
-                if (resultList.Count > 0 && clip.ClipValue == resultList[0].ClipValue)
+                if (clipList.Count > 0 && clip.ClipValue == clipList[0].ClipValue)
                 {
                     return IntPtr.Zero;
                 }
@@ -865,7 +840,7 @@ namespace ClipPlus
         private async void EnQueue(ClipModel clip)
         {
 
-            resultList.Insert(0, clip);
+            clipList.Insert(0, clip);
 
             await ClearImage();
 
@@ -881,10 +856,10 @@ namespace ClipPlus
         {
             return Task.Run(() =>
             {
-                if (resultList.Count > currentRecords)
+                if (clipList.Count > currentRecords)
                 {
-                    ClipModel clip = resultList[currentRecords];
-                    resultList.RemoveAt(currentRecords);
+                    ClipModel clip = clipList[currentRecords];
+                    clipList.RemoveAt(currentRecords);
 
 
                     if (clip.Type == IMAGE_TYPE)
@@ -912,13 +887,13 @@ namespace ClipPlus
 
             int displayHeight = 0;
 
-            for (int i = 0; i < resultList.Count; i++)
+            for (int i = 0; i < clipList.Count; i++)
             {
 
-                displayHeight += resultList[i].Height;
+                displayHeight += clipList[i].Height;
 
             }
-            string json = JsonConvert.SerializeObject(resultList, displayJsonSettings);
+            string json = JsonConvert.SerializeObject(clipList, displayJsonSettings);
 
             json = HttpUtility.UrlEncode(json);
 
@@ -930,7 +905,7 @@ namespace ClipPlus
 
             if (WinAPIHelper.GetCursorPos(out p))
             {
-                if (resultList.Count == 0)
+                if (clipList.Count == 0)
                 {
                     this.Height = 100;
                 }
@@ -999,7 +974,7 @@ namespace ClipPlus
                 WinAPIHelper.RemoveClipboardFormatListener(wpfHwnd);
                 HotKeyManager.UnregisterHotKey(wpfHwnd, hotkeyAtom);
                 HotKeyManager.GlobalDeleteAtom(hotkeyAtomStr);
-                SaveData(resultList, storePath);
+                SaveData(clipList, storePath);
             }
 
         }
@@ -1069,9 +1044,9 @@ namespace ClipPlus
 
              }));
 
-                ClipModel result = resultList[id];
-                resultList.RemoveAt(id);
-                resultList.Insert(0, result);
+                ClipModel result = clipList[id];
+                clipList.RemoveAt(id);
+                clipList.Insert(0, result);
 
                 batchPasteList.Clear();
                 batchPasteList.Add(result);
@@ -1109,7 +1084,7 @@ namespace ClipPlus
         private void ShowPreviewForm(int id)
         {
             preview.Hide();
-            ClipModel result = resultList[id];
+            ClipModel result = clipList[id];
             if (result.Type == IMAGE_TYPE)
             {
                 preview.ImgPath = result.ClipValue;
@@ -1163,7 +1138,6 @@ namespace ClipPlus
         {
 
 
-
             if (this.IsVisible)
                 this.Hide();
             lastSelectedIndex = -1;
@@ -1179,26 +1153,25 @@ namespace ClipPlus
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            if (resultList.Count > 0)
+           
+             
+            if (clipList.Count > 0)
             {
-                string key;
-                int a;
-                int b;
+                
                 if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift)  //处理基于SHIFT+数字的批量粘贴
                 {
 
-                    key = e.Key.ToString();
-                    a = key.CompareTo("D1");
-                    b = key.CompareTo("D9");
-                    if (a >= 0 && b <= 0)
+                    int keyNum = (int)e.Key - 34;
+                  
+                    if (keyNum > 0 && keyNum <= 35)
                     {
                         if (lastSelectedIndex == -1)
                         {
-                            lastSelectedIndex = int.Parse(key.Remove(0, 1)) - 1;
+                            lastSelectedIndex = keyNum - 1;
                         }
                         else
                         {
-                            int currentKey = int.Parse(key.Remove(0, 1)) - 1;
+                            int currentKey = keyNum - 1;
 
                             SetBatchPatse(currentKey, lastSelectedIndex);
                             this.Hide();
@@ -1221,12 +1194,10 @@ namespace ClipPlus
                     }
                     else
                     {
-                        key = e.Key.ToString();
-                        a = key.CompareTo("D1");
-                        b = key.CompareTo("D9");
-                        if (a >= 0 && b <= 0)
+                        int keyNum = (int)e.Key-34;
+                        if (keyNum > 0 && keyNum <= 35)
                         {
-                            index = int.Parse(key.Remove(0, 1)) - 1;
+                            index = keyNum - 1;
 
                         }
                     }
@@ -1254,9 +1225,9 @@ namespace ClipPlus
             {
                 for (int i = lastIndex; i <= nowIndex; i++)
                 {
-                    var result = resultList[i];
-                    resultList.RemoveAt(i);
-                    resultList.Insert(0, result);
+                    var result = clipList[i];
+                    clipList.RemoveAt(i);
+                    clipList.Insert(0, result);
                     batchPasteList.Add(result);
 
 
@@ -1267,9 +1238,9 @@ namespace ClipPlus
             {
                 for (int i = lastIndex; i >= nowIndex; i--)
                 {
-                    var result = resultList[lastIndex];
-                    resultList.RemoveAt(lastIndex);
-                    resultList.Insert(0, result);
+                    var result = clipList[lastIndex];
+                    clipList.RemoveAt(lastIndex);
+                    clipList.Insert(0, result);
                     batchPasteList.Add(result);
                 }
 

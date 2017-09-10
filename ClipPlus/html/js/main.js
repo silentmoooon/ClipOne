@@ -20,8 +20,12 @@ function scrollTop(){
 
     window.scrollTo(0, 0);
 }
+function num2key(num){
+	
+	return String.fromCharCode(55 + num);
+}
 function fun(json) {
-  
+	 
     json = decodeURIComponent(json.replace(/\+/g, '%20'));
 	 
     var obj = JSON.parse(json);
@@ -33,9 +37,11 @@ function fun(json) {
         var num = "";
         if (i < 9) {
             num = "<u>" + (i + 1) + "</u>";
-        } else {
-            num = i + 1;
-        }
+        } else if(i<35){
+            num =  "<u>" + num2key(i + 1) + "</u>";
+        }else{
+			 num = "" + (i + 1) ;
+		}
         if (obj[i].Type == "image") {
            
             trs = " <tr style='cursor: default'  id='tr" + i + "' > <td  class='td_content' id='td" + i + "' onclick='callback(this)'  onmouseenter='tdEnter(this)' onmouseleave='tdOut()' > <img class='image' src='../" + obj[i].DisplayValue + "' /> </td><td class='td_index'  >" + num + "</td> </tr>";
