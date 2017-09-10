@@ -5,9 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ClipPlus"
         mc:Ignorable="d"
-        Title="PreviewForm" Height="300" Width="300" SizeToContent="WidthAndHeight" AllowsTransparency="True" WindowStyle="None" MaxHeight="600" MaxWidth="800" LostFocus="Window_LostFocus" Deactivated="Window_Deactivated" MouseEnter="Window_MouseEnter" ShowInTaskbar="False" Focusable="False" IsHitTestVisible="False" IsTabStop="False" IsVisibleChanged="Window_IsVisibleChanged"> 
-    <Grid >
-        <Image Name="imageShow"/>
+        Title="PreviewForm"   SizeToContent="WidthAndHeight"  AllowsTransparency="True" WindowStyle="None" MaxHeight="600" MaxWidth="800" LostFocus="Window_LostFocus" Deactivated="Window_Deactivated" MouseEnter="Window_MouseEnter" ShowInTaskbar="False" Focusable="False" IsHitTestVisible="False" IsTabStop="False" IsVisibleChanged="Window_IsVisibleChanged"> 
+    <Grid MaxWidth="800" MaxHeight="600" >
+        <Image Name="imageShow" Stretch="None"/>
 
     </Grid>
 </Window>

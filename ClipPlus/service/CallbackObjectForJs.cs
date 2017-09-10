@@ -37,7 +37,7 @@ namespace ClipPlus
         public void Preview(string msg)
         {
             string id = msg.Replace("td", "");
-
+            
 
             window.PreviewByIndex(int.Parse(id));
 
@@ -57,7 +57,7 @@ namespace ClipPlus
 
         public void ChangeWindowHeight(double height,string colorStr)
         {
-            Console.WriteLine(colorStr);
+             
             string [] str = colorStr.Replace("rgb(", "").Replace(")", "").Split(',');
             int r = int.Parse(str[0].Trim());
             int g = int.Parse(str[1].Trim());

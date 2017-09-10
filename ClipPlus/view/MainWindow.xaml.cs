@@ -1,6 +1,8 @@
 ﻿using CefSharp;
 using CefSharp.Wpf;
-using ClipPlus.service;
+using ClipPlus.model;
+
+using ClipPlus.util;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using System;
@@ -18,6 +20,11 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Xml;
+using ClipPlus.service;
+using static ClipPlus.service.CommonService;
+using HtmlAgilityPack;
+using System.Windows.Resources;
 
 namespace ClipPlus
 {
@@ -43,10 +50,7 @@ namespace ClipPlus
         /// 缓存目录
         /// </summary>
         private static string cacheDir = "cache";
-        /// <summary>
-        /// HTML目录
-        /// </summary>
-        private static string htmlDir = "html";
+
 
         /// <summary>
         /// css目录
@@ -58,10 +62,7 @@ namespace ClipPlus
         /// </summary>
         private static string defaultHtml = "html\\index.html";
 
-        /// <summary>
-        /// 托盘路径路径
-        /// </summary>
-        private static string iconPath = "icon\\clipPlus.ico";
+       
 
         /// <summary>
         /// 浏览器
@@ -71,12 +72,8 @@ namespace ClipPlus
         /// <summary>
         /// 复制条目保存记录
         /// </summary>
-        List<string> resultList = new List<string>(maxRecords + 2);
+        List<ClipModel> resultList = new List<ClipModel>(maxRecords + 2);
 
-        /// <summary>
-        /// 临时保存当前活动窗口
-        /// </summary>
-        IntPtr activeWnd;
 
         /// <summary>
         /// 供浏览器JS回调的接口
@@ -93,18 +90,7 @@ namespace ClipPlus
         /// </summary>
         private static int WM_CLIPBOARDUPDATE = 0x031D;
 
-        /// <summary>
-        /// 图片类型，通过在内容前面增加前缀来标识
-        /// </summary>
-        private static string imageType = "``+image|";
-        /// <summary>
-        /// html类型，通过在内容前面增加前缀来标识
-        /// </summary>
-        private static string htmlType = "``+html|";
-        /// <summary>
-        /// 文件类型，通过在内容前面增加前缀来标识
-        /// </summary>
-        private static string fileType = "``+file|";
+        JsonSerializerSettings displayJsonSettings = new JsonSerializerSettings();
 
         /// <summary>
         /// 注册快捷键全局原子字符串 
@@ -170,7 +156,7 @@ namespace ClipPlus
         /// <summary>
         /// 用于连续粘贴 ，连续粘贴条目列表
         /// </summary>
-        List<string> batchPasteList = new List<string>();
+        List<ClipModel> batchPasteList = new List<ClipModel>();
         /// <summary>
         /// 用于连续粘贴，Shift+鼠标选择的械中是否按下Shift键
         /// </summary>
@@ -195,8 +181,8 @@ namespace ClipPlus
         {
             InitializeComponent();
             System.IO.Directory.SetCurrentDirectory(System.Windows.Forms.Application.StartupPath);
-
-            CommonService.ExitWhenExists();
+            displayJsonSettings.ContractResolver = new LimitPropsContractResolver(new string[] { "Type", "DisplayValue" });
+            ExitWhenExists();
 
 
         }
@@ -257,19 +243,13 @@ namespace ClipPlus
                 Hotkey_Click(null, null);
             }
 
-            preview = new PreviewForm(this);
-            preview.Focusable = false;
-            preview.IsHitTestVisible = false;
-            preview.IsTabStop = false;
-            preview.ShowInTaskbar = false;
-            preview.ShowActivated = false;
-
-
-
+            InitPreviewForm();
 
         }
 
-        #region 加载持久化数据
+
+
+
         /// <summary>
         /// 加载持久化数据
         /// </summary>
@@ -277,23 +257,35 @@ namespace ClipPlus
         {
             //从持久化文件中读取复制条目，并将图片类型的条目记录至lastSaveImag，供清除过期图片用
             string json = File.ReadAllText(storePath);
-            List<string> list = JsonConvert.DeserializeObject<List<string>>(json);
-            foreach (string str in list)
+
+            List<ClipModel> list = JsonConvert.DeserializeObject<List<ClipModel>>(json);
+            foreach (ClipModel clip in list)
             {
-                resultList.Add(str);
-                if (str.StartsWith(imageType))
+                resultList.Add(clip);
+                if (clip.Type == IMAGE_TYPE)
                 {
-                    lastSaveImg += str;
+                    lastSaveImg += clip.ClipValue;
                 }
             }
-            saveDataTimer.Tick += BatchPasteTimer_Tick; ;
+            saveDataTimer.Tick += BatchPasteTimer_Tick;
             saveDataTimer.Interval = 60000;
             saveDataTimer.Start();
             Thread thread = new Thread(ClearExpireImage);
             thread.Start();
         }
-        #endregion
 
+        /// <summary>
+        /// 初始化预览窗口
+        /// </summary>
+        private void InitPreviewForm()
+        {
+            preview = new PreviewForm(this);
+            preview.Focusable = false;
+            preview.IsHitTestVisible = false;
+            preview.IsTabStop = false;
+            preview.ShowInTaskbar = false;
+            preview.ShowActivated = false;
+        }
         private static void InitConfig()
         {
             //从持久化文件中读取设置项
@@ -304,7 +296,7 @@ namespace ClipPlus
                 autoStartup = bool.Parse(settingsMap["startup"]);
                 if (autoStartup)
                 {
-                    CommonService.SetStartup(autoStartup);
+                    SetStartup(autoStartup);
                 }
             }
             if (settingsMap.ContainsKey("skin"))
@@ -350,7 +342,7 @@ namespace ClipPlus
 
         private void BatchPasteTimer_Tick(object sender, EventArgs e)
         {
-            CommonService.SaveData(resultList, storePath);
+            SaveData(resultList, storePath);
         }
 
 
@@ -371,7 +363,10 @@ namespace ClipPlus
             //设置托盘图标
             notifyIcon = new System.Windows.Forms.NotifyIcon();
             notifyIcon.Text = "clipPlus";
-            notifyIcon.Icon = new System.Drawing.Icon(iconPath);
+            
+            StreamResourceInfo info = Application.GetResourceStream(new Uri("/clipPlus.ico", UriKind.Relative));
+            Stream s = info.Stream;
+            notifyIcon.Icon = new System.Drawing.Icon(s);
             notifyIcon.Visible = true;
 
 
@@ -451,7 +446,7 @@ namespace ClipPlus
             }
             item.Checked = true;
             settingsMap["skin"] = item.Text;
-            saveSettings();
+            SaveSettings();
             string css = item.Tag.ToString();
             ChangeSkin(css);
 
@@ -462,7 +457,6 @@ namespace ClipPlus
         {
 
             cssPath = cssPath.Replace("\\", "/").Replace("html/", "");
-            //webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("changeStyle('" + cssPath + "')");
             string[] fileLines = File.ReadAllLines(defaultHtml);
             fileLines[fileLines.Length - 1] = " <link rel='stylesheet' type='text/css' href='" + cssPath + "'/>";
             File.WriteAllLines(defaultHtml, fileLines, Encoding.UTF8);
@@ -476,9 +470,9 @@ namespace ClipPlus
             System.Windows.Forms.MenuItem item = (System.Windows.Forms.MenuItem)sender;
             item.Checked = !item.Checked;
 
-            CommonService.SetStartup(item.Checked);
+            SetStartup(item.Checked);
             settingsMap["startup"] = item.Checked.ToString();
-            saveSettings();
+            SaveSettings();
         }
 
         private void Hotkey_Click(object sender, EventArgs e)
@@ -496,11 +490,11 @@ namespace ClipPlus
 
                 settingsMap["modifier"] = hotkeyModifier.ToString();
                 settingsMap["key"] = hotkeyKey.ToString();
-                saveSettings();
+                SaveSettings();
             }
         }
 
-        private void saveSettings()
+        private void SaveSettings()
         {
             string json = JsonConvert.SerializeObject(settingsMap);
             File.WriteAllText(settingsPath, json);
@@ -523,7 +517,7 @@ namespace ClipPlus
             item.Checked = true;
             currentRecords = int.Parse(item.Text);
             settingsMap["record"] = item.Text;
-            saveSettings();
+            SaveSettings();
 
 
 
@@ -537,7 +531,7 @@ namespace ClipPlus
         private void Clear_Click(object sender, EventArgs e)
         {
             resultList.Clear();
-            CommonService.SaveData(resultList, storePath);
+            SaveData(resultList, storePath);
         }
 
         /// <summary>
@@ -578,40 +572,82 @@ namespace ClipPlus
             {
 
                 IDataObject iData = Clipboard.GetDataObject();
-                foreach (string str in iData.GetFormats())
-                {
-                    Console.WriteLine(str);
-                }
-                string queueStr = string.Empty;
 
+                ClipModel clip = new ClipModel();
+
+                
                 //处理剪切板文字
-                if (iData.GetDataPresent("QQ_Unicode_RichEdit_Format"))
+                if (iData.GetDataPresent(QQ_RICH_TYPE))
                 {
                     for (int i = 0; i < 3; i++)
                     {
                         try
                         {
 
-                          string str1=  iData.GetData(DataFormats.Html).ToString();
-                            Console.WriteLine(str1);
-                            MemoryStream  stream= (MemoryStream)iData.GetData("QQ_Unicode_RichEdit_Format");
 
-                            Console.WriteLine("====");
-                            byte[] b = new byte[stream.Length];
-                            Console.WriteLine(stream.Length);
-                            stream.Read(b, 0, b.Length);
-                          string str=  System.Text.Encoding.UTF32.GetString(b);
-                            Console.WriteLine(str);
+                            MemoryStream stream = (MemoryStream)iData.GetData(QQ_RICH_TYPE);
+                            byte[] b = stream.ToArray();
+                            string xmlStr = System.Text.Encoding.UTF8.GetString(b);
+                            xmlStr = xmlStr.Substring(0, xmlStr.IndexOf("</QQRichEditFormat>") + "</QQRichEditFormat>".Length);
+
+
+
+                            string htmlStr = iData.GetData(DataFormats.Html).ToString();
+                           
+                            //qq的html内容会固定出现在第14行。
+                            htmlStr = htmlStr.Split("\r\n".ToCharArray())[14];
+                            if (htmlStr.Contains("\"file:///\""))
+                            {
+
+                                XmlDocument document = new XmlDocument();
+                                document.LoadXml(xmlStr);
+                                foreach (XmlNode node in document.DocumentElement.ChildNodes)
+                                {
+                                    if (node.Name == "EditElement" && node.Attributes["type"].Value == "5") //图片类型
+                                    {
+                                        string filePath = node.Attributes["filepath"].Value;
+                                        if (!htmlStr.Contains(Path.GetFileName(filePath)))
+                                        {
+                                            htmlStr = htmlStr.ReplaceFirst("\"file:///\"", "\"file:///" + filePath.Replace("\\", "/") + "\"");
+                                        }
+                                    }
+                                }
+
+                            }
+                            clip.Type = QQ_RICH_TYPE;
+                            clip.ClipValue = xmlStr;
+
+                            if (htmlStr.IndexOf("%") >= 0)
+                            {
+                                HtmlDocument doc = new HtmlDocument();
+                                doc.LoadHtml(htmlStr);
+                                foreach (HtmlNode node in doc.DocumentNode.SelectNodes("//img"))
+                                {
+                                    string src = node.GetAttributeValue("src", string.Empty);
+                                    if (src.IndexOf("%") >= 0)
+                                    {
+                                        src = src.Replace("%", "%25");
+                                    }
+                                    node.SetAttributeValue("src", src);
+                                }
+                                htmlStr = doc.DocumentNode.OuterHtml;
+                            }
+                            clip.DisplayValue = htmlStr;
+                            clip.Height = 165;
+                            break;
+
+
+
                         }
-                        catch (Exception e)
+                        catch 
                         {
 
-                            Console.WriteLine(e.Message);
+                           
                         }
                     }
 
                 }
-                else if (iData.GetDataPresent(DataFormats.Bitmap)|| iData.GetDataPresent(DataFormats.Dib))
+                else if (iData.GetDataPresent(DataFormats.Bitmap) || iData.GetDataPresent(DataFormats.Dib))
                 {
 
                     for (int i = 0; i < 3; i++)
@@ -624,14 +660,18 @@ namespace ClipPlus
 
                             string path = SaveImage(bs);
 
-                            queueStr = imageType + path;
+
+                            clip.Type = IMAGE_TYPE;
+                            clip.ClipValue = path;
+                            clip.DisplayValue = path;
+                            clip.Height = 165;
                             break;
 
                         }
-                        catch (Exception e)
+                        catch  
                         {
 
-                            Console.WriteLine(e.Message);
+                            
                         }
                     }
 
@@ -646,7 +686,48 @@ namespace ClipPlus
                         try
                         {
 
-                            queueStr = Clipboard.GetText();
+                            string str = Clipboard.GetText();
+
+                            clip.ClipValue = str;
+                            clip.DisplayValue = str.Replace("<", "&lt;").Replace(">", "&gt;");
+                            clip.Type = TEXT_TYPE;
+
+                            string[] array = clip.DisplayValue.Split('\n');
+
+                            string tempStr = array[0];
+                            if (array.Length > 0)
+                            {
+                                for(int j=1;j<array.Length; j++)
+                                {
+                                    if (j < 6)
+                                    {
+                                        tempStr += "<br>" + array[j];
+                                    }
+                                    else if (j == 6)
+                                    {
+                                        tempStr += "<br>...";
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            clip.DisplayValue = tempStr;
+
+
+                            if (array.Length > 5)
+
+                            {
+                                clip.Height = 6 * 22;
+                            }
+                            else if (array.Length > 0)
+                            {
+                                clip.Height = (array.Length) * 22;
+                            }
+                            else
+                            {
+                                clip.Height = 35;
+                            }
+
                             break;
 
                         }
@@ -667,19 +748,49 @@ namespace ClipPlus
                         try
                         {
                             StringCollection coll = Clipboard.GetFileDropList();
-                            queueStr = fileType + coll.Count + " file";
-                            if (coll.Count > 1)
-                            {
-                                queueStr += "s";
-                            }
 
                             string[] array = new string[coll.Count];
                             coll.CopyTo(array, 0);
 
-                            foreach (string str in array)
+                            clip.Type = FILE_TYPE;
+                            clip.ClipValue = string.Join(",", array);
+
+
+
+                            //组装显示内容，按文件名分行
+                            string displayStr = coll.Count + " file";
+                            if (coll.Count > 1)
                             {
-                                queueStr += "\n" + str;
+                                displayStr += "s";
                             }
+                            int j = 0;
+                            foreach (string str in coll)
+                            {
+                                if (j < 5)
+                                {
+                                    displayStr += "<br>" + Path.GetFileName(str);
+                                }
+                                else if (j == 5)
+                                {
+                                    displayStr += "<br>...";
+                                    break;
+                                }
+                                j++;
+                            }
+
+
+                            clip.DisplayValue = displayStr;
+
+                            if (coll.Count >= 5)
+
+                            {
+                                clip.Height = 6 * 22;
+                            }
+                            else
+                            {
+                                clip.Height = (coll.Count + 1) * 22;
+                            }
+
                             break;
                         }
                         catch
@@ -688,7 +799,6 @@ namespace ClipPlus
 
                         }
                     }
-
 
                 }
                 //处理HTML类型
@@ -698,7 +808,13 @@ namespace ClipPlus
                     {
                         try
                         {
-                            queueStr = iData.GetData(DataFormats.Html).ToString();
+
+                            string htmlStr = iData.GetData(DataFormats.Html).ToString();
+                            clip.ClipValue = htmlStr;
+                            //html内容会固定出现在第16行。
+                            clip.DisplayValue = htmlStr.Split("\r\n".ToCharArray())[16];
+                            clip.Type = HTML_TYPE;
+                            clip.Height = 165;
                             break;
                         }
                         catch
@@ -706,7 +822,8 @@ namespace ClipPlus
 
                         }
                     }
-                    queueStr = htmlType + queueStr;
+
+
                 }
 
                 else
@@ -714,16 +831,16 @@ namespace ClipPlus
 
                     return IntPtr.Zero;
                 }
-                if (queueStr == string.Empty)
+                if (string.IsNullOrWhiteSpace(clip.ClipValue))
                 {
                     return IntPtr.Zero;
                 }
-                if (resultList.Count > 0 && queueStr == resultList[0])
+                if (resultList.Count > 0 && clip.ClipValue == resultList[0].ClipValue)
                 {
                     return IntPtr.Zero;
                 }
 
-                EnQueue(queueStr);
+                EnQueue(clip);
 
 
             }
@@ -745,10 +862,10 @@ namespace ClipPlus
         /// 增加条目
         /// </summary>
         /// <param name="str"></param>
-        private async void EnQueue(String str)
+        private async void EnQueue(ClipModel clip)
         {
 
-            resultList.Insert(0, str);
+            resultList.Insert(0, clip);
 
             await ClearImage();
 
@@ -766,16 +883,16 @@ namespace ClipPlus
             {
                 if (resultList.Count > currentRecords)
                 {
-                    string clearStr = resultList[currentRecords];
+                    ClipModel clip = resultList[currentRecords];
                     resultList.RemoveAt(currentRecords);
 
 
-                    if (clearStr.StartsWith(imageType))
+                    if (clip.Type == IMAGE_TYPE)
                     {
-                        clearStr = clearStr.Replace(imageType, "");
-                        if (File.Exists(clearStr))
+
+                        if (File.Exists(clip.DisplayValue))
                         {
-                            File.Delete(clearStr);
+                            File.Delete(clip.DisplayValue);
                         }
                     }
                 }
@@ -790,91 +907,18 @@ namespace ClipPlus
         /// </summary>
         private void GetClipDataAndShowWindows()
         {
-            activeWnd = WinAPIHelper.GetForegroundWindow();
-
 
             WinAPIHelper.POINT p = new WinAPIHelper.POINT();
 
-            List<string> frontList = new List<string>(maxRecords);
-            int imgCount = 0;
-
-            int fileWidth = 0;
+            int displayHeight = 0;
 
             for (int i = 0; i < resultList.Count; i++)
             {
 
-                string str = resultList[i];
+                displayHeight += resultList[i].Height;
 
-                if (!str.StartsWith(imageType) && !str.StartsWith(htmlType))
-                {
-                    string[] tmp = new string[0];
-                    if (str.StartsWith(fileType))
-                    {
-                        tmp = str.Split('\n');
-                        str = tmp[0];
-                        for (int j = 1; j < tmp.Length; j++)
-                        {
-
-                            str = str + "\n " + System.IO.Path.GetFileName(tmp[j]);
-
-                        }
-
-                    }
-                    if (str.Length - str.Replace("\n", "").Length > 5)
-                    {
-                        tmp = str.Split('\n');
-                        string tempStr = string.Empty;
-                        for (int ii = 0; ii < 5; ii++)
-                        {
-                            tempStr += tmp[ii] + "\n";
-
-                        }
-                        str = tempStr + "...";
-                    }
-                    if (tmp.Length > 5)
-
-                    {
-                        fileWidth += 6 * 22;
-                    }
-                    else if (tmp.Length > 0)
-                    {
-                        fileWidth += (tmp.Length) * 22;
-                    }
-                    else
-                    {
-                        byte[] bb = Encoding.Default.GetBytes(str);
-                        if (bb.Length <= 50)
-                        {
-                            fileWidth += 34;
-                        }
-                        else
-                        {
-                            fileWidth += Encoding.Default.GetBytes(str).Length / 50 * 23;
-                        }
-                    }
-
-
-
-
-                }
-                else
-                {
-                    imgCount++;
-                    if (str.StartsWith(htmlType))
-                    {
-
-                        string[] tmp = str.Split("\r\n".ToCharArray());
-
-                        //html内容会固定出现在第17行。
-                        str = htmlType + tmp[16];
-
-                    }
-                }
-
-
-                frontList.Add(str);
             }
-            string json = JsonConvert.SerializeObject(frontList);
+            string json = JsonConvert.SerializeObject(resultList, displayJsonSettings);
 
             json = HttpUtility.UrlEncode(json);
 
@@ -886,13 +930,13 @@ namespace ClipPlus
 
             if (WinAPIHelper.GetCursorPos(out p))
             {
-                if (frontList.Count == 0)
+                if (resultList.Count == 0)
                 {
                     this.Height = 100;
                 }
                 else
                 {
-                    this.Height = fileWidth + 165 * imgCount + 15;
+                    this.Height = displayHeight + 25;
 
 
                 }
@@ -909,7 +953,7 @@ namespace ClipPlus
                 }
                 else
                 {
-                    this.Left = mx;
+                    this.Left = mx - 2;
                 }
                 if (my > y - this.ActualHeight)
                 {
@@ -917,7 +961,7 @@ namespace ClipPlus
                 }
                 else
                 {
-                    this.Top = my;
+                    this.Top = my - 2;
                 }
 
 
@@ -955,7 +999,7 @@ namespace ClipPlus
                 WinAPIHelper.RemoveClipboardFormatListener(wpfHwnd);
                 HotKeyManager.UnregisterHotKey(wpfHwnd, hotkeyAtom);
                 HotKeyManager.GlobalDeleteAtom(hotkeyAtomStr);
-                CommonService.SaveData(resultList, storePath);
+                SaveData(resultList, storePath);
             }
 
         }
@@ -996,7 +1040,7 @@ namespace ClipPlus
                 }
                 else
                 {
-                    setBatchPatse(id, lastSelectedIndex);
+                    SetBatchPatse(id, lastSelectedIndex);
 
                     this.Dispatcher.Invoke(
                           new Action(
@@ -1025,7 +1069,7 @@ namespace ClipPlus
 
              }));
 
-                string result = resultList[id];
+                ClipModel result = resultList[id];
                 resultList.RemoveAt(id);
                 resultList.Insert(0, result);
 
@@ -1065,10 +1109,10 @@ namespace ClipPlus
         private void ShowPreviewForm(int id)
         {
             preview.Hide();
-            string result = resultList[id];
-            if (result.StartsWith(imageType))
+            ClipModel result = resultList[id];
+            if (result.Type == IMAGE_TYPE)
             {
-                preview.ImgPath = result;
+                preview.ImgPath = result.ClipValue;
 
                 preview.Show();
 
@@ -1080,7 +1124,7 @@ namespace ClipPlus
         /// </summary>
         /// <param name="result">需要粘贴的值</param>
         /// /// <param name="neadPause">是否需要延时，单条需要，批量不需要</param>
-        private void SetValueToClip(string result, bool neadPause)
+        private void SetValueToClip(ClipModel result, bool neadPause)
         {
 
 
@@ -1091,16 +1135,9 @@ namespace ClipPlus
             //设置剪切板后恢复监听
             WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
 
-
-            //if (neadPause)
-            //{
-            //    Console.WriteLine("sleep");
-            //   // Thread.Sleep(100);
-            //}
-
             System.Windows.Forms.SendKeys.SendWait("^v");
 
-            // CommonService.SendPasteKey(activeWnd);
+
 
 
         }
@@ -1163,7 +1200,7 @@ namespace ClipPlus
                         {
                             int currentKey = int.Parse(key.Remove(0, 1)) - 1;
 
-                            setBatchPatse(currentKey, lastSelectedIndex);
+                            SetBatchPatse(currentKey, lastSelectedIndex);
                             this.Hide();
                             new Thread(new ParameterizedThreadStart(BatchPaste)).Start(false);
                             lastSelectedIndex = -1;
@@ -1210,14 +1247,14 @@ namespace ClipPlus
         /// </summary>
         /// <param name="nowIndex">结束索引</param>
         /// <param name="lastIndex">起始索引</param>
-        private void setBatchPatse(int nowIndex, int lastIndex)
+        private void SetBatchPatse(int nowIndex, int lastIndex)
         {
             batchPasteList.Clear();
             if (nowIndex > lastIndex)
             {
                 for (int i = lastIndex; i <= nowIndex; i++)
                 {
-                    string result = resultList[i];
+                    var result = resultList[i];
                     resultList.RemoveAt(i);
                     resultList.Insert(0, result);
                     batchPasteList.Add(result);
@@ -1230,7 +1267,7 @@ namespace ClipPlus
             {
                 for (int i = lastIndex; i >= nowIndex; i--)
                 {
-                    string result = resultList[lastIndex];
+                    var result = resultList[lastIndex];
                     resultList.RemoveAt(lastIndex);
                     resultList.Insert(0, result);
                     batchPasteList.Add(result);

@@ -16,7 +16,7 @@ using System.Windows.Shapes;
 namespace ClipPlus
 {
 
-  
+
     /// <summary>
     /// PreviewForm.xaml 的交互逻辑
     /// </summary>
@@ -39,94 +39,92 @@ namespace ClipPlus
 
         }
 
-       
+
 
         private void Window_LostFocus(object sender, RoutedEventArgs e)
         {
-           
+
             this.Hide();
         }
 
         private void Window_Deactivated(object sender, EventArgs e)
         {
-            
-                this.Hide();
+
+            this.Hide();
         }
 
         private void Window_MouseEnter(object sender, MouseEventArgs e)
         {
             this.Hide();
         }
- 
+
 
         private void Window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             if ((bool)e.NewValue == true)
             {
+ 
+                if (File.Exists(ImgPath))
+                {
+
+                    BitmapImage bi = new BitmapImage();
+                    
+                    bi.BeginInit();
+                   
+                    bi.UriSource = new Uri("pack://SiteOfOrigin:,,,/" + ImgPath + "", UriKind.RelativeOrAbsolute);
+                    bi.EndInit();
+
+
+                    imageShow.Source = bi;
+                    
+                    WinAPIHelper.POINT p = new WinAPIHelper.POINT();
+
                 
 
-                if (ImgPath.StartsWith(imageType))
-                {
-                    ImgPath = ImgPath.Replace(imageType, "");
-
-                    if (File.Exists(ImgPath))
+                    if (WinAPIHelper.GetCursorPos(out p))
                     {
+                        double x = SystemParameters.WorkArea.Width;//得到屏幕工作区域宽度
+                        double y = SystemParameters.WorkArea.Height;//得到屏幕工作区域高度
+                        double mx = CursorHelp.ConvertPixelsToDIPixels(p.X);
+                        double my = CursorHelp.ConvertPixelsToDIPixels(p.Y);
 
-                        BitmapImage bi = new BitmapImage();
-
-                        bi.BeginInit();
-                        bi.UriSource = new Uri("pack://SiteOfOrigin:,,,/" + ImgPath + "", UriKind.RelativeOrAbsolute);
-                        bi.EndInit();
-
-
-                        imageShow.Source = bi;
-                        
-                        WinAPIHelper.POINT p = new WinAPIHelper.POINT();
-
-
-                        if (WinAPIHelper.GetCursorPos(out p))
+                        if (bi.Height > this.MaxHeight)
                         {
-                            double x = SystemParameters.WorkArea.Width;//得到屏幕工作区域宽度
-                            double y = SystemParameters.WorkArea.Height;//得到屏幕工作区域高度
-                            double mx = CursorHelp.ConvertPixelsToDIPixels(p.X);
-                            double my = CursorHelp.ConvertPixelsToDIPixels(p.Y);
-
-                            if (bi.Height > this.MaxHeight)
-                            {
-                                this.Top = my - (this.MaxHeight / 2);
-                            }
-                            else { 
-                                this.Top = my - bi.Height / 2;
-                            }
-                            if (this.Top + bi.Height > x)
-                            {
-                                this.Top = x - bi.Height-10;
-                            }
-
-
-
-                            double caclWitch = bi.Width;
-                          
-                            if (caclWitch > MaxWidth)
-                            {
-                                caclWitch = MaxWidth;
-                            }
-                            if(window.Left> x-(window.Left+ window.ActualWidth))
-                            {
-                                this.Left = window.Left - caclWitch;
-
-                            }
-                            else
-                            {
-                                this.Left = window.Left + window.ActualWidth;
-                            }
-                            
- 
+                            this.Top = my - (this.MaxHeight / 2);
                         }
+                        else
+                        {
+                            this.Top = my - bi.Height / 2;
+                        }
+                        if (this.Top + bi.Height > x)
+                        {
+                            this.Top = x - bi.Height - 10;
+                        }
+
+
+
+                        double caclWitch = bi.Width;
+
+                        if (caclWitch > MaxWidth)
+                        {
+                            caclWitch = MaxWidth;
+                        }
+                        if (window.Left > x - (window.Left + window.ActualWidth))
+                        {
+                            this.Left = window.Left - caclWitch;
+
+                        }
+                        else
+                        {
+                            this.Left = window.Left + window.ActualWidth;
+                        }
+
+
                     }
                 }
+
             }
-        
+
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)

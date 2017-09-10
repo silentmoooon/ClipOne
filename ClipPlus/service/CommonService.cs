@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using ClipPlus.model;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -19,15 +20,27 @@ namespace ClipPlus.service
         /// <summary>
         /// 图片类型，通过在内容前面增加前缀来标识
         /// </summary>
-        private static string imageType = "``+image|";
+        public   const string IMAGE_TYPE = "image";
         /// <summary>
         /// html类型，通过在内容前面增加前缀来标识
         /// </summary>
-        private static string htmlType = "``+html|";
+        public const string HTML_TYPE = "html";
+
+       
         /// <summary>
         /// 文件类型，通过在内容前面增加前缀来标识
         /// </summary>
-        private static string fileType = "``+file|";
+        public const string FILE_TYPE = "file";
+
+        /// <summary>
+        /// QQ富文本类型
+        /// </summary>
+        public const string QQ_RICH_TYPE = "QQ_Unicode_RichEdit_Format";
+
+        /// <summary>
+        /// Q文本类型
+        /// </summary>
+        public const string TEXT_TYPE = "text";
         /// <summary>
         /// 设置开机启动
         /// </summary>
@@ -56,7 +69,7 @@ namespace ClipPlus.service
         /// <summary>
         /// 持久化
         /// </summary>
-        public static void SaveData(List<string> resultList,string storePath)
+        public static void SaveData(List<ClipModel> resultList,string storePath)
         {
             string json = JsonConvert.SerializeObject(resultList);
             File.WriteAllText(storePath, json);
@@ -67,16 +80,16 @@ namespace ClipPlus.service
         /// 设置条目到剪切板
         /// </summary>
         /// <param name="result"></param>
-        public static void SetValueToClip(string result)
+        public static void SetValueToClip(ClipModel result)
         {
-            if (result.StartsWith(imageType))
+            if (result.Type==IMAGE_TYPE)
             {
                 try
                 {
-                    result = result.Replace(imageType, "");
+                    
                     BitmapImage bitImg = new BitmapImage();
                     bitImg.BeginInit();
-                    bitImg.UriSource = new Uri(result, UriKind.Relative);
+                    bitImg.UriSource = new Uri(result.ClipValue, UriKind.Relative);
                     bitImg.EndInit();
                     IDataObject data = new DataObject(DataFormats.Bitmap, bitImg);
                     Clipboard.SetDataObject(data, false);
@@ -85,43 +98,41 @@ namespace ClipPlus.service
                 }
                 catch {  return; }
             }
-            else if (result.StartsWith(htmlType))
+            else if (result.Type == HTML_TYPE)
             {
-                result = result.Replace(htmlType, "");
-                IDataObject data = new DataObject(DataFormats.Html, result);
+                
+                IDataObject data = new DataObject(DataFormats.Html, result.ClipValue);
                 Clipboard.SetDataObject(data, false);
             }
-            else if (result.StartsWith(fileType))
+            else if (result.Type == QQ_RICH_TYPE)
             {
-                string[] tmp = result.Split('\n');
-                string[] files = new string[tmp.Length - 1];
-                StringCollection coll = new StringCollection();
 
-                for (int i = 0; i < tmp.Length; i++)
-                {
-                    if (i != 0)
-                    {
-                        coll.Add(tmp[i]);
-                        files[i - 1] = tmp[i];
-
-                    }
-                }
+                
+                MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
+                IDataObject data = new DataObject(QQ_RICH_TYPE, ms);
+                Clipboard.SetDataObject(data, false);
+            }
+            else if (result.Type == FILE_TYPE)
+            {
+                string[] tmp = result.ClipValue.Split(',');
+                 
+                
                 try
                 {
-                    IDataObject data = new DataObject(DataFormats.FileDrop, files);
+                    IDataObject data = new DataObject(DataFormats.FileDrop, tmp);
                     MemoryStream memo = new MemoryStream(4);
                     byte[] bytes = new byte[] { (byte)(5), 0, 0, 0 };
                     memo.Write(bytes, 0, bytes.Length);
                     data.SetData("PreferredDropEffect", memo);
                     Clipboard.SetDataObject(data, false);
                 }
-                catch { return; }
+                catch  {   return; }
             }
             else
             {
                 try
                 {
-                    IDataObject data = new DataObject(DataFormats.Text, result);
+                    IDataObject data = new DataObject(DataFormats.Text, result.ClipValue);
                     System.Windows.Forms.Clipboard.SetDataObject(data, false);
 
                 }
@@ -195,7 +206,7 @@ namespace ClipPlus.service
 
 
             }
-            catch (Exception e) { Console.WriteLine(e.Message); return; }
+            catch  {   return; }
         }
 
     }
