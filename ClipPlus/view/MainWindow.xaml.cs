@@ -1049,6 +1049,7 @@ namespace ClipPlus
                 clipList.Insert(0, result);
 
                 batchPasteList.Clear();
+               
                 batchPasteList.Add(result);
 
                 new Thread(new ParameterizedThreadStart(BatchPaste)).Start(true);
@@ -1163,15 +1164,15 @@ namespace ClipPlus
 
                     int keyNum = (int)e.Key - 34;
                   
-                    if (keyNum > 0 && keyNum <= 35)
+                    if (keyNum >= 0 && keyNum <= 35)
                     {
                         if (lastSelectedIndex == -1)
                         {
-                            lastSelectedIndex = keyNum - 1;
+                            lastSelectedIndex = keyNum ;
                         }
                         else
                         {
-                            int currentKey = keyNum - 1;
+                            int currentKey = keyNum ;
 
                             SetBatchPatse(currentKey, lastSelectedIndex);
                             this.Hide();
@@ -1188,16 +1189,20 @@ namespace ClipPlus
                 else //处理单选粘贴
                 {
                     int index = -1;
-                    if (e.Key == Key.Space)
+                    if (e.Key == Key.OemTilde)
+                    {
+                        index = 0;
+                    }
+                    else if (e.Key == Key.Space)
                     {
                         index = 1;
                     }
                     else
                     {
                         int keyNum = (int)e.Key-34;
-                        if (keyNum > 0 && keyNum <= 35)
+                        if (keyNum >= 0 && keyNum <= 35)
                         {
-                            index = keyNum - 1;
+                            index = keyNum ;
 
                         }
                     }

@@ -35,12 +35,12 @@ function fun(json) {
 
         var trs = "";
         var num = "";
-        if (i < 9) {
-            num = "<u>" + (i + 1) + "</u>";
-        } else if(i<35){
-            num =  "<u>" + num2key(i + 1) + "</u>";
+        if (i <= 9) {
+            num = "<u>" + i+ "</u>";
+        } else if(i<=35){
+            num =  "<u>" + num2key(i ) + "</u>";
         }else{
-			 num = "" + (i + 1) ;
+			 num = "" + i  ;
 		}
         if (obj[i].Type == "image") {
            
@@ -86,7 +86,7 @@ function fun(json) {
 	 window.scrollTo(0, 0);
 	//callbackObj.changeWindowHeight($(".table_main").height(),$(".table_main").css("background-color"));
 
-  //  $("body").css("overflow","auto");
+  
 
 
 }
