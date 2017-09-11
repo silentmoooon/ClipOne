@@ -31,7 +31,7 @@ namespace ClipOne.view
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window 
     {
 
         /// <summary>
@@ -57,8 +57,7 @@ namespace ClipOne.view
         /// </summary>
         private static string defaultHtml = "html\\index.html";
 
-
-
+ 
         /// <summary>
         /// 浏览器
         /// </summary>
@@ -75,7 +74,7 @@ namespace ClipOne.view
         /// </summary>
         CallbackObjectForJs cbOjb;
 
-
+        public static  bool isDevTools = false;
 
         /// <summary>
         /// 剪切板事件
@@ -334,7 +333,7 @@ namespace ClipOne.view
             browserSetting.DefaultEncoding = "utf-8";
             webView.BrowserSettings = browserSetting;
             webView.Address = "file:///" + defaultHtml;
-
+            
             cbOjb = new CallbackObjectForJs(this);
             webView.RegisterAsyncJsObject("callbackObj", cbOjb);
 
@@ -387,6 +386,8 @@ namespace ClipOne.view
             //设置菜单项
             System.Windows.Forms.MenuItem exit = new System.Windows.Forms.MenuItem("退出");
             System.Windows.Forms.MenuItem startup = new System.Windows.Forms.MenuItem("开机自启");
+            System.Windows.Forms.MenuItem devTools = new System.Windows.Forms.MenuItem("开发者工具");
+            
             System.Windows.Forms.MenuItem separator1 = new System.Windows.Forms.MenuItem("-");
             System.Windows.Forms.MenuItem hotkey = new System.Windows.Forms.MenuItem("热键");
 
@@ -399,7 +400,7 @@ namespace ClipOne.view
             System.Windows.Forms.MenuItem reload = new System.Windows.Forms.MenuItem("刷新");
 
 
-
+            devTools.Click += DevTools_Click;
             clear.Click += Clear_Click;
             reload.Click += new EventHandler(Reload);
             exit.Click += new EventHandler(Exit_Click);
@@ -444,10 +445,30 @@ namespace ClipOne.view
 
 
             //关联菜单项至托盘
-            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { clear, separator3, reload, skin, separator2, record, hotkey, separator1, startup, exit };
+            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { clear, separator3, reload, skin, separator2, record, hotkey, separator1, devTools, startup, exit };
             notifyIcon.ContextMenu = new System.Windows.Forms.ContextMenu(childen);
 
 
+        }
+
+        private void DevTools_Click(object sender, EventArgs e)
+        {
+            System.Windows.Forms.MenuItem item = (System.Windows.Forms.MenuItem)sender;
+            if (!isDevTools) {
+                item.Checked = true;
+                isDevTools = true;
+               
+                webView?.GetBrowser()?.ShowDevTools();
+                GetClipDataAndShowWindows();
+                this.Left = 100;
+            }
+            else
+            {
+                item.Checked = false;
+                webView?.GetBrowser()?.CloseDevTools();
+                isDevTools = false;
+                this.Hide();
+            }
         }
 
         private void SkinItem_Click(object sender, EventArgs e)
@@ -1216,7 +1237,7 @@ namespace ClipOne.view
         /// </summary>
         private void WindowLostFocusHandle()
         {
-
+            if(!isDevTools)
             this.Hide();
 
             lastSelectedIndex = -1;

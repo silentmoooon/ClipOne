@@ -24,10 +24,9 @@ namespace ClipOne.service
         public void PasteValue(string id)
         {
 
-            Console.WriteLine(id);
-
+            if (!MainWindow.isDevTools) { 
             window.PasteValueByIndex(int.Parse(id));
-
+            }
 
         }
 
@@ -60,7 +59,7 @@ namespace ClipOne.service
         /// <param name="msg"></param>
         public void DeleteClip(int id)
         {
-            Console.WriteLine(id);
+            
             window.DeleteClip(id);
         }
 

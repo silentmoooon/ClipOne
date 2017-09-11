@@ -132,6 +132,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="model\ClipModel.cs" />
+    <Compile Include="model\ClipType.cs" />
     <Compile Include="service\CallbackObjectForJs.cs" />
     <Compile Include="service\CommonService.cs" />
     <Compile Include="util\LimitPropsContractResolver.cs" />
@@ -208,9 +209,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="html\css\vendor\bootstrap.min.css">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Resource Include="ClipOne.ico" />
     <Content Include="html\css\classic.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
