@@ -1,0 +1,13 @@
+﻿<Window x:Class="ClipOne.view.PreviewForm"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ClipPlus"
+        mc:Ignorable="d"
+        Title="PreviewForm"   SizeToContent="WidthAndHeight"  AllowsTransparency="True" WindowStyle="None" MaxHeight="600" MaxWidth="800" LostFocus="Window_LostFocus" Deactivated="Window_Deactivated" MouseEnter="Window_MouseEnter" ShowInTaskbar="False" Focusable="False" IsHitTestVisible="False" IsTabStop="False" IsVisibleChanged="Window_IsVisibleChanged"> 
+    <Grid MaxWidth="800" MaxHeight="600" >
+        <Image Name="imageShow" Stretch="None"/>
+
+    </Grid>
+</Window>
