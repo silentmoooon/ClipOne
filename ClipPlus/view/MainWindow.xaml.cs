@@ -46,7 +46,7 @@ namespace ClipPlus
         /// 持久化目录
         /// </summary>
         private static string storeDir = "store";
-        
+
 
         /// <summary>
         /// css目录
@@ -58,7 +58,7 @@ namespace ClipPlus
         /// </summary>
         private static string defaultHtml = "html\\index.html";
 
-       
+
 
         /// <summary>
         /// 浏览器
@@ -76,13 +76,16 @@ namespace ClipPlus
         /// </summary>
         CallbackObjectForJs cbOjb;
 
-       
+
 
         /// <summary>
         /// 剪切板事件
         /// </summary>
         private static int WM_CLIPBOARDUPDATE = 0x031D;
 
+        /// <summary>
+        /// JSON设置
+        /// </summary>
         JsonSerializerSettings displayJsonSettings = new JsonSerializerSettings();
 
         /// <summary>
@@ -151,7 +154,7 @@ namespace ClipPlus
         /// </summary>
         List<ClipModel> batchPasteList = new List<ClipModel>();
         /// <summary>
-        /// 用于连续粘贴，Shift+鼠标选择的械中是否按下Shift键
+        /// 用于连续粘贴，Shift+鼠标选择 是否按下Shift键
         /// </summary>
         volatile bool isPressedShift = false;
         /// <summary>
@@ -169,11 +172,12 @@ namespace ClipPlus
         /// 预览窗口
         /// </summary>
         private PreviewForm preview;
-
+ 
         public MainWindow()
         {
             InitializeComponent();
             System.IO.Directory.SetCurrentDirectory(System.Windows.Forms.Application.StartupPath);
+            //序列化到前端时只序列化需要的字段
             displayJsonSettings.ContractResolver = new LimitPropsContractResolver(new string[] { "Type", "DisplayValue" });
             ExitWhenExists();
 
@@ -186,8 +190,6 @@ namespace ClipPlus
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             this.Hide();
-
-
 
             if (!Directory.Exists(cacheDir))
             {
@@ -211,6 +213,8 @@ namespace ClipPlus
                 InitStore();
             }
 
+
+            //在这之后才需要对退出事件做处理
             needCloseHandle = true;
 
             InitWebView();
@@ -266,7 +270,7 @@ namespace ClipPlus
             saveDataTimer.Interval = 60000;
             saveDataTimer.Start();
             new Thread(new ParameterizedThreadStart(ClearExpireImage)).Start(lastSaveImg);
-             
+
         }
 
         /// <summary>
@@ -310,6 +314,9 @@ namespace ClipPlus
             }
         }
 
+        /// <summary>
+        /// 初始化浏览器
+        /// </summary>
         private void InitWebView()
         {
             ///初始化浏览器
@@ -350,7 +357,7 @@ namespace ClipPlus
             //设置托盘图标
             notifyIcon = new System.Windows.Forms.NotifyIcon();
             notifyIcon.Text = "clipPlus";
-            
+
             StreamResourceInfo info = Application.GetResourceStream(new Uri("/clipPlus.ico", UriKind.Relative));
             Stream s = info.Stream;
             notifyIcon.Icon = new System.Drawing.Icon(s);
@@ -440,6 +447,10 @@ namespace ClipPlus
         }
 
 
+        /// <summary>
+        /// 通过修改index.html中引入的样式文件来换肤
+        /// </summary>
+        /// <param name="cssPath"></param>
         private void ChangeSkin(string cssPath)
         {
 
@@ -452,6 +463,11 @@ namespace ClipPlus
 
         }
 
+        /// <summary>
+        /// 设置是否开机启动
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Startup_Click(object sender, EventArgs e)
         {
             System.Windows.Forms.MenuItem item = (System.Windows.Forms.MenuItem)sender;
@@ -462,6 +478,11 @@ namespace ClipPlus
             SaveSettings();
         }
 
+        /// <summary>
+        /// 设置热键
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Hotkey_Click(object sender, EventArgs e)
         {
             SetHotKeyForm sethk = new SetHotKeyForm();
@@ -481,6 +502,9 @@ namespace ClipPlus
             }
         }
 
+        /// <summary>
+        /// 保存设置
+        /// </summary>
         private void SaveSettings()
         {
             string json = JsonConvert.SerializeObject(settingsMap);
@@ -538,20 +562,20 @@ namespace ClipPlus
 
         }
 
-        
+
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            //当为剪切板消息时
+            //当为剪切板消息时，由于获取数据会有失败的情况，所以循环3次，尽量确保成功
             if (msg == WM_CLIPBOARDUPDATE)
             {
 
                 IDataObject iData = Clipboard.GetDataObject();
-
+               
                 ClipModel clip = new ClipModel();
 
-                
-                //处理剪切板文字
+
+                //处理剪切板QQ自定义格式
                 if (iData.GetDataPresent(QQ_RICH_TYPE))
                 {
                     for (int i = 0; i < 3; i++)
@@ -568,7 +592,7 @@ namespace ClipPlus
 
 
                             string htmlStr = iData.GetData(DataFormats.Html).ToString();
-                           
+
                             //qq的html内容会固定出现在第14行。
                             htmlStr = htmlStr.Split("\r\n".ToCharArray())[14];
                             if (htmlStr.Contains("\"file:///\""))
@@ -614,14 +638,15 @@ namespace ClipPlus
 
 
                         }
-                        catch 
+                        catch
                         {
 
-                           
+
                         }
                     }
 
                 }
+                //处理图片
                 else if (iData.GetDataPresent(DataFormats.Bitmap) || iData.GetDataPresent(DataFormats.Dib))
                 {
 
@@ -631,7 +656,7 @@ namespace ClipPlus
                         {
 
 
-                            BitmapSource bs = Clipboard.GetImage();
+                            BitmapSource bs =(BitmapSource)iData.GetData(DataFormats.Bitmap);
 
                             string path = SaveImage(bs);
 
@@ -643,16 +668,16 @@ namespace ClipPlus
                             break;
 
                         }
-                        catch  
+                        catch
                         {
+                            Console.WriteLine("1111");
 
-                            
                         }
                     }
 
                 }
 
-                //处理剪切板图形
+                //处理剪切板文件
                 else if (iData.GetDataPresent(DataFormats.Text))
                 {
 
@@ -661,7 +686,7 @@ namespace ClipPlus
                         try
                         {
 
-                            string str = Clipboard.GetText();
+                            string str = (string)iData.GetData(DataFormats.Text);
 
                             clip.ClipValue = str;
                             clip.DisplayValue = str.Replace("<", "&lt;").Replace(">", "&gt;");
@@ -672,7 +697,7 @@ namespace ClipPlus
                             string tempStr = array[0];
                             if (array.Length > 0)
                             {
-                                for(int j=1;j<array.Length; j++)
+                                for (int j = 1; j < array.Length; j++)
                                 {
                                     if (j < 6)
                                     {
@@ -685,7 +710,7 @@ namespace ClipPlus
                                     }
                                 }
                             }
-                            
+
                             clip.DisplayValue = tempStr;
 
 
@@ -722,24 +747,21 @@ namespace ClipPlus
                     {
                         try
                         {
-                            StringCollection coll = Clipboard.GetFileDropList();
-
-                            string[] array = new string[coll.Count];
-                            coll.CopyTo(array, 0);
-
+                            string []files=(string [])iData.GetData(DataFormats.FileDrop);
+                            
                             clip.Type = FILE_TYPE;
-                            clip.ClipValue = string.Join(",", array);
+                            clip.ClipValue = string.Join(",", files);
 
 
 
                             //组装显示内容，按文件名分行
-                            string displayStr = coll.Count + " file";
-                            if (coll.Count > 1)
+                            string displayStr = files.Length + " file";
+                            if (files.Length > 1)
                             {
                                 displayStr += "s";
                             }
                             int j = 0;
-                            foreach (string str in coll)
+                            foreach (string str in files)
                             {
                                 if (j < 5)
                                 {
@@ -756,22 +778,22 @@ namespace ClipPlus
 
                             clip.DisplayValue = displayStr;
 
-                            if (coll.Count >= 5)
+                            if (files.Length>= 5)
 
                             {
                                 clip.Height = 6 * 22;
                             }
                             else
                             {
-                                clip.Height = (coll.Count + 1) * 22;
+                                clip.Height = (files.Length + 1) * 22;
                             }
 
                             break;
                         }
-                        catch
+                        catch 
                         {
 
-
+                            
                         }
                     }
 
@@ -882,7 +904,7 @@ namespace ClipPlus
         /// </summary>
         private void GetClipDataAndShowWindows()
         {
-
+            
             WinAPIHelper.POINT p = new WinAPIHelper.POINT();
 
             int displayHeight = 0;
@@ -1049,7 +1071,7 @@ namespace ClipPlus
                 clipList.Insert(0, result);
 
                 batchPasteList.Clear();
-               
+
                 batchPasteList.Add(result);
 
                 new Thread(new ParameterizedThreadStart(BatchPaste)).Start(true);
@@ -1110,7 +1132,7 @@ namespace ClipPlus
             CommonService.SetValueToClip(result);
             //设置剪切板后恢复监听
             WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
-
+           
             System.Windows.Forms.SendKeys.SendWait("^v");
 
 
@@ -1128,7 +1150,6 @@ namespace ClipPlus
 
         private void Window_Deactivated(object sender, EventArgs e)
         {
-
             WindowLostFocusHandle();
         }
 
@@ -1138,9 +1159,8 @@ namespace ClipPlus
         private void WindowLostFocusHandle()
         {
 
+            this.Hide();
 
-            if (this.IsVisible)
-                this.Hide();
             lastSelectedIndex = -1;
             isPressedShift = false;
             if (preview != null)
@@ -1154,25 +1174,25 @@ namespace ClipPlus
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-           
-             
+
+
             if (clipList.Count > 0)
             {
-                
+
                 if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift)  //处理基于SHIFT+数字的批量粘贴
                 {
 
                     int keyNum = (int)e.Key - 34;
-                  
+
                     if (keyNum >= 0 && keyNum <= 35)
                     {
                         if (lastSelectedIndex == -1)
                         {
-                            lastSelectedIndex = keyNum ;
+                            lastSelectedIndex = keyNum;
                         }
                         else
                         {
-                            int currentKey = keyNum ;
+                            int currentKey = keyNum;
 
                             SetBatchPatse(currentKey, lastSelectedIndex);
                             this.Hide();
@@ -1199,10 +1219,10 @@ namespace ClipPlus
                     }
                     else
                     {
-                        int keyNum = (int)e.Key-34;
+                        int keyNum = (int)e.Key - 34;
                         if (keyNum >= 0 && keyNum <= 35)
                         {
-                            index = keyNum ;
+                            index = keyNum;
 
                         }
                     }

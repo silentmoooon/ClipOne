@@ -202,14 +202,14 @@ namespace ClipPlus.service
         {
             try
             {
-                //var SelfThreadId = WinAPIHelper.GetCurrentThreadId();//获取本身的线程ID
-                //var ForeThreadId = WinAPIHelper.GetWindowThreadProcessId(activeWnd, IntPtr.Zero);//根据窗口句柄获取线程ID
-                //WinAPIHelper.AttachThreadInput((IntPtr)ForeThreadId, SelfThreadId, 1);//附加线程
-               // WinAPIHelper.SetForegroundWindow(activeWnd);
-               // IntPtr foreWnd = WinAPIHelper.GetFocus();//获取具有输入焦点的窗口句柄
+                var SelfThreadId = WinAPIHelper.GetCurrentThreadId();//获取本身的线程ID
+                var ForeThreadId = WinAPIHelper.GetWindowThreadProcessId(activeWnd, IntPtr.Zero);//根据窗口句柄获取线程ID
+                WinAPIHelper.AttachThreadInput((IntPtr)ForeThreadId, SelfThreadId, 1);//附加线程
+                WinAPIHelper.SetForegroundWindow(activeWnd);
+                
+                IntPtr foreWnd = WinAPIHelper.GetFocus();//获取具有输入焦点的窗口句柄
 
-                //WinAPIHelper.AttachThreadInput((IntPtr)ForeThreadId, SelfThreadId, 0);//取消附加的线程
-
+                WinAPIHelper.AttachThreadInput((IntPtr)ForeThreadId, SelfThreadId, 0);//取消附加的线程
 
                 //发送按键消息
                 uint KEYEVENTF_KEYUP = 2;
