@@ -28,7 +28,7 @@ namespace ClipOne.service
             window.PasteValueByIndex(int.Parse(id));
             }
 
-        }
+        } 
 
         /// <summary>
         /// 用于JS回调的方法，以预览图片
@@ -36,7 +36,7 @@ namespace ClipOne.service
         /// <param name="msg"></param>
         public void Preview(int id)
         {
-            
+           
             window.PreviewByIndex(id);
 
 

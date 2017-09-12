@@ -8,12 +8,18 @@
         xmlns:cefSharp="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
         xmlns:local="clr-namespace:ClipPlus"
         mc:Ignorable="d"
-        Title="MainWindow"   Margin="0,0,0,0" Padding="0,0,0,0"   Height="600" Width="446"  Closing="Window_Closing" Loaded="Window_Loaded"   LostFocus="Window_LostFocus" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None" KeyDown="Window_KeyDown" Background="#ffffff" KeyUp="Window_KeyUp" ResizeMode="NoResize" Topmost="True" Visibility="Visible" ShowInTaskbar="False" MaxWidth="448" MaxHeight="600" >
+        Title="MainWindow"   Margin="0,0,0,0" Padding="0,0,0,0"   Height="600" Width="446"  Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None" Background="#ffffff" KeyUp="Window_KeyUp" ResizeMode="NoResize" Topmost="True" Visibility="Visible" ShowInTaskbar="False" MaxWidth="448" MaxHeight="600" >
 
     <Border BorderThickness="1" BorderBrush="#A9CBEE" CornerRadius="2"   Name="top">
 
         <Grid Name="mainGrid">
-            
+            <Grid.RowDefinitions>
+                <RowDefinition Name="row0" Height="auto" ></RowDefinition>
+                <RowDefinition></RowDefinition>
+            </Grid.RowDefinitions>
+            <Label Name="lblSearch" HorizontalAlignment="Left" VerticalContentAlignment="Center" Margin="4,5,0,5" Padding="0,0,0,0" Grid.Row="0" Width="40" Height="0" Content="查找："></Label>
+            <TextBox Name="txtSearch" HorizontalAlignment="Left" VerticalContentAlignment="Center" Margin="50,5,0,5" BorderBrush="DarkGray"   SelectionBrush="DarkGray" CaretBrush="DarkGray"  Width="200" Height="0"    Grid.Column="0" Grid.Row="0" TextChanged="txtSearch_TextChanged" KeyDown="txtSearch_KeyDown" />
+
         </Grid>
 
     </Border>

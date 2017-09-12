@@ -25,6 +25,7 @@ using ClipOne.service;
 using static ClipOne.service.CommonService;
 using HtmlAgilityPack;
 using System.Windows.Resources;
+using System.Windows.Controls;
 
 namespace ClipOne.view
 {
@@ -38,10 +39,12 @@ namespace ClipOne.view
         /// 持久化路径
         /// </summary>
         private static string storePath = "store\\clip.json";
+
         /// <summary>
         /// 配置文件持久化路径
         /// </summary>
         private static string settingsPath = "store\\settings.json";
+
         /// <summary>
         /// 持久化目录
         /// </summary>
@@ -57,7 +60,7 @@ namespace ClipOne.view
         /// </summary>
         private static string defaultHtml = "html\\index.html";
 
- 
+        
         /// <summary>
         /// 浏览器
         /// </summary>
@@ -74,6 +77,9 @@ namespace ClipOne.view
         /// </summary>
         CallbackObjectForJs cbOjb;
 
+        /// <summary>
+        /// 是否显示开发者工具
+        /// </summary>
         public static  bool isDevTools = false;
 
         /// <summary>
@@ -126,6 +132,8 @@ namespace ClipOne.view
         private static string skinName = "stand";
 
 
+        private static ClipType supportFormat = ClipType.qq | ClipType.html | ClipType.image | ClipType.file | ClipType.text;
+
         /// <summary>
         /// 配置项map
         /// </summary>
@@ -146,6 +154,8 @@ namespace ClipOne.view
         /// 定时器，用于定时持久化条目
         /// </summary>
         System.Windows.Forms.Timer saveDataTimer = new System.Windows.Forms.Timer();
+
+
 
         /// <summary>
         /// 用于连续粘贴 ，连续粘贴条目列表
@@ -189,6 +199,7 @@ namespace ClipOne.view
         {
             this.Hide();
 
+           
             if (!Directory.Exists(cacheDir))
             {
                 Directory.CreateDirectory(cacheDir);
@@ -310,6 +321,10 @@ namespace ClipOne.view
                 hotkeyModifier = int.Parse(settingsMap["modifier"]);
 
             }
+            if (settingsMap.ContainsKey("format"))
+            {
+                supportFormat = (ClipType)int.Parse(settingsMap["format"]);
+            }
         }
 
         /// <summary>
@@ -320,6 +335,7 @@ namespace ClipOne.view
             ///初始化浏览器
             var setting = new CefSharp.CefSettings();
             setting.Locale = "zh-CN";
+            setting.LogSeverity = LogSeverity.Disable;
             setting.WindowlessRenderingEnabled = true;
             setting.CefCommandLineArgs.Add("Cache-control", "no-cache");
             setting.CefCommandLineArgs.Add("Pragma", "no-cache");
@@ -334,10 +350,13 @@ namespace ClipOne.view
             webView.BrowserSettings = browserSetting;
             webView.Address = "file:///" + defaultHtml;
             
+            webView.KeyDown += Window_KeyDown;
+            webView.KeyUp += Window_KeyUp;
             cbOjb = new CallbackObjectForJs(this);
             webView.RegisterAsyncJsObject("callbackObj", cbOjb);
-
+             
             mainGrid.Children.Add(webView);
+            webView.SetValue(Grid.RowProperty, 1);
 
         }
 
@@ -385,8 +404,9 @@ namespace ClipOne.view
 
             //设置菜单项
             System.Windows.Forms.MenuItem exit = new System.Windows.Forms.MenuItem("退出");
+            System.Windows.Forms.MenuItem separator0 = new System.Windows.Forms.MenuItem("-");
             System.Windows.Forms.MenuItem startup = new System.Windows.Forms.MenuItem("开机自启");
-            System.Windows.Forms.MenuItem devTools = new System.Windows.Forms.MenuItem("开发者工具");
+            System.Windows.Forms.MenuItem devTools = new System.Windows.Forms.MenuItem("调试工具");
             
             System.Windows.Forms.MenuItem separator1 = new System.Windows.Forms.MenuItem("-");
             System.Windows.Forms.MenuItem hotkey = new System.Windows.Forms.MenuItem("热键");
@@ -394,11 +414,19 @@ namespace ClipOne.view
             System.Windows.Forms.MenuItem record = new System.Windows.Forms.MenuItem("记录数");
             System.Windows.Forms.MenuItem separator2 = new System.Windows.Forms.MenuItem("-");
             System.Windows.Forms.MenuItem skin = new System.Windows.Forms.MenuItem("皮肤");
+            System.Windows.Forms.MenuItem reload = new System.Windows.Forms.MenuItem("刷新");
             System.Windows.Forms.MenuItem second = new System.Windows.Forms.MenuItem("高亮第二条");
             System.Windows.Forms.MenuItem separator3 = new System.Windows.Forms.MenuItem("-");
+            System.Windows.Forms.MenuItem format = new System.Windows.Forms.MenuItem("格式");
             System.Windows.Forms.MenuItem clear = new System.Windows.Forms.MenuItem("清空");
-            System.Windows.Forms.MenuItem reload = new System.Windows.Forms.MenuItem("刷新");
 
+            
+            System.Windows.Forms.MenuItem qqFormat = new System.Windows.Forms.MenuItem("腾讯");
+            System.Windows.Forms.MenuItem htmlFormat = new System.Windows.Forms.MenuItem("html");
+            System.Windows.Forms.MenuItem imageFormat = new System.Windows.Forms.MenuItem("图片");
+            System.Windows.Forms.MenuItem fileFormat = new System.Windows.Forms.MenuItem("格式");
+            System.Windows.Forms.MenuItem txtFormat = new System.Windows.Forms.MenuItem("格式");
+            
 
             devTools.Click += DevTools_Click;
             clear.Click += Clear_Click;
@@ -408,6 +436,8 @@ namespace ClipOne.view
             startup.Click += Startup_Click;
             startup.Checked = autoStartup;
 
+
+            //增加记录数设置子菜单项
             for (int i = 100; i <= maxRecords; i += 100)
             {
 
@@ -421,6 +451,29 @@ namespace ClipOne.view
                 record.MenuItems.Add(subRecord);
 
             }
+
+            //增加格式选择子菜单项
+            foreach (ClipType type in Enum.GetValues(typeof(ClipType)))
+            {
+                
+                System.Windows.Forms.MenuItem subFormat = new System.Windows.Forms.MenuItem(Enum.GetName(typeof(ClipType),type));
+                subFormat.Tag = type;
+                if ((supportFormat & type) != 0)
+                {
+                    subFormat.Checked = true;
+                    
+                }
+                if (type==ClipType.text) {
+                    subFormat.Enabled = false;
+                }
+                else
+                {
+                    subFormat.Click += SubFormat_Click;
+                }
+                format.MenuItems.Add(subFormat);
+            }
+
+            //根据css文件创建皮肤菜单项
             if (Directory.Exists(cssDir))
             {
                 List<string> fileList = Directory.EnumerateFiles(cssDir).ToList();
@@ -445,10 +498,30 @@ namespace ClipOne.view
 
 
             //关联菜单项至托盘
-            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { clear, separator3, reload, skin, separator2, record, hotkey, separator1, devTools, startup, exit };
+            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { clear,format, separator3, reload, skin, separator2, record, hotkey, separator1, devTools, startup,separator0, exit };
             notifyIcon.ContextMenu = new System.Windows.Forms.ContextMenu(childen);
 
 
+        }
+
+        private void SubFormat_Click(object sender, EventArgs e)
+        {
+            System.Windows.Forms.MenuItem item = (System.Windows.Forms.MenuItem)sender;
+            if (item.Checked)
+            {
+                item.Checked = false;
+                supportFormat= supportFormat&~((ClipType)item.Tag);
+               
+
+            }
+            else
+            {
+                
+                item.Checked = true;
+                supportFormat = supportFormat |((ClipType)item.Tag);
+            }
+            settingsMap["format"] = ((int)supportFormat).ToString();
+            SaveSettings();
         }
 
         private void DevTools_Click(object sender, EventArgs e)
@@ -616,7 +689,7 @@ namespace ClipOne.view
  
 
                 //处理剪切板QQ自定义格式
-                if (Clipboard.ContainsData(QQ_RICH_TYPE))
+                if ((supportFormat&ClipType.qq) != 0 &&Clipboard.ContainsData(QQ_RICH_TYPE))
                 {
                     for (int i = 0; i < 3; i++)
                     {
@@ -684,7 +757,7 @@ namespace ClipOne.view
 
                 }
                 //处理图片
-                else if (Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib))
+                else if ((supportFormat & ClipType.image) != 0 &&( Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib)))
                 {
 
                     for (int i = 0; i < 3; i++)
@@ -694,14 +767,17 @@ namespace ClipOne.view
 
 
                             BitmapSource bs =  Clipboard.GetImage();
-
+                           
                             string path = SaveImage(bs);
-
 
                             clip.Type = IMAGE_TYPE;
                             clip.ClipValue = path;
                             clip.DisplayValue = path;
-                            clip.Height = 165;
+                            clip.Height = (int)bs.Height;
+                            if (bs.Height > 165)
+                            {
+                                clip.Height = 165;
+                            }
                             break;
 
                         }
@@ -723,8 +799,7 @@ namespace ClipOne.view
 
                             string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();
                             string textStr = Clipboard.GetText();
-                           //  Console.WriteLine(htmlStr.Split("\r\n".ToCharArray())[16]);
-                            // Console.WriteLine(textStr);
+                           
                             //文字类型和html类型中"img"出现的次数一样则说明可以以text类型来解析
                             if (textStr != null && (textStr.IndexOf("<img") == 0 || textStr.GetOccurTimes("img") == htmlStr.Split("\r\n".ToCharArray())[16].GetOccurTimes("img")))
                             {
@@ -760,7 +835,7 @@ namespace ClipOne.view
                                 {
                                     clip.Height = 6 * 22;
                                 }
-                                else if (array.Length > 0)
+                                else if (array.Length > 1)
                                 {
                                     clip.Height = (array.Length) * 22;
                                 }
@@ -769,8 +844,9 @@ namespace ClipOne.view
                                     clip.Height = 35;
                                 }
                             }
-                            else
+                            else if ((supportFormat & ClipType.html) != 0)
                             {
+                               
                                 clip.ClipValue = htmlStr;
                                 //html内容会固定出现在第16行。
                                 clip.DisplayValue = htmlStr.Split("\r\n".ToCharArray())[16];
@@ -830,7 +906,7 @@ namespace ClipOne.view
                             {
                                 clip.Height = 6 * 22;
                             }
-                            else if (array.Length > 0)
+                            else if (array.Length > 1)
                             {
                                 clip.Height = (array.Length) * 22;
                             }
@@ -855,7 +931,7 @@ namespace ClipOne.view
                
 
                 //处理剪切板文件
-                else if (Clipboard.ContainsFileDropList())
+                else if ((supportFormat & ClipType.file) != 0 &&Clipboard.ContainsFileDropList())
                 {
                     for (int i = 0; i < 3; i++)
                     {
@@ -1045,7 +1121,8 @@ namespace ClipOne.view
                 this.Topmost = true;
 
                 this.Activate();
-                this.Focus();
+               
+                webView.Focus();
 
             }
 
@@ -1106,16 +1183,22 @@ namespace ClipOne.view
         /// <param name="id">索引</param>
         public void PasteValueByIndex(int id)
         {
-
+            if (id >= clipList.Count)
+            {
+                return;
+            }
             //当按下shift键时，做批量处理判断
             if (isPressedShift)
             {
                 if (lastSelectedIndex == -1)
                 {
-                    lastSelectedIndex = id;
+                     
+                        lastSelectedIndex = id;
+                    
                 }
                 else
                 {
+                   
                     SetBatchPatse(id, lastSelectedIndex);
 
                     this.Dispatcher.Invoke(
@@ -1223,12 +1306,13 @@ namespace ClipOne.view
 
         private void Window_LostFocus(object sender, RoutedEventArgs e)
         {
-
-            WindowLostFocusHandle();
+            
+           // WindowLostFocusHandle();
         }
 
         private void Window_Deactivated(object sender, EventArgs e)
         {
+          
             WindowLostFocusHandle();
         }
 
@@ -1237,7 +1321,14 @@ namespace ClipOne.view
         /// </summary>
         private void WindowLostFocusHandle()
         {
-            if(!isDevTools)
+
+            lblSearch.Height = 0;
+            txtSearch.Height = 0;
+                this.Height -= 30;
+            txtSearch.Text = "";
+            // webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("showSearch()");
+
+            if (!isDevTools)
             this.Hide();
 
             lastSelectedIndex = -1;
@@ -1254,7 +1345,39 @@ namespace ClipOne.view
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-           
+            if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.F)
+            {
+                if (clipList.Count > 0&&txtSearch.Height==0) {
+
+                    txtSearch.Height = 25;
+                    lblSearch.Height = 25;
+                    this.Height += 30;
+                   
+                    txtSearch.Focus();
+                }
+                else if(txtSearch.Height>0)
+                {
+                    
+                    txtSearch.Height = 0;
+                    lblSearch.Height = 0;
+                    txtSearch.Text = "";
+                    this.Height -= 30;
+                    webView.Focus();
+                }
+                
+                return;
+            }
+            if (e.Key == Key.Back && txtSearch.Height != 0)
+            {
+                txtSearch.Focus();
+            }
+            if (e.Key == Key.F12)
+            {
+
+                webView.GetBrowser().MainFrame.ViewSource();
+
+                return;
+            }
 
             if (clipList.Count > 0)
             {
@@ -1285,16 +1408,11 @@ namespace ClipOne.view
 
                     isPressedShift = true;
                 }
+                 
 
-                else //处理单选粘贴
+                else if(!isDevTools)//处理单选粘贴
                 {
-                    if (e.Key == Key.F12)
-                    {
-                        
-                            webView.GetBrowser().MainFrame.ViewSource();
-                         
-                        return;
-                    }
+                    
                     int index = -1;
                     if (e.Key == Key.OemTilde)
                     {
@@ -1388,6 +1506,30 @@ namespace ClipOne.view
             }
         }
 
+        private void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (txtSearch.Height > 0)
+            {
+                webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("searchResult('" + txtSearch.Text + "')");
+            }
+        }
+
+        private void txtSearch_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.F)
+            {
+                webView.Focus();
+
+                txtSearch.Height = 0;
+                lblSearch.Height = 0;
+                this.Height -= 30;
+            }
+            else if (e.Key == Key.Enter)
+            {
+                webView.Focus();
+            }
+        }
+
         internal class MenuHandler : IContextMenuHandler
         {
             public void OnBeforeContextMenu(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, IMenuModel model)
@@ -1410,6 +1552,9 @@ namespace ClipOne.view
                 return false;
             }
         }
+
+        
+       
     }
 
 

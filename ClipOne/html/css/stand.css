@@ -82,15 +82,15 @@ td{
  
 
  /*鼠标悬浮*/
-.tr_hover,tr:hover {
+.tr_hover,.tr:hover {
     -webkit-box-shadow: 0 0 0 2px #0078d7 ;
      border-radius: 2px;
 	 
 }
- .tr_hover > td ,tr:hover >td{
+ .tr_hover > td ,.tr:hover >td{
  	 font-size: 14px;
  }
-
+ 
 
  /*table*/
 .table_main {
@@ -121,7 +121,8 @@ body{
     z-index: 1000;
     display: none;
     float: left;
-    min-width: 100px;
+    width: 100px;
+	height: 40px;
     padding: 5px 0;
     margin: 2px 0 0;
     list-style: none;
@@ -143,6 +144,7 @@ body{
 .dropdown-menu >ul{
 	padding-left: 5px;
 	margin-left: 5px;
+	margin-top: 8px;
 	width: 80px;
 }
 .dropdown-menu.pull-right {
@@ -171,3 +173,4 @@ body{
     background-color: #0078d7;
    
 }
+a { text-decoration:none} 
