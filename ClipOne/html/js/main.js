@@ -1,8 +1,9 @@
 var timeout = '';
-var searchTimeout = '';
+ 
 var deleteId = -1;
 var deleteNode = '';
 var clipObj = [];
+var lastSelectedIndex=-1;
 
 $(document).ready(function () {
 
@@ -16,7 +17,6 @@ $(document).ready(function () {
         display();
     });
 
-    
 
 });
 
@@ -27,34 +27,6 @@ document.onselectstart = function () {
 document.oncontextmenu = function (e) {
     e.preventDefault();
 };
-
-function searchResult(value){
-	clearTimeout(searchTimeout);
-	
-	searchTimeout=setTimeout(function(){
-
-		if (value != "") {
-		
-        for (var i = 0; i < clipObj.length; i++) {
-			 
-            if (clipObj[i].Type.toLowerCase().indexOf(value) < 0 && clipObj[i].DisplayValue.toLowerCase().indexOf(value) < 0) {
-				
-                $("#tr" + i).css("display", "none");
-            }else{
-				$("#tr" + i).css("display", "block");
-			}
-        }
-    }
-    else {
-	 
-        for (var i = 0; i < clipObj.length; i++) {
-
-            $("#tr" + i).css("display", "block");
-
-        }
-    }
-	},400);
-}
 
  
 
@@ -81,7 +53,7 @@ function showmenu(e) {
 
 }
 
- 
+
 function hiddenrightmenu() {
     document.getElementById("rightmenu").style.display = "none";
 }
@@ -96,25 +68,38 @@ function num2key(num) {
     return String.fromCharCode(55 + num);
 }
 
-function fun(json) {
+function selectItem(selectIndex){
+ 
+	if(lastSelectedIndex!=-1){
+		$("#tr"+lastSelectedIndex).trigger("mouseout");
+		lastSelectedIndex=selectIndex;
+		$("#tr"+selectIndex).addClass("tr_hover");
+
+            $("#tr"+selectIndex).one("mouseout", function () {
+                $("#tr"+selectIndex).removeClass("tr_hover");
+
+            });
+	}
+}
+
+function showList(json,selectIndex) {
 
     json = decodeURIComponent(json.replace(/\+/g, '%20'));
 
     clipObj = JSON.parse(json);
+    
     display();
 
-    if (clipObj.length > 0) {
+    if (clipObj.length > 0) {  
 
-        setTimeout(function () {
+			lastSelectedIndex=selectIndex;
+            $("#tr"+selectIndex).addClass("tr_hover");
 
-            $("#tr1").addClass("tr_hover");
-
-            $("#tr1").one("mouseout", function () {
-                $("#tr1").removeClass("tr_hover");
+            $("#tr"+selectIndex).one("mouseout", function () {
+                $("#tr"+selectIndex).removeClass("tr_hover");
 
             });
 
-        }, 0);
 
     }
 
@@ -130,12 +115,12 @@ function display() {
 
         var trs = "";
         var num = "";
-        if (i <= 9) {
-            num = "<u>" + i + "</u>";
-        } else if (i <= 35) {
-            num = "<u>" + num2key(i) + "</u>";
+        if (i < 9) {
+            num = "<u>" + (i + 1) +"</u>";
+        } else if (i < 35) {
+            num = "<u>" + num2key(i + 1) + "</u>";
         } else {
-            num = "" + i;
+            num = "" + (i + 1);
         }
         if (clipObj[i].Type == "image") {
 
@@ -144,21 +129,7 @@ function display() {
             trs = " <tr style='cursor: default' class='tr' id='tr" + i + "' index='" + i + "' onmouseup ='callback(this)' > <td  class='td_content' id='td" + i + "' > " + clipObj[i].DisplayValue + " </td><td class='td_index'  >" + num + "</td> </tr>";
 
         }
-        /* else  {
-
-             trs = " <tr style='cursor: default'  id='tr" + i + "' > <td  class='td_content' id='td" + i + "' onclick='callback(this)'  > "+clipObj[i].DisplayValue+" </td><td class='td_index'  >" + num + "</td> </tr>";
-         }
-
-         */
-        /* for (var i = 0; i < obj.length; i++) {
-
-           if(obj[i].Type == "text") {
-                $("#td" + i)[0].innerText = clipObj[i].DisplayValue;
-           }
-
-
-        }*/
-
+        
         tbody += trs;
     }
     $(".myTable").html(tbody);
