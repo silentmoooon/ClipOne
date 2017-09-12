@@ -4,9 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        
         xmlns:Microsoft_Windows_Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero"
         xmlns:cefSharp="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
-        xmlns:local="clr-namespace:ClipPlus"
+        xmlns:local="clr-namespace:ClipOne.view"
         mc:Ignorable="d"
         Title="MainWindow"   Margin="0,0,0,0" Padding="0,0,0,0"   Height="600" Width="446"  Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None" Background="#ffffff" KeyUp="Window_KeyUp" ResizeMode="NoResize" Topmost="True" Visibility="Visible" ShowInTaskbar="False" MaxWidth="448" MaxHeight="600" >
 
@@ -14,12 +15,15 @@
 
         <Grid Name="mainGrid">
             <Grid.RowDefinitions>
-                <RowDefinition Name="row0" Height="auto" ></RowDefinition>
+                <RowDefinition Name="row0" Height="0" ></RowDefinition>
                 <RowDefinition></RowDefinition>
             </Grid.RowDefinitions>
-            <Label Name="lblSearch" HorizontalAlignment="Left" VerticalContentAlignment="Center" Margin="4,5,0,5" Padding="0,0,0,0" Grid.Row="0" Width="40" Height="0" Content="查找："></Label>
-            <TextBox Name="txtSearch" HorizontalAlignment="Left" VerticalContentAlignment="Center" Margin="50,5,0,5" BorderBrush="DarkGray"   SelectionBrush="DarkGray" CaretBrush="DarkGray"  Width="200" Height="0"    Grid.Column="0" Grid.Row="0" TextChanged="txtSearch_TextChanged" KeyDown="txtSearch_KeyDown" />
+            
+                <Label Name="lblSearch" HorizontalAlignment="Left" VerticalContentAlignment="Center" Margin="4,5,0,5" Padding="0,0,0,0"   Width="40" Height="25" Grid.Row="0" Content="查找："></Label>
+            <TextBox Name="txtSearch" HorizontalAlignment="Left" VerticalContentAlignment="Center" Margin="50,5,0,5" BorderBrush="DarkGray"   SelectionBrush="DarkGray" CaretBrush="DarkGray"  Width="200" Height="25"  Grid.Row="0"   TextChanged="txtSearch_TextChanged" KeyDown="txtSearch_KeyDown" />
 
+            
+            
         </Grid>
 
     </Border>

@@ -71,6 +71,11 @@ namespace ClipOne.view
         /// </summary>
         List<ClipModel> clipList = new List<ClipModel>(maxRecords + 2);
 
+        /// <summary>
+        /// 用于显示的记录列表
+        /// </summary>
+        List<ClipModel> displayList = new List<ClipModel>(maxRecords);
+
 
         /// <summary>
         /// 供浏览器JS回调的接口
@@ -81,6 +86,8 @@ namespace ClipOne.view
         /// 是否显示开发者工具
         /// </summary>
         public static  bool isDevTools = false;
+
+        public static bool isSearch = false;
 
         /// <summary>
         /// 剪切板事件
@@ -126,6 +133,7 @@ namespace ClipOne.view
         /// </summary>
         private static int maxRecords = 300;
 
+
         /// <summary>
         /// 默认皮肤
         /// </summary>
@@ -154,6 +162,8 @@ namespace ClipOne.view
         /// 定时器，用于定时持久化条目
         /// </summary>
         System.Windows.Forms.Timer saveDataTimer = new System.Windows.Forms.Timer();
+
+        System.Windows.Forms.Timer searchTimer = new System.Windows.Forms.Timer();
 
 
 
@@ -186,7 +196,7 @@ namespace ClipOne.view
             InitializeComponent();
             System.IO.Directory.SetCurrentDirectory(System.Windows.Forms.Application.StartupPath);
             //序列化到前端时只序列化需要的字段
-            displayJsonSettings.ContractResolver = new LimitPropsContractResolver(new string[] { "Type", "DisplayValue" });
+            displayJsonSettings.ContractResolver = new LimitPropsContractResolver(new string[] { "Id","Type", "DisplayValue" });
             ExitWhenExists();
 
 
@@ -198,7 +208,22 @@ namespace ClipOne.view
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             this.Hide();
+            searchTimer.Enabled = false;
+            searchTimer.Interval = 400;
+            searchTimer.Tick += (x, y) =>
+            {
 
+                 displayList.Clear();
+
+                clipList.ForEach(p => displayList.Add(p));
+                
+                string json = JsonConvert.SerializeObject(displayList, displayJsonSettings);
+
+                json = HttpUtility.UrlEncode(json);
+
+                webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("fun('" + json + "')");
+                searchTimer.Stop();
+            };
            
             if (!Directory.Exists(cacheDir))
             {
@@ -682,7 +707,6 @@ namespace ClipOne.view
             //当为剪切板消息时，由于获取数据会有失败的情况，所以循环3次，尽量确保成功
             if (msg == WM_CLIPBOARDUPDATE)
             {
-
                 
 
                 ClipModel clip = new ClipModel();
@@ -1183,7 +1207,7 @@ namespace ClipOne.view
         /// <param name="id">索引</param>
         public void PasteValueByIndex(int id)
         {
-            if (id >= clipList.Count)
+            if (id >= displayList.Count)
             {
                 return;
             }
@@ -1321,13 +1345,10 @@ namespace ClipOne.view
         /// </summary>
         private void WindowLostFocusHandle()
         {
-
-            lblSearch.Height = 0;
-            txtSearch.Height = 0;
-                this.Height -= 30;
-            txtSearch.Text = "";
-            // webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("showSearch()");
-
+            row0.Height = new GridLength(0);
+            this.Height -= 35;
+            txtSearch.Clear();
+             
             if (!isDevTools)
             this.Hide();
 
@@ -1347,38 +1368,30 @@ namespace ClipOne.view
         {
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.F)
             {
-                if (clipList.Count > 0&&txtSearch.Height==0) {
-
-                    txtSearch.Height = 25;
-                    lblSearch.Height = 25;
+                
+                if (   row0.Height.Value==0) {
+                    if(clipList.Count == 0)
+                    {
+                        return;
+                    }
+                    isSearch = true;
+                    row0.Height = new GridLength(35);
                     this.Height += 30;
-                   
+                    
                     txtSearch.Focus();
                 }
-                else if(txtSearch.Height>0)
+                else  
                 {
-                    
-                    txtSearch.Height = 0;
-                    lblSearch.Height = 0;
-                    txtSearch.Text = "";
+                    row0.Height = new GridLength(0);
+                    txtSearch.Clear();
                     this.Height -= 30;
                     webView.Focus();
                 }
                 
                 return;
             }
-            if (e.Key == Key.Back && txtSearch.Height != 0)
-            {
-                txtSearch.Focus();
-            }
-            if (e.Key == Key.F12)
-            {
-
-                webView.GetBrowser().MainFrame.ViewSource();
-
-                return;
-            }
-
+           
+          
             if (clipList.Count > 0)
             {
 
@@ -1442,6 +1455,7 @@ namespace ClipOne.view
 
         }
 
+       
 
         /// <summary>
         /// 根据给点起始、结束索引来设置批量粘贴条目
@@ -1499,6 +1513,19 @@ namespace ClipOne.view
 
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {
+            if (e.Key == Key.OemMinus && row0.Height.Value != 0)
+            {
+                txtSearch.Focus();
+                return;
+            }
+            if (e.Key == Key.F12)
+            {
+
+                webView.GetBrowser().MainFrame.ViewSource();
+
+                return;
+            }
+
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift)
             {
                 //当shift键keyUp时，还原状态
@@ -1508,9 +1535,9 @@ namespace ClipOne.view
 
         private void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (txtSearch.Height > 0)
+            if (row0.Height.Value > 0)
             {
-                webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("searchResult('" + txtSearch.Text + "')");
+                webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("searchResult('" + txtSearch.Text.ToLower() + "')");
             }
         }
 
@@ -1519,17 +1546,32 @@ namespace ClipOne.view
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.F)
             {
                 webView.Focus();
-
-                txtSearch.Height = 0;
-                lblSearch.Height = 0;
-                this.Height -= 30;
+                row0.Height = new GridLength(0);
+               
+                this.Height -= 35;
             }
-            else if (e.Key == Key.Enter)
+            else if (e.Key == Key.OemPlus)
             {
                 webView.Focus();
+            }else if (e.Key == Key.Enter)
+            {
+                if (txtSearch.Text != "")
+                {
+                    
+                }
             }
         }
+        private void GetFirstSearchResult(string value)
+        {
+            value = value.ToLower();
+            for(int i = 0; i < clipList.Count; i++)
+            {
+                if(clipList[i].Type.ToLower().IndexOf(value)>=0|| clipList[i].DisplayValue.ToLower().IndexOf(value) >= 0)
+                {
 
+                }
+            }
+        }
         internal class MenuHandler : IContextMenuHandler
         {
             public void OnBeforeContextMenu(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, IMenuModel model)

@@ -37,7 +37,7 @@ function searchResult(value){
 		
         for (var i = 0; i < clipObj.length; i++) {
 			 
-            if (clipObj[i].Type.indexOf(value) < 0 && clipObj[i].DisplayValue.indexOf(value) < 0) {
+            if (clipObj[i].Type.toLowerCase().indexOf(value) < 0 && clipObj[i].DisplayValue.toLowerCase().indexOf(value) < 0) {
 				
                 $("#tr" + i).css("display", "none");
             }else{
