@@ -384,6 +384,7 @@ namespace ClipOne.view
 
             TxtSearch_TextChanged(null, null);
 
+            SaveData(clipList, storePath);
             if (clip.Type == IMAGE_TYPE)
             {
 

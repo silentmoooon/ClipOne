@@ -55,7 +55,7 @@ namespace ClipOne.service
 
             RegistryKey reg = Registry.CurrentUser.CreateSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
             string exePath = System.Windows.Forms.Application.ExecutablePath;
-            string exeName = Path.GetFileName(exePath);
+            string exeName = System.Windows.Forms.Application.ProductName;
             if (!isAutoStartup)
             {
                 if (reg.GetValue(exeName) != null)

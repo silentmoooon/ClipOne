@@ -1,0 +1,1 @@
+reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\run" /v ClipOne /f 
