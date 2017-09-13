@@ -696,7 +696,10 @@ namespace ClipOne.view
             if (msg == WM_CLIPBOARDUPDATE)
             {
 
-
+                if (txtSearch.IsFocused)
+                {
+                    return IntPtr.Zero;
+                }
                 ClipModel clip = new ClipModel();
 
 
