@@ -60,7 +60,7 @@ namespace ClipOne.view
         /// </summary>
         private static string defaultHtml = "html\\index.html";
 
-
+        private IntPtr activeHwnd = IntPtr.Zero;
         /// <summary>
         /// 浏览器
         /// </summary>
@@ -1072,7 +1072,7 @@ namespace ClipOne.view
         /// </summary>
         private void ShowList()
         {
-
+            activeHwnd = WinAPIHelper.GetForegroundWindow();
             WinAPIHelper.POINT point = new WinAPIHelper.POINT();
 
             int displayHeight = 0;
@@ -1141,9 +1141,7 @@ namespace ClipOne.view
 
                 DiyShow();
 
-                this.Topmost = true;
-                 
-                this.Activate();
+               
 
                 webView.Focus();
 
@@ -1652,8 +1650,11 @@ namespace ClipOne.view
 
         private void DiyShow()
         {
-            //this.Width = 1000;
+            this.Topmost = true;
+
+            this.Activate();
             this.Opacity = 100;
+            
         }
 
         /// <summary>
@@ -1661,12 +1662,16 @@ namespace ClipOne.view
         /// </summary>
         private void DiyHide()
         {
+            this.Topmost = false;
+            WinAPIHelper.SetForegroundWindow(activeHwnd);
             if (stack.IsVisible)
             {
                 stack.Visibility = Visibility.Collapsed;
                 this.Height -= 35;
             }
             webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("scrollTop()");
+            
+            
             this.Opacity = 0;
 
            
