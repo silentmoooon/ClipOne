@@ -18,7 +18,7 @@
                 <RowDefinition Name="row0" Height="auto" ></RowDefinition>
                 <RowDefinition></RowDefinition>
             </Grid.RowDefinitions>
-            <StackPanel Name="stack" Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,0" >
+            <StackPanel Name="stack" Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,0" Visibility="Collapsed" >
                 <Label Name="lblSearch" HorizontalAlignment="Left" VerticalContentAlignment="Center" Margin="4,5,0,5" Padding="0,0,0,0"   Width="40" Height="25"   Content="查找："></Label>
                 <TextBox Name="txtSearch" HorizontalAlignment="Left" VerticalContentAlignment="Center" Margin="1,5,0,5" BorderBrush="DarkGray"   SelectionBrush="DarkGray" CaretBrush="DarkGray"  Width="200" Height="25"     TextChanged="TxtSearch_TextChanged" KeyDown="TxtSearch_KeyDown" />
 

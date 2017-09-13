@@ -76,5 +76,11 @@ namespace ClipOne.util
         [DllImport("User32.dll", EntryPoint = "FindWindow")]
 
         public static extern IntPtr FindWindow(string className, string windowName);
+ 
+
+        [DllImport("user32.dll", EntryPoint = "SetWindowLong", SetLastError = true)]
+        public static extern Int32 SetWindowLong(IntPtr hWnd, int nIndex, Int32 dwNewLong);
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetWindowLong(IntPtr hWnd, int nIndex);
     }
 }

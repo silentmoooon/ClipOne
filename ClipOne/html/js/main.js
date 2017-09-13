@@ -14,7 +14,7 @@ $(document).ready(function () {
         $(deleteNode).remove();
         clipObj.splice(deleteId, 1);
         $("#rightmenu").css("display", "none");
-        display();
+        //display();
     });
 
 
@@ -30,7 +30,7 @@ document.oncontextmenu = function (e) {
 
 
 function tdEnter(event) {
-	console.log('tdEnter');
+	 
     $("#rightmenu").css("display", "none");
     var index = event.getAttribute('index') / 1;
     selectTimeout = setTimeout(function () {
@@ -45,8 +45,12 @@ function tdEnter(event) {
 }
 
 function tdOut() {
-    clearTimeout(timeout);
+
+	if(selectTimeout)
     clearTimeout(selectTimeout);
+	if(timeout)
+    clearTimeout(timeout);
+	
     callbackObj.hidePreview();
 }
 
@@ -88,12 +92,15 @@ function selectItem(selectIndex) {
 }
 
 function showList(json, selectIndex) {
-
+	 
+	
     json = decodeURIComponent(json.replace(/\+/g, '%20'));
     
     clipObj = JSON.parse(json);
   
-    display();
+    displayData();
+	
+	 window.scrollTo(1, 1);
 
     if (clipObj.length > 0) {
 
@@ -108,14 +115,14 @@ function showList(json, selectIndex) {
 
     }
 
-    $(".table_main").focus();
+  
 
 }
 
-function display() {
+function displayData() {
 
 	 var tbody = "";
-	 console.log(clipObj.length);
+	 
     if (clipObj.length == 0) {
         tbody = " <tr style='cursor: default'> <td  class='td_content' style='cursor: default' > 无记录 </td> </tr>";
         $(".myTable").html(tbody);
@@ -148,7 +155,7 @@ function display() {
 
         $(".myTable").html(tbody);
     }
-    window.scrollTo(0, 0);
+   
 
 
 }

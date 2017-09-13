@@ -82,7 +82,7 @@ namespace ClipOne.service
         new Action(
       delegate
       {
-          window.Height = height + 10;
+          window.Height = height + 35;
 
       }));
 

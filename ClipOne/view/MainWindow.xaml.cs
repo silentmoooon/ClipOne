@@ -22,7 +22,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml;
 using ClipOne.service;
-using static ClipOne.service.CommonService;
+using static ClipOne.service.ClipService;
 using HtmlAgilityPack;
 using System.Windows.Resources;
 using System.Windows.Controls;
@@ -139,8 +139,10 @@ namespace ClipOne.view
         /// </summary>
         private static string skinName = "stand";
 
-        private static bool isAnyFileNotExists = false;
-
+      
+        /// <summary>
+        /// 默认支持格式
+        /// </summary>
         private static ClipType supportFormat = ClipType.qq | ClipType.html | ClipType.image | ClipType.file | ClipType.text;
 
         /// <summary>
@@ -164,10 +166,7 @@ namespace ClipOne.view
         /// </summary>
         System.Windows.Forms.Timer saveDataTimer = new System.Windows.Forms.Timer();
 
-        //System.Windows.Forms.Timer searchTimer = new System.Windows.Forms.Timer();
-
-
-
+         
         /// <summary>
         /// 用于连续粘贴 ，连续粘贴条目列表
         /// </summary>
@@ -187,24 +186,21 @@ namespace ClipOne.view
         /// </summary>
         public int selectedIndex = -1;
 
-
-        /// <summary>
-        /// 退出时是否需要做处理
-        /// </summary>
-        private bool needCloseHandle = false;
-
+ 
         /// <summary>
         /// 预览窗口
         /// </summary>
         private PreviewForm preview;
 
+
         public MainWindow()
         {
             InitializeComponent();
+            
             System.IO.Directory.SetCurrentDirectory(System.Windows.Forms.Application.StartupPath);
             //序列化到前端时只序列化需要的字段
             displayJsonSettings.ContractResolver = new LimitPropsContractResolver(new string[] { "Type", "DisplayValue" });
-            ExitWhenExists();
+           
 
 
         }
@@ -215,7 +211,7 @@ namespace ClipOne.view
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
 
-
+            Console.WriteLine("load");
             if (!Directory.Exists(cacheDir))
             {
                 Directory.CreateDirectory(cacheDir);
@@ -239,9 +235,7 @@ namespace ClipOne.view
             }
 
 
-            //在这之后才需要对退出事件做处理
-            needCloseHandle = true;
-
+            
             InitWebView();
 
             InitialTray();
@@ -551,15 +545,14 @@ namespace ClipOne.view
                 isDevTools = true;
 
                 webView?.GetBrowser()?.ShowDevTools();
-                GetClipDataAndShowWindows();
-                this.Left = 100;
+                ShowList();
             }
             else
             {
                 item.Checked = false;
                 webView?.GetBrowser()?.CloseDevTools();
                 isDevTools = false;
-                this.Hide();
+                DiyHide();
             }
         }
 
@@ -696,7 +689,7 @@ namespace ClipOne.view
 
 
 
-        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        public IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
 
             //当为剪切板消息时，由于获取数据会有失败的情况，所以循环3次，尽量确保成功
@@ -931,7 +924,7 @@ namespace ClipOne.view
                             }
                             else
                             {
-                                clip.Height = 35;
+                                clip.Height = 33;
                             }
 
                             break;
@@ -1032,7 +1025,7 @@ namespace ClipOne.view
                 if (hotkeyAtom == wParam.ToInt32())
                 {
 
-                    GetClipDataAndShowWindows();
+                    ShowList();
 
 
                 }
@@ -1077,12 +1070,12 @@ namespace ClipOne.view
         /// <summary>
         /// 显示窗口并列出所有条目
         /// </summary>
-        private void GetClipDataAndShowWindows()
+        private void ShowList()
         {
 
             WinAPIHelper.POINT point = new WinAPIHelper.POINT();
 
-            int displayHeight = 35;
+            int displayHeight = 0;
 
             for (int i = 0; i < clipList.Count; i++)
             {
@@ -1107,9 +1100,7 @@ namespace ClipOne.view
 
             webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("showList('" + json + "',1)");
 
-            if (this.IsVisible)
-                this.Hide();
-
+           
 
             if (WinAPIHelper.GetCursorPos(out point))
             {
@@ -1148,9 +1139,10 @@ namespace ClipOne.view
                 }
 
 
+                DiyShow();
 
                 this.Topmost = true;
-                this.Show();
+                 
                 this.Activate();
 
                 webView.Focus();
@@ -1162,8 +1154,8 @@ namespace ClipOne.view
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            SaveData(clipList, storePath);
 
-            if (!needCloseHandle) { return; }
             if (notifyIcon != null)
             {
                 notifyIcon.Dispose();
@@ -1184,7 +1176,7 @@ namespace ClipOne.view
                 WinAPIHelper.RemoveClipboardFormatListener(wpfHwnd);
                 HotKeyManager.UnregisterHotKey(wpfHwnd, hotkeyAtom);
                 HotKeyManager.GlobalDeleteAtom(hotkeyAtomStr);
-                SaveData(clipList, storePath);
+               
             }
 
         }
@@ -1238,7 +1230,7 @@ namespace ClipOne.view
                         delegate
                         {
 
-                            this.Hide();
+                            DiyHide();
                             preview.Hide();
                         }));
                     new Thread(new ParameterizedThreadStart(BatchPaste)).Start(false);
@@ -1253,7 +1245,7 @@ namespace ClipOne.view
                new Action(
              delegate
              {
-                 this.Hide();
+                 DiyHide();
 
                  preview.Hide();
 
@@ -1306,7 +1298,7 @@ namespace ClipOne.view
               new Action(
             delegate
             {
-
+                if(preview.IsVisible)
                 preview.Hide();
             }));
 
@@ -1343,7 +1335,7 @@ namespace ClipOne.view
             //设置剪切板前取消监听
             WinAPIHelper.RemoveClipboardFormatListener(wpfHwnd);
 
-            CommonService.SetValueToClip(result);
+            ClipService.SetValueToClip(result);
             //设置剪切板后恢复监听
             WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
 
@@ -1367,7 +1359,7 @@ namespace ClipOne.view
         /// </summary>
         private void WindowLostFocusHandle()
         {
-
+            
             txtSearch.Clear();
 
             lastSelectedIndex = -1;
@@ -1376,8 +1368,9 @@ namespace ClipOne.view
             {
                 preview.Hide();
             }
-            if (!isDevTools)
-                this.Hide();
+            if (!isDevTools) {
+                DiyHide();
+            }
 
 
         }
@@ -1387,12 +1380,15 @@ namespace ClipOne.view
         {
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.F)
             {
-
+                if (!stack.IsVisible)
+                {
+                    stack.Visibility = Visibility.Visible;
+                }
                 if (!txtSearch.IsFocused)
                 {
                     txtSearch.Focus();
                 }
-
+                this.Height += 35;
                 return;
             }
 
@@ -1416,7 +1412,7 @@ namespace ClipOne.view
                             int currentKey = keyNum-1;
 
                             SetBatchPatse(currentKey, lastSelectedIndex);
-                            this.Hide();
+                            DiyHide();
                             new Thread(new ParameterizedThreadStart(BatchPaste)).Start(false);
                             lastSelectedIndex = -1;
 
@@ -1614,12 +1610,17 @@ namespace ClipOne.view
 
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.F)
             {
+                if (stack.IsVisible)
+                {
+                    stack.Visibility = Visibility.Collapsed;
+                }
                 if (txtSearch.Text != "")
                 {
                     txtSearch.Clear();
                 }
-
+                this.Height -= 35;
                 webView.Focus();
+                
             }
 
             else if (e.Key == Key.Enter)
@@ -1628,6 +1629,11 @@ namespace ClipOne.view
             }
         }
 
+        /// <summary>
+        /// 添加剪切板监听，更改窗体属性， 不在alt+tab中显示
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Window_SourceInitialized(object sender, EventArgs e)
         {
 
@@ -1635,9 +1641,40 @@ namespace ClipOne.view
             source.AddHook(WndProc);
             wpfHwnd = (new WindowInteropHelper(this)).Handle;
             WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
-            this.Hide();
+
+            int exStyle = (int)WinAPIHelper.GetWindowLong(wpfHwnd,  -20);
+            exStyle |= (int)0x00000080;
+            WinAPIHelper.SetWindowLong(wpfHwnd, -20, exStyle);
+
+            DiyHide();
 
         }
+
+        private void DiyShow()
+        {
+            //this.Width = 1000;
+            this.Opacity = 100;
+        }
+
+        /// <summary>
+        /// 通过把透明度设置为0来代替窗体隐藏，防止到窗体显示时才开始渲染
+        /// </summary>
+        private void DiyHide()
+        {
+            if (stack.IsVisible)
+            {
+                stack.Visibility = Visibility.Collapsed;
+                this.Height -= 35;
+            }
+            webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("scrollTop()");
+            this.Opacity = 0;
+
+           
+            //this.Width = 0;
+           // this.Left = -10000;
+            
+        }
+
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Source is TextBox)
@@ -1672,7 +1709,7 @@ namespace ClipOne.view
                 {
                     if (selectedIndex == 0)
                     {
-                        if (row0.Height.Value != 0)
+                        if (stack.Visibility == Visibility.Visible)
                         {
                             txtSearch.Focus();
                         }

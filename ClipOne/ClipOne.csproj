@@ -134,7 +134,7 @@
     <Compile Include="model\ClipModel.cs" />
     <Compile Include="model\ClipType.cs" />
     <Compile Include="service\CallbackObjectForJs.cs" />
-    <Compile Include="service\CommonService.cs" />
+    <Compile Include="service\ClipService.cs" />
     <Compile Include="util\LimitPropsContractResolver.cs" />
     <Compile Include="util\StringUtil.cs" />
     <Compile Include="view\PreviewForm.xaml.cs">
