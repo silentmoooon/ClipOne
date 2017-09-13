@@ -100,7 +100,7 @@ function showList(json, selectIndex) {
   
     displayData();
 	
-	 window.scrollTo(1, 1);
+	 
 
     if (clipObj.length > 0) {
 

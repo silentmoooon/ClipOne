@@ -1252,6 +1252,7 @@ namespace ClipOne.view
 
                 //从显示列表中获取记录，并根据sourceId从对保存列表中的该条记录做相应处理
                 ClipModel result = displayList[id];
+               
                 clipList.RemoveAt(result.SourceId);
 
                 if (result.Type == FILE_TYPE)
@@ -1357,9 +1358,7 @@ namespace ClipOne.view
         /// </summary>
         private void WindowLostFocusHandle()
         {
-            
-            txtSearch.Clear();
-
+             
             lastSelectedIndex = -1;
             isPressedShift = false;
             if (preview != null)
@@ -1579,6 +1578,10 @@ namespace ClipOne.view
         private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
 
+            if (stack.Visibility != Visibility.Visible)
+            {
+                return;
+            }
             displayList.Clear();
             string value = txtSearch.Text.ToLower();
 
@@ -1591,11 +1594,11 @@ namespace ClipOne.view
                 }
             }
             string json = JsonConvert.SerializeObject(displayList, displayJsonSettings);
-
+           
             json = HttpUtility.UrlEncode(json);
 
-            selectedIndex = value == "" ? 1 : 0;
-
+            selectedIndex = (value == "") ? 1 : 0;
+           
             webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("showList('" + json + "'," + selectedIndex + ")");
 
 
@@ -1608,21 +1611,24 @@ namespace ClipOne.view
 
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.F)
             {
-                if (stack.IsVisible)
-                {
-                    stack.Visibility = Visibility.Collapsed;
-                }
+                //先clear再隐藏，保证隐藏前再执行一次无条件查询
                 if (txtSearch.Text != "")
                 {
                     txtSearch.Clear();
                 }
+                if (stack.IsVisible)
+                {
+                    stack.Visibility = Visibility.Collapsed;
+                }
+                
                 this.Height -= 35;
-                webView.Focus();
+                
                 
             }
 
             else if (e.Key == Key.Enter)
             {
+               
                 PasteValueByIndex(selectedIndex);
             }
         }
@@ -1662,11 +1668,15 @@ namespace ClipOne.view
         /// </summary>
         private void DiyHide()
         {
+            
             this.Topmost = false;
             WinAPIHelper.SetForegroundWindow(activeHwnd);
             if (stack.IsVisible)
             {
+                //先隐藏后clear,防止多余的查询操作
                 stack.Visibility = Visibility.Collapsed;
+                txtSearch.Clear();
+                
                 this.Height -= 35;
             }
             webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("scrollTop()");
@@ -1675,8 +1685,6 @@ namespace ClipOne.view
             this.Opacity = 0;
 
            
-            //this.Width = 0;
-           // this.Left = -10000;
             
         }
 
