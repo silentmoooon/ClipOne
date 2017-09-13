@@ -63,6 +63,11 @@ namespace ClipOne.service
             window.DeleteClip(id);
         }
 
+        public void SelectIndex(int id)
+        {
+            window.selectedIndex = id;
+        }
+
         public void ChangeWindowHeight(double height, string colorStr)
         {
 

@@ -184,7 +184,7 @@ namespace ClipOne.view
         /// <summary>
         /// 当前选中行
         /// </summary>
-        private int selectedIndex = -1;
+        public int selectedIndex = -1;
 
 
         /// <summary>
@@ -218,23 +218,24 @@ namespace ClipOne.view
             searchTimer.Interval = 400;
             searchTimer.Tick += (x, y) =>
             {
-
+                
                 displayList.Clear();
                 string value = txtSearch.Text.ToLower();
-
+                Console.WriteLine(value);
                 for (int i = 0; i < clipList.Count; i++)
                 {
-                    if (clipList[i].Type.IndexOf(value) >= 0 || clipList[i].ClipValue.ToLower().IndexOf(value) > 0)
+                    if (clipList[i].Type.IndexOf(value) >= 0 || clipList[i].ClipValue.ToLower().IndexOf(value) >= 0)
                     {
                         clipList[i].SourceId = i;
                         displayList.Add(clipList[i]);
                     }
                 }
                 string json = JsonConvert.SerializeObject(displayList, displayJsonSettings);
-
+                //Console.WriteLine(json);
                 json = HttpUtility.UrlEncode(json);
 
                 selectedIndex = value == "" ? 1 : 0;
+                //Console.WriteLine("showList search");
                 webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("showList('" + json + "'," + selectedIndex + ")");
                 searchTimer.Stop();
             };
@@ -448,11 +449,17 @@ namespace ClipOne.view
         /// <param name="index"></param>
         public void DeleteClip(int index)
         {
+            
             //同时删除显示列表和保存列表中的条目
             ClipModel clip = displayList[index];
             displayList.RemoveAt(index);
+          
             clipList.RemoveAt(clip.SourceId);
-
+            this.Dispatcher.Invoke(new Action(delegate {
+                searchTimer.Stop();
+                searchTimer.Start();
+            }));
+           
 
             if (clip.Type == IMAGE_TYPE)
             {
@@ -462,6 +469,8 @@ namespace ClipOne.view
                     File.Delete(clip.DisplayValue);
                 }
             }
+          
+           
         }
 
         /// <summary>
@@ -1092,6 +1101,7 @@ namespace ClipOne.view
             {
                 if (hotkeyAtom == wParam.ToInt32())
                 {
+                     
                     GetClipDataAndShowWindows();
 
 
@@ -1163,6 +1173,7 @@ namespace ClipOne.view
 
             json = HttpUtility.UrlEncode(json);
             selectedIndex = 1;
+            
             webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("showList('" + json + "',1)");
 
             if (this.IsVisible)
@@ -1437,15 +1448,18 @@ namespace ClipOne.view
                     }
                     isSearch = true;
                     row0.Height = new GridLength(35);
-                    this.Height += 30;
+                    this.Height += 35;
 
                     txtSearch.Focus();
                 }
                 else
                 {
+                    //Console.WriteLine("win keydown");
                     row0.Height = new GridLength(0);
                     txtSearch.Clear();
-                    this.Height -= 30;
+                    searchTimer.Stop();
+                    searchTimer.Start();
+                    this.Height -= 35;
                     webView.Focus();
                 }
 
@@ -1612,10 +1626,14 @@ namespace ClipOne.view
         {
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.F)
             {
-                webView.Focus();
-                row0.Height = new GridLength(0);
+                if (txtSearch.Text != "") { 
+                    txtSearch.Clear();
+                }
 
+                row0.Height = new GridLength(0);
+                
                 this.Height -= 35;
+                webView.Focus();
             }
             
             else if (e.Key == Key.Enter)

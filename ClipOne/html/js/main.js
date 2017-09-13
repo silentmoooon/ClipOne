@@ -1,5 +1,5 @@
 var timeout = '';
- 
+var selectTimeout=''; 
 var deleteId = -1;
 var deleteNode = '';
 var clipObj = [];
@@ -9,7 +9,7 @@ $(document).ready(function () {
 
 
     $("#delete").on("click", function () {
-
+		$("#tr" + deleteId).parent().addClass("tr_hover");
         callbackObj.deleteClip(deleteId / 1);
         $(deleteNode).remove();
         clipObj.splice(deleteId, 1);
@@ -33,15 +33,21 @@ document.oncontextmenu = function (e) {
 function tdEnter(event) {
 
     $("#rightmenu").css("display", "none");
-
+	var index=event.getAttribute('index') / 1;
+	selectTimeout=setTimeout(function(){
+		callbackObj.selectIndex(index);
+	},300);
+	if(clipObj[index].Type=="image"){
     timeout = setTimeout(function () {
 
-        callbackObj.preview(event.getAttribute('index') / 1);
+        callbackObj.preview(index);
     }, 600);
+	}
 }
 
 function tdOut() {
     clearTimeout(timeout);
+	clearTimeout(selectTimeout);
     callbackObj.hidePreview();
 }
 
@@ -83,9 +89,9 @@ function selectItem(selectIndex){
 }
 
 function showList(json,selectIndex) {
-
+	 
     json = decodeURIComponent(json.replace(/\+/g, '%20'));
-
+	 
     clipObj = JSON.parse(json);
     
     display();
@@ -126,7 +132,7 @@ function display() {
 
             trs = " <tr style='cursor: default' class='tr' id='tr" + i + "' index='" + i + "' onmouseup ='callback(this)'  onmouseenter='tdEnter(this)' onmouseleave='tdOut()'> <td  class='td_content' id='td" + i + "'  > <img class='image' src='../" + clipObj[i].DisplayValue + "' /> </td><td class='td_index'  >" + num + "</td> </tr>";
         } else {  //if (clipObj[i].Type=="html"||clipObj[i].Type == "QQ_Unicode_RichEdit_Format"||clipObj[i].Type=="file") 
-            trs = " <tr style='cursor: default' class='tr' id='tr" + i + "' index='" + i + "' onmouseup ='callback(this)' > <td  class='td_content' id='td" + i + "' > " + clipObj[i].DisplayValue + " </td><td class='td_index'  >" + num + "</td> </tr>";
+            trs = " <tr style='cursor: default' class='tr' id='tr" + i + "' index='" + i + "' onmouseup ='callback(this)'  onmouseenter='tdEnter(this)' onmouseleave='tdOut()'> <td  class='td_content' id='td" + i + "' > " + clipObj[i].DisplayValue + " </td><td class='td_index'  >" + num + "</td> </tr>";
 
         }
         
