@@ -211,7 +211,7 @@ namespace ClipOne.view
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
 
-            Console.WriteLine("load");
+           
             if (!Directory.Exists(cacheDir))
             {
                 Directory.CreateDirectory(cacheDir);
@@ -243,9 +243,8 @@ namespace ClipOne.view
 
             hotkeyAtom = HotKeyManager.GlobalAddAtom(hotkeyAtomStr);
 
-
+            //如果注册热键失败则弹出热键设置界面
             bool status = HotKeyManager.RegisterHotKey(wpfHwnd, hotkeyAtom, hotkeyModifier, hotkeyKey);
-
             if (!status)
             {
                 Hotkey_Click(null, null);
@@ -484,12 +483,12 @@ namespace ClipOne.view
             //根据css文件创建皮肤菜单项
             if (Directory.Exists(cssDir))
             {
-                List<string> fileList = Directory.EnumerateFiles(cssDir).ToList();
+                List<string> fileList = Directory.EnumerateDirectories(cssDir).ToList();
 
                 foreach (string file in fileList)
                 {
-
-                    string fileName = Path.GetFileNameWithoutExtension(file);
+                   
+                    string fileName = Path.GetFileName(file);
                     System.Windows.Forms.MenuItem subRecord = new System.Windows.Forms.MenuItem(fileName);
                     if (skinName.Equals(fileName.ToLower()))
                     {
@@ -574,10 +573,24 @@ namespace ClipOne.view
         /// <param name="cssPath"></param>
         private void ChangeSkin(string cssPath)
         {
-
-            cssPath = cssPath.Replace("\\", "/").Replace("html/", "");
-            string[] fileLines = File.ReadAllLines(defaultHtml);
-            fileLines[fileLines.Length - 1] = " <link rel='stylesheet' type='text/css' href='" + cssPath + "'/>";
+           
+            List<string> fileLines = File.ReadAllLines(defaultHtml).ToList();
+            for(int i=0;i<fileLines.Count;i++)
+            {
+                string str = fileLines.Last().Trim();
+                if (str==""||str.StartsWith("<link"))
+                {
+                    fileLines.RemoveAt(fileLines.Count - 1);
+                }
+                else {
+                    break;
+                }
+            }
+            string[] files = Directory.EnumerateFiles(cssPath).ToArray();
+            foreach(string file in files) {
+               string  str = file.Replace("\\", "/").Replace("html/", "");
+               fileLines.Add( " <link rel='stylesheet' type='text/css' href='" + str + "'/>");
+            }
             File.WriteAllLines(defaultHtml, fileLines, Encoding.UTF8);
             webView.GetBrowser().Reload();
 
