@@ -35,12 +35,12 @@ function tdEnter(event) {
     var index = event.getAttribute('index') / 1;
     selectTimeout = setTimeout(function () {
         callbackObj.selectIndex(index);
-    }, 300);
+    }, 200);
     if (clipObj[index].Type == "image") {
         timeout = setTimeout(function () {
 
             callbackObj.preview(index);
-        }, 600);
+        }, 500);
     }
 }
 

@@ -65,6 +65,7 @@ namespace ClipOne.service
 
         public void SelectIndex(int id)
         {
+           
             window.selectedIndex = id;
         }
 

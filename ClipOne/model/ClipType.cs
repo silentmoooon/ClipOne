@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace ClipOne.model
 {
     [Flags]
-    enum ClipType
+   public enum ClipType
     {
         qq = 1 << 0,
         html = 1 << 1,

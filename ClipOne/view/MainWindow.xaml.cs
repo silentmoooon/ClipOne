@@ -139,11 +139,11 @@ namespace ClipOne.view
         /// </summary>
         private static string skinName = "stand";
 
-      
+
         /// <summary>
         /// 默认支持格式
         /// </summary>
-        private static ClipType supportFormat = ClipType.qq | ClipType.html | ClipType.image | ClipType.file | ClipType.text;
+        public static ClipType supportFormat = ClipType.qq | ClipType.html | ClipType.image | ClipType.file | ClipType.text;
 
         /// <summary>
         /// 配置项map
@@ -166,7 +166,7 @@ namespace ClipOne.view
         /// </summary>
         System.Windows.Forms.Timer saveDataTimer = new System.Windows.Forms.Timer();
 
-         
+
         /// <summary>
         /// 用于连续粘贴 ，连续粘贴条目列表
         /// </summary>
@@ -186,7 +186,7 @@ namespace ClipOne.view
         /// </summary>
         public int selectedIndex = -1;
 
- 
+
         /// <summary>
         /// 预览窗口
         /// </summary>
@@ -196,11 +196,11 @@ namespace ClipOne.view
         public MainWindow()
         {
             InitializeComponent();
-            
+
             System.IO.Directory.SetCurrentDirectory(System.Windows.Forms.Application.StartupPath);
             //序列化到前端时只序列化需要的字段
             displayJsonSettings.ContractResolver = new LimitPropsContractResolver(new string[] { "Type", "DisplayValue" });
-           
+
 
 
         }
@@ -235,7 +235,7 @@ namespace ClipOne.view
             }
 
 
-            
+
             InitWebView();
 
             InitialTray();
@@ -376,23 +376,18 @@ namespace ClipOne.view
         public void DeleteClip(int index)
         {
 
+
             //同时删除显示列表和保存列表中的条目
             ClipModel clip = displayList[index];
             displayList.RemoveAt(index);
-
+            Console.WriteLine("index:"+index);
+            Console.WriteLine("id:" + clip.SourceId);
             clipList.RemoveAt(clip.SourceId);
 
-            TxtSearch_TextChanged(null, null);
+            ShowList();
 
             SaveData(clipList, storePath);
-            if (clip.Type == IMAGE_TYPE)
-            {
-
-                if (File.Exists(clip.DisplayValue))
-                {
-                    File.Delete(clip.DisplayValue);
-                }
-            }
+           
 
 
         }
@@ -546,7 +541,7 @@ namespace ClipOne.view
                 isDevTools = true;
 
                 webView?.GetBrowser()?.ShowDevTools();
-                ShowList();
+                ShowWindowAndList();
             }
             else
             {
@@ -707,301 +702,36 @@ namespace ClipOne.view
                 //处理剪切板QQ自定义格式
                 if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
                 {
-                    for (int i = 0; i < 3; i++)
-                    {
-                        try
-                        {
-
-                            MemoryStream stream = (MemoryStream)Clipboard.GetData(QQ_RICH_TYPE);
-                            byte[] b = stream.ToArray();
-                            string xmlStr = System.Text.Encoding.UTF8.GetString(b);
-                            xmlStr = xmlStr.Substring(0, xmlStr.IndexOf("</QQRichEditFormat>") + "</QQRichEditFormat>".Length);
-
-                            string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();
-
-                            //qq的html内容会固定出现在第14行。
-                            htmlStr = htmlStr.Split("\r\n".ToCharArray())[14];
-                            if (htmlStr.Contains("\"file:///\""))
-                            {
-
-                                XmlDocument document = new XmlDocument();
-                                document.LoadXml(xmlStr);
-                                foreach (XmlNode node in document.DocumentElement.ChildNodes)
-                                {
-                                    if (node.Name == "EditElement" && node.Attributes["type"].Value == "5") //图片类型
-                                    {
-                                        string filePath = node.Attributes["filepath"].Value;
-                                        if (!htmlStr.Contains(Path.GetFileName(filePath)))
-                                        {
-                                            htmlStr = htmlStr.ReplaceFirst("\"file:///\"", "\"file:///" + filePath.Replace("\\", "/") + "\"");
-                                        }
-                                    }
-                                }
-
-                            }
-                            clip.Type = QQ_RICH_TYPE;
-                            clip.ClipValue = xmlStr;
-
-                            if (htmlStr.IndexOf("%") >= 0)
-                            {
-                                HtmlDocument doc = new HtmlDocument();
-                                doc.LoadHtml(htmlStr);
-                                foreach (HtmlNode node in doc.DocumentNode.SelectNodes("//img"))
-                                {
-                                    string src = node.GetAttributeValue("src", string.Empty);
-                                    if (src.IndexOf("%") >= 0)
-                                    {
-                                        src = src.Replace("%", "%25");
-                                    }
-                                    node.SetAttributeValue("src", src);
-                                }
-                                htmlStr = doc.DocumentNode.OuterHtml;
-                            }
-                            clip.DisplayValue = htmlStr;
-                            clip.Height = 165;
-                            break;
-
-
-
-                        }
-                        catch
-                        {
-
-
-                        }
-                    }
+                    HandleClipQQ(clip);
 
                 }
                 //处理图片
                 else if ((supportFormat & ClipType.image) != 0 && (Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib)))
                 {
-
-                    for (int i = 0; i < 3; i++)
-                    {
-                        try
-                        {
-
-
-                            BitmapSource bs = Clipboard.GetImage();
-
-                            string path = SaveImage(bs);
-
-                            clip.Type = IMAGE_TYPE;
-                            clip.ClipValue = path;
-                            clip.DisplayValue = path;
-                            clip.Height = (int)bs.Height;
-                            if (bs.Height > 165)
-                            {
-                                clip.Height = 165;
-                            }
-                            break;
-
-                        }
-                        catch
-                        {
-
-
-                        }
-                    }
+                    HandleClipImage(clip);
 
                 }
-                //处理HTML类型
-                else if (Clipboard.ContainsData(DataFormats.Html))
-                {
-                    for (int i = 0; i < 3; i++)
-                    {
-                        try
-                        {
-
-                            string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();
-                            string textStr = Clipboard.GetText();
-
-                            //文字类型和html类型中"img"出现的次数一样则说明可以以text类型来解析
-                            if (textStr != null && (textStr.IndexOf("<img") == 0 || textStr.GetOccurTimes("img") == htmlStr.Split("\r\n".ToCharArray())[16].GetOccurTimes("img")))
-                            {
-
-                                clip.ClipValue = textStr;
-                                clip.DisplayValue = textStr.Replace("<", "&lt;").Replace(">", "&gt;");
-                                clip.Type = TEXT_TYPE;
-
-                                string[] array = clip.DisplayValue.Split('\n');
-
-                                string tempStr = array[0];
-                                if (array.Length > 0)
-                                {
-                                    for (int j = 1; j < array.Length; j++)
-                                    {
-                                        if (j < 6)
-                                        {
-                                            tempStr += "<br>" + array[j];
-                                        }
-                                        else if (j == 6)
-                                        {
-                                            tempStr += "<br>...";
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                clip.DisplayValue = tempStr;
-
-
-                                if (array.Length > 5)
-
-                                {
-                                    clip.Height = 6 * 22;
-                                }
-                                else if (array.Length > 1)
-                                {
-                                    clip.Height = (array.Length) * 22;
-                                }
-                                else
-                                {
-                                    clip.Height = 35;
-                                }
-                            }
-                            else if ((supportFormat & ClipType.html) != 0)
-                            {
-
-                                clip.ClipValue = htmlStr;
-                                //html内容会固定出现在第16行。
-                                clip.DisplayValue = htmlStr.Split("\r\n".ToCharArray())[16];
-                                clip.Type = HTML_TYPE;
-                                clip.Height = 165;
-                            }
-                            break;
-                        }
-                        catch
-                        {
-
-                        }
-                    }
-
-
-                }
-
                 //处理剪切板文件
                 else if (Clipboard.ContainsText())
                 {
-
-                    for (int i = 0; i < 3; i++)
-                    {
-                        try
-                        {
-
-                            string str = Clipboard.GetText();
-
-                            clip.ClipValue = str;
-                            clip.DisplayValue = str.Replace("<", "&lt;").Replace(">", "&gt;");
-                            clip.Type = TEXT_TYPE;
-
-                            string[] array = clip.DisplayValue.Split('\n');
-
-                            string tempStr = array[0];
-                            if (array.Length > 0)
-                            {
-                                for (int j = 1; j < array.Length; j++)
-                                {
-                                    if (j < 6)
-                                    {
-                                        tempStr += "<br>" + array[j];
-                                    }
-                                    else if (j == 6)
-                                    {
-                                        tempStr += "<br>...";
-                                        break;
-                                    }
-                                }
-                            }
-
-                            clip.DisplayValue = tempStr;
-
-
-                            if (array.Length > 5)
-
-                            {
-                                clip.Height = 6 * 22;
-                            }
-                            else if (array.Length > 1)
-                            {
-                                clip.Height = (array.Length) * 22;
-                            }
-                            else
-                            {
-                                clip.Height = 33;
-                            }
-
-                            break;
-
-                        }
-                        catch
-                        {
-
-
-                        }
-                    }
-
+                    HandClipText(clip);
 
                 }
+                //处理HTML类型
+                else if ((supportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
+                {
+                    HandleClipHtml(clip);
+
+                }
+
+
 
 
 
                 //处理剪切板文件
                 else if ((supportFormat & ClipType.file) != 0 && Clipboard.ContainsFileDropList())
                 {
-                    for (int i = 0; i < 3; i++)
-                    {
-                        try
-                        {
-                            string[] files = (string[])Clipboard.GetData(DataFormats.FileDrop);
-
-                            clip.Type = FILE_TYPE;
-                            clip.ClipValue = string.Join(",", files);
-
-
-
-                            //组装显示内容，按文件名分行
-                            string displayStr = files.Length + " file";
-                            if (files.Length > 1)
-                            {
-                                displayStr += "s";
-                            }
-                            int j = 0;
-                            foreach (string str in files)
-                            {
-                                if (j < 5)
-                                {
-                                    displayStr += "<br>" + Path.GetFileName(str);
-                                }
-                                else if (j == 5)
-                                {
-                                    displayStr += "<br>...";
-                                    break;
-                                }
-                                j++;
-                            }
-
-
-                            clip.DisplayValue = displayStr;
-
-                            if (files.Length >= 5)
-
-                            {
-                                clip.Height = 6 * 22;
-                            }
-                            else
-                            {
-                                clip.Height = (files.Length + 1) * 22;
-                            }
-
-                            break;
-                        }
-                        catch
-                        {
-
-
-                        }
-                    }
+                    HandleClipFile(clip);
 
                 }
 
@@ -1029,7 +759,7 @@ namespace ClipOne.view
                 if (hotkeyAtom == wParam.ToInt32())
                 {
 
-                    ShowList();
+                    ShowWindowAndList();
 
 
                 }
@@ -1037,6 +767,9 @@ namespace ClipOne.view
             }
             return IntPtr.Zero;
         }
+
+       
+
 
         /// <summary>
         /// 增加条目
@@ -1074,38 +807,22 @@ namespace ClipOne.view
         /// <summary>
         /// 显示窗口并列出所有条目
         /// </summary>
-        private void ShowList()
+        private void ShowWindowAndList()
         {
-            activeHwnd = WinAPIHelper.GetForegroundWindow();
-            WinAPIHelper.POINT point = new WinAPIHelper.POINT();
-
-            int displayHeight = 0;
-
-            for (int i = 0; i < clipList.Count; i++)
-            {
-
-                displayHeight += clipList[i].Height;
-
-            }
             displayList.Clear();
-
+            int displayHeight = 0;
             for (int i = 0; i < clipList.Count; i++)
             {
                 clipList[i].SourceId = i;
                 displayList.Add(clipList[i]);
+                displayHeight += clipList[i].Height;
             }
 
+            ShowList();
 
-            string json = JsonConvert.SerializeObject(clipList, displayJsonSettings);
-
-            json = HttpUtility.UrlEncode(json);
-
-            selectedIndex = 1;
-
-            webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("showList('" + json + "',1)");
-
-           
-
+            activeHwnd = WinAPIHelper.GetForegroundWindow();
+            WinAPIHelper.POINT point = new WinAPIHelper.POINT();
+             
             if (WinAPIHelper.GetCursorPos(out point))
             {
                 if (clipList.Count == 0)
@@ -1145,13 +862,32 @@ namespace ClipOne.view
 
                 DiyShow();
 
-               
+
 
                 webView.Focus();
 
             }
 
 
+        }
+
+        private void ShowList()
+        {
+            displayList.Clear();
+            int displayHeight = 0;
+            for (int i = 0; i < clipList.Count; i++)
+            {
+                clipList[i].SourceId = i;
+                displayList.Add(clipList[i]);
+                displayHeight += clipList[i].Height;
+            }
+            string json = JsonConvert.SerializeObject(displayList, displayJsonSettings);
+
+            json = HttpUtility.UrlEncode(json);
+
+            selectedIndex = 1;
+
+            webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("showList('" + json + "',1)");
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -1178,7 +914,7 @@ namespace ClipOne.view
                 WinAPIHelper.RemoveClipboardFormatListener(wpfHwnd);
                 HotKeyManager.UnregisterHotKey(wpfHwnd, hotkeyAtom);
                 HotKeyManager.GlobalDeleteAtom(hotkeyAtomStr);
-               
+
             }
 
         }
@@ -1256,7 +992,7 @@ namespace ClipOne.view
 
                 //从显示列表中获取记录，并根据sourceId从对保存列表中的该条记录做相应处理
                 ClipModel result = displayList[id];
-               
+
                 clipList.RemoveAt(result.SourceId);
 
                 if (result.Type == FILE_TYPE)
@@ -1266,12 +1002,12 @@ namespace ClipOne.view
                     {
                         if (!File.Exists(str))
                         {
-                                this.Dispatcher.Invoke(
-                             new Action(
-                           delegate
-                           {
-                               MessageBox.Show("源文件缺失，粘贴失败！");
-                           }));
+                            this.Dispatcher.Invoke(
+                         new Action(
+                       delegate
+                       {
+                           MessageBox.Show("源文件缺失，粘贴失败！");
+                       }));
                             return;
                         }
                     }
@@ -1301,8 +1037,8 @@ namespace ClipOne.view
               new Action(
             delegate
             {
-                if(preview.IsVisible)
-                preview.Hide();
+                if (preview.IsVisible)
+                    preview.Hide();
             }));
 
 
@@ -1362,14 +1098,15 @@ namespace ClipOne.view
         /// </summary>
         private void WindowLostFocusHandle()
         {
-             
+
             lastSelectedIndex = -1;
             isPressedShift = false;
             if (preview != null)
             {
                 preview.Hide();
             }
-            if (!isDevTools) {
+            if (!isDevTools)
+            {
                 DiyHide();
             }
 
@@ -1381,9 +1118,9 @@ namespace ClipOne.view
         {
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.F)
             {
-                if (!stack.IsVisible)
+                if (!searchStack.IsVisible)
                 {
-                    stack.Visibility = Visibility.Visible;
+                    searchStack.Visibility = Visibility.Visible;
                 }
                 if (!txtSearch.IsFocused)
                 {
@@ -1406,11 +1143,11 @@ namespace ClipOne.view
                     {
                         if (lastSelectedIndex == -1)
                         {
-                            lastSelectedIndex = keyNum-1;
+                            lastSelectedIndex = keyNum - 1;
                         }
                         else
                         {
-                            int currentKey = keyNum-1;
+                            int currentKey = keyNum - 1;
 
                             SetBatchPatse(currentKey, lastSelectedIndex);
                             DiyHide();
@@ -1475,7 +1212,7 @@ namespace ClipOne.view
                 for (int i = lastIndex; i <= nowIndex; i++)
                 {
                     var result = displayList[i];
-                   
+
                     clipList.RemoveAt(result.SourceId);
                     if (result.Type == FILE_TYPE)
                     {
@@ -1506,7 +1243,7 @@ namespace ClipOne.view
                 for (int i = lastIndex; i >= nowIndex; i--)
                 {
                     var result = clipList[lastIndex];
-                   
+
                     clipList.RemoveAt(result.SourceId);
                     if (result.Type == FILE_TYPE)
                     {
@@ -1582,7 +1319,7 @@ namespace ClipOne.view
         private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
 
-            if (stack.Visibility != Visibility.Visible)
+            if (searchStack.Visibility != Visibility.Visible)
             {
                 return;
             }
@@ -1598,11 +1335,11 @@ namespace ClipOne.view
                 }
             }
             string json = JsonConvert.SerializeObject(displayList, displayJsonSettings);
-           
+
             json = HttpUtility.UrlEncode(json);
 
             selectedIndex = (value == "") ? 1 : 0;
-           
+
             webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("showList('" + json + "'," + selectedIndex + ")");
 
 
@@ -1620,25 +1357,25 @@ namespace ClipOne.view
                 {
                     txtSearch.Clear();
                 }
-                if (stack.IsVisible)
+                if (searchStack.IsVisible)
                 {
-                    stack.Visibility = Visibility.Collapsed;
+                    searchStack.Visibility = Visibility.Collapsed;
                 }
-                
+
                 this.Height -= 35;
-                
-                
+
+
             }
 
             else if (e.Key == Key.Enter)
             {
-               
+
                 PasteValueByIndex(selectedIndex);
             }
         }
 
         /// <summary>
-        /// 添加剪切板监听，更改窗体属性， 不在alt+tab中显示
+        /// 添加剪切板监听， 更改窗体属性,不在alt+tab中显示
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1650,7 +1387,7 @@ namespace ClipOne.view
             wpfHwnd = (new WindowInteropHelper(this)).Handle;
             WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
 
-            int exStyle = (int)WinAPIHelper.GetWindowLong(wpfHwnd,  -20);
+            int exStyle = (int)WinAPIHelper.GetWindowLong(wpfHwnd, -20);
             exStyle |= (int)0x00000080;
             WinAPIHelper.SetWindowLong(wpfHwnd, -20, exStyle);
 
@@ -1664,7 +1401,7 @@ namespace ClipOne.view
 
             this.Activate();
             this.Opacity = 100;
-            
+
         }
 
         /// <summary>
@@ -1672,38 +1409,38 @@ namespace ClipOne.view
         /// </summary>
         private void DiyHide()
         {
-            
+
             this.Topmost = false;
             WinAPIHelper.SetForegroundWindow(activeHwnd);
-            if (stack.IsVisible)
+            if (searchStack.IsVisible)
             {
                 //先隐藏后clear,防止多余的查询操作
-                stack.Visibility = Visibility.Collapsed;
+                searchStack.Visibility = Visibility.Collapsed;
                 txtSearch.Clear();
-                
+
                 this.Height -= 35;
             }
             webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("scrollTop()");
-            
-            
+
+
             this.Opacity = 0;
 
-           
-            
+
+
         }
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Source is TextBox)
             {
-                if (e.Key == Key.Down&& displayList.Count > 0)
+                if (e.Key == Key.Down && displayList.Count > 0)
                 {
                     if (txtSearch.Text == "")
                     {
                         selectedIndex = 0;
                         webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("selectItem(0)");
                     }
-                   
+
                     webView.Focus();
                     e.Handled = true;
 
@@ -1726,7 +1463,7 @@ namespace ClipOne.view
                 {
                     if (selectedIndex == 0)
                     {
-                        if (stack.Visibility == Visibility.Visible)
+                        if (searchStack.Visibility == Visibility.Visible)
                         {
                             txtSearch.Focus();
                         }
