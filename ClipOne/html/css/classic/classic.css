@@ -38,11 +38,25 @@
 }
 
 
+ /*table*/
+.table_main {
+    width: 440px;
+    cursor: default;
+	  background-color: #EbF1Fb;
+   border: 1px;
+   border-collapse:collapse;
+    table-layout: fixed;
+   
+}
+
 /*表格边框*/
 td{
 	border-top: 1px solid #ddd;
 	border-bottom: 1px solid #ddd; 
 	min-height: 25px;
+	overflow: hidden; 
+	text-overflow: ellipsis; 
+	white-space: nowrap;
 
 }
 
@@ -50,6 +64,7 @@ td{
 .td_content {
     cursor: default;
     width: 398px;
+	
     margin-left: 0px !important;
     margin-right: 0px !important;
     padding-left: 3px !important;
@@ -87,22 +102,12 @@ td{
      border-radius: 2px;
 	 
 }
- .tr_hover > td ,.tr:hover >td{
+ 
+  .tr_hover > td ,.tr:hover >td{
  	 font-size: 14px;
  }
  
 
- /*table*/
-.table_main {
-    width: 440px;
-    cursor: default;
-	  background-color: #EbF1Fb;
-   border: 1px;
-   border-collapse:collapse;
-    table-layout: fixed;
-    word-wrap: break-word;
-}
- 
  
   /*body*/
 	body{

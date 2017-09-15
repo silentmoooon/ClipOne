@@ -227,11 +227,11 @@ namespace ClipOne.service
                     {
                         for (int j = 1; j < array.Length; j++)
                         {
-                            if (j < 6)
+                            if (j < 5)
                             {
                                 tempStr += "<br>" + array[j];
                             }
-                            else if (j == 6)
+                            else if (j == 5&&j<array.Length-1)
                             {
                                 tempStr += "<br>...";
                                 break;

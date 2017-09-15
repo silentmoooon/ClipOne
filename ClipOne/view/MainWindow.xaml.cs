@@ -696,7 +696,7 @@ namespace ClipOne.view
 
         }
 
-
+      
 
         public IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
@@ -704,7 +704,7 @@ namespace ClipOne.view
             //当为剪切板消息时，由于获取数据会有失败的情况，所以循环3次，尽量确保成功
             if (msg == WM_CLIPBOARDUPDATE)
             {
-
+                 
                 if (txtSearch.IsFocused)
                 {
                     return IntPtr.Zero;
@@ -716,12 +716,6 @@ namespace ClipOne.view
                 if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
                 {
                     HandleClipQQ(clip);
-
-                }
-                //处理图片
-                else if ((supportFormat & ClipType.image) != 0 && (Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib)))
-                {
-                    HandleClipImage(clip);
 
                 }
                 //处理剪切板文件
@@ -736,9 +730,13 @@ namespace ClipOne.view
                     HandleClipHtml(clip);
 
                 }
+                //处理图片
+                else if ((supportFormat & ClipType.image) != 0 && (Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib)))
+                {
+                    HandleClipImage(clip);
 
-
-
+                }
+               
 
 
                 //处理剪切板文件
