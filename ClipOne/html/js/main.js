@@ -14,8 +14,22 @@ $(document).ready(function () {
         $(deleteNode).remove();
         clipObj.splice(deleteId, 1);
         $("#rightmenu").css("display", "none");
-        //display();
+		
+       
     });
+
+	$("#searchInput").on("keydown",function(event){
+
+		 if(event.keyCode==70){
+				$("#searchInput").val("");
+				//$("#searchDiv").css("display","none");
+				//callbackObj.addKeyEvent();
+		 }
+	});
+
+	$("#searchInput").on("input",function(event){
+		
+	});
 
 
 });
@@ -28,7 +42,12 @@ document.oncontextmenu = function (e) {
     e.preventDefault();
 };
 
-
+function showSearch(){
+ 
+	$("#searchDiv").css("display","block");
+	$("#searchInput")[0].focus();
+	
+}
 function tdEnter(event) {
 	 
     $("#rightmenu").css("display", "none");

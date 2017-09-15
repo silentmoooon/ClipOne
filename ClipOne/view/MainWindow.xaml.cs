@@ -710,7 +710,7 @@ namespace ClipOne.view
                     return IntPtr.Zero;
                 }
                 ClipModel clip = new ClipModel();
-
+                
 
                 //处理剪切板QQ自定义格式
                 if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
@@ -721,6 +721,7 @@ namespace ClipOne.view
                 //处理剪切板文件
                 else if (Clipboard.ContainsText())
                 {
+                   
                     HandClipText(clip);
 
                 }
@@ -1123,20 +1124,26 @@ namespace ClipOne.view
 
 
         }
-
+        public void AddKeyDownEvent()
+        {
+            webView.KeyDown += Window_KeyDown;
+        }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.F)
             {
-                if (!searchStack.IsVisible)
-                {
-                    searchStack.Visibility = Visibility.Visible;
-                }
-                if (!txtSearch.IsFocused)
-                {
-                    txtSearch.Focus();
-                }
+                //if (!searchStack.IsVisible)
+                //{
+                //    searchStack.Visibility = Visibility.Visible;
+                //}
+                //if (!txtSearch.IsFocused)
+                //{
+                //    txtSearch.Focus();
+                //}
+                
+                webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("showSearch()");
+                webView.KeyDown -= Window_KeyDown;
                 this.Height += 35;
                 return;
             }

@@ -191,11 +191,12 @@ namespace ClipOne.service
             {
                 try
                 {
-
+                   
                     string textStr = Clipboard.GetText();
 
                     if ((MainWindow.supportFormat&ClipType.html)!=0&& Clipboard.ContainsData(DataFormats.Html))
                     {
+                        
                         try
                         {
                             string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();

@@ -69,6 +69,11 @@ namespace ClipOne.service
             window.selectedIndex = id;
         }
 
+        public void AddKeyEvent()
+        {
+            window.AddKeyDownEvent();
+        }
+
         public void ChangeWindowHeight(double height, string colorStr)
         {
 
