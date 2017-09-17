@@ -187,6 +187,8 @@ namespace ClipOne.view
         public int selectedIndex = -1;
 
 
+        public bool isSearchMode = false;
+
         /// <summary>
         /// 预览窗口
         /// </summary>
@@ -1126,29 +1128,19 @@ namespace ClipOne.view
         }
         public void AddKeyDownEvent()
         {
+
             webView.KeyDown += Window_KeyDown;
+            webView.KeyUp += Window_KeyUp;
         }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.F)
+
+            if (isSearchMode)
             {
-                //if (!searchStack.IsVisible)
-                //{
-                //    searchStack.Visibility = Visibility.Visible;
-                //}
-                //if (!txtSearch.IsFocused)
-                //{
-                //    txtSearch.Focus();
-                //}
                 
-                webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("showSearch()");
-                webView.KeyDown -= Window_KeyDown;
-                this.Height += 35;
                 return;
             }
-
-
             if (displayList.Count > 0)
             {
 
@@ -1314,6 +1306,32 @@ namespace ClipOne.view
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {
 
+
+            if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.F)
+            {
+                //if (!searchStack.IsVisible)
+                //{
+                //    searchStack.Visibility = Visibility.Visible;
+                //}
+                //if (!txtSearch.IsFocused)
+                //{
+                //    txtSearch.Focus();
+                //}
+
+                if (!isSearchMode) { 
+                webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("showSearch()");
+                isSearchMode = true;
+                this.Height += 35;
+                }
+                else
+                {
+                    webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("closeSearch()");
+                    isSearchMode = false;
+                    this.Height -= 35;
+                }
+                return;
+            }
+
             if (e.Key == Key.Back && row0.Height.Value != 0)
             {
                 txtSearch.Focus();
@@ -1415,10 +1433,12 @@ namespace ClipOne.view
 
         private void DiyShow()
         {
+            this.Show();
             this.Topmost = true;
 
             this.Activate();
-            this.Opacity = 100;
+            //this.Opacity = 100;
+            
 
         }
 
@@ -1441,65 +1461,66 @@ namespace ClipOne.view
             webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("scrollTop()");
 
 
-            this.Opacity = 0;
-
+            // this.Opacity = 0;
+            this.Hide();
+            Console.WriteLine("hide");
 
 
         }
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Source is TextBox)
-            {
-                if (e.Key == Key.Down && displayList.Count > 0)
-                {
-                    if (txtSearch.Text == "")
-                    {
-                        selectedIndex = 0;
-                        webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("selectItem(0)");
-                    }
+            //if (e.Source is TextBox)
+            //{
+            //    if (e.Key == Key.Down && displayList.Count > 0)
+            //    {
+            //        if (txtSearch.Text == "")
+            //        {
+            //            selectedIndex = 0;
+            //            webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("selectItem(0)");
+            //        }
 
-                    webView.Focus();
-                    e.Handled = true;
+            //        webView.Focus();
+            //        e.Handled = true;
 
-                }
+            //    }
 
-            }
-            else
-            {
-                if (e.Key == Key.Down)
-                {
-                    if (selectedIndex < displayList.Count - 1)
-                    {
-                        selectedIndex++;
-                        webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("selectItem(" + selectedIndex + ")");
-                    }
-                    e.Handled = true;
+            //}
+            //else
+            //{
+            //    if (e.Key == Key.Down)
+            //    {
+            //        if (selectedIndex < displayList.Count - 1)
+            //        {
+            //            selectedIndex++;
+            //            webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("selectItem(" + selectedIndex + ")");
+            //        }
+            //        e.Handled = true;
 
-                }
-                else if (e.Key == Key.Up)
-                {
-                    if (selectedIndex == 0)
-                    {
-                        if (searchStack.Visibility == Visibility.Visible)
-                        {
-                            txtSearch.Focus();
-                        }
-                    }
-                    if (selectedIndex > 0)
-                    {
-                        selectedIndex--;
-                        webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("selectItem(" + selectedIndex + ")");
-                    }
+            //    }
+            //    else if (e.Key == Key.Up)
+            //    {
+            //        if (selectedIndex == 0)
+            //        {
+            //            if (searchStack.Visibility == Visibility.Visible)
+            //            {
+            //                txtSearch.Focus();
+            //            }
+            //        }
+            //        if (selectedIndex > 0)
+            //        {
+            //            selectedIndex--;
+            //            webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("selectItem(" + selectedIndex + ")");
+            //        }
 
-                    e.Handled = true;
-                }
-                else
-                {
+            //        e.Handled = true;
+            //    }
+            //    else
+            //    {
 
-                    e.Handled = false;
-                }
-            }
+            //        e.Handled = false;
+            //    }
+            //}
         }
 
 

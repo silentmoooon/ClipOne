@@ -9,7 +9,7 @@
         xmlns:cefSharp="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
         xmlns:local="clr-namespace:ClipOne.view"
         mc:Ignorable="d"
-        Title="MainWindow"   Margin="0,0,0,0" Padding="0,0,0,0"   Height="600" Width="446"  Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None" Background="#ffffff" KeyUp="Window_KeyUp" ResizeMode="NoResize" Topmost="True" Visibility="Visible" ShowInTaskbar="False" MaxWidth="448" MaxHeight="600" SourceInitialized="Window_SourceInitialized" PreviewKeyDown="Window_PreviewKeyDown" >
+        Title="MainWindow"   Margin="0,0,0,0" Padding="0,0,0,0" Opacity="1"  Height="600" Width="446"  Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None" Background="#ffffff" ResizeMode="NoResize" Topmost="True" Visibility="Visible" ShowInTaskbar="False" MaxWidth="448" MaxHeight="600" SourceInitialized="Window_SourceInitialized" PreviewKeyDown="Window_PreviewKeyDown" >
 
     <Border BorderThickness="1" BorderBrush="#A9CBEE" CornerRadius="2"   Name="top">
 

@@ -178,3 +178,10 @@ td{
    
 }
 a { text-decoration:none} 
+
+#searchDiv{
+	height:35px;
+}
+#searchInput{
+	margin-top:6px;
+}

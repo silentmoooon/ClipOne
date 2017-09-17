@@ -4,6 +4,7 @@ var deleteId = -1;
 var deleteNode = '';
 var clipObj = [];
 var lastSelectedIndex = -1;
+var searchMode='';
 
 $(document).ready(function () {
 
@@ -12,29 +13,30 @@ $(document).ready(function () {
         $("#tr" + deleteId).parent().addClass("tr_hover");
         callbackObj.deleteClip(deleteId / 1);
         $(deleteNode).remove();
-        clipObj.splice(deleteId, 1);
+       // clipObj.splice(deleteId, 1);
         $("#rightmenu").css("display", "none");
 		
        
     });
 
-	$("#searchInput").on("keydown",function(event){
-
-		 if(event.keyCode==70){
+	$(".searchInput").on("keydown",function(event){
+		 
+		 if(event.keyCode==70&&searchMode==true){
+				 
 				$("#searchInput").val("");
-				//$("#searchDiv").css("display","none");
-				//callbackObj.addKeyEvent();
+				$("#searchDiv").css("display","none");
+				callbackObj.addKeyEvent();
+				searchMode=false;
 		 }
 	});
 
 	$("#searchInput").on("input",function(event){
-		
+			searchMode=true;
 	});
 
 
 });
-
-
+ 
 document.onselectstart = function () {
     event.returnValue = false;
 }
@@ -44,8 +46,10 @@ document.oncontextmenu = function (e) {
 
 function showSearch(){
  
+	 
 	$("#searchDiv").css("display","block");
 	$("#searchInput")[0].focus();
+	 
 	
 }
 function tdEnter(event) {
@@ -119,7 +123,7 @@ function showList(json, selectIndex) {
   
     displayData();
 	
-	 
+	 $(".table_main")[0].focus();
 
     if (clipObj.length > 0) {
 
