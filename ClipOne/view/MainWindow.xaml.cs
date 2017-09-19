@@ -769,6 +769,18 @@ namespace ClipOne.view
                 {
                     return IntPtr.Zero;
                 }
+                if (clip.Type == TEXT_TYPE)
+                {
+                  for(int i = 0; i < clipList.Count; i++)
+                    {
+                        if (clipList[i].Type == TEXT_TYPE && clipList[i].ClipValue == clip.ClipValue)
+                        {
+                           
+                            clipList.RemoveAt(i);
+                            break;
+                        }
+                    }
+                }
 
                 EnQueue(clip);
 
