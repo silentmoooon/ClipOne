@@ -1,9 +1,9 @@
-var timeout = '';
+var previewTimeout = '';
 var selectTimeout = '';
 var deleteId = -1;
 var deleteNode = '';
 var clipObj = [];
-var displayObj = [];
+//var displayObj = [];
 var lastSelectedIndex = -1;
 var selectIndex = 0;
 var searchMode = false;
@@ -104,7 +104,7 @@ $(document).ready(function () {
         $("#tr" + deleteId).parent().addClass("tr_hover");
         callbackObj.deleteClip(deleteId / 1);
         $(deleteNode).remove();
-        // clipObj.splice(deleteId, 1);
+        
         $("#rightmenu").css("display", "none");
 
 
@@ -113,8 +113,8 @@ $(document).ready(function () {
 
 
     $("#searchInput").on("input", function (event) {
-        console.log("input")
-        displayObj = [];
+       
+       // displayObj = [];
         var value = $("#searchInput").val().toLowerCase();
         callbackObj.search(value);
         //for(var i=0;i<clipObj.length;i++){
@@ -158,7 +158,7 @@ function tdEnter(event) {
         callbackObj.selectIndex(index);
     }, 200);
     if (clipObj[index].Type == "image") {
-        timeout = setTimeout(function () {
+        previewTimeout = setTimeout(function () {
 
             callbackObj.preview(index);
         }, 500);
@@ -169,8 +169,8 @@ function tdOut() {
 
     if (selectTimeout)
         clearTimeout(selectTimeout);
-    if (timeout)
-        clearTimeout(timeout);
+    if (previewTimeout)
+        clearTimeout(previewTimeout);
 
     callbackObj.hidePreview();
 }

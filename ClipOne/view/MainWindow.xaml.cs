@@ -650,6 +650,11 @@ namespace ClipOne.view
             File.WriteAllText(settingsPath, json);
         }
 
+
+        /// <summary>
+        /// 修改透明度
+        /// </summary>
+        /// <param name="value"></param>
         public void ChangeOpacity(double value)
         {
             opacityValue = 1 - value * 0.02;
@@ -709,7 +714,15 @@ namespace ClipOne.view
         }
 
 
-
+        /// <summary>
+        /// 主要用来处理剪切板消息和热键
+        /// </summary>
+        /// <param name="hwnd"></param>
+        /// <param name="msg"></param>
+        /// <param name="wParam"></param>
+        /// <param name="lParam"></param>
+        /// <param name="handled"></param>
+        /// <returns></returns>
         public IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
 
