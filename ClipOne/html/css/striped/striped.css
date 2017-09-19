@@ -1,0 +1,205 @@
+
+/*全局字体*/
+* {
+    font-family: "Microsoft YaHei";
+    font-size: 12px;
+	 
+}
+/* 滚动条*/
+::-webkit-scrollbar { 
+    width: 4px;
+    opacity: 0.1;
+}
+
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.3);
+    border-radius: 10px; /*滚动条的背景区域的圆角*/
+    background-color: red; /*滚动条的背景颜色*/
+}
+
+::-webkit-scrollbar-track-piece {
+    background-color: #EbF1Fb;
+    margin: -2px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #aaa;
+    min-height: 150px;
+    min-width: 150px;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:vertical:hover {
+    background: #555555
+}
+
+::-webkit-scrollbar-thumb:horizontal:hover {
+    background: #555555
+}
+
+
+ /*table*/
+.table_main {
+    width: 440px;
+    cursor: default;
+	  background-color: transparent;
+   border: 1px;
+   border-collapse:collapse;
+    table-layout: fixed;
+	border-spacing: 0;
+   
+}
+.table_main th,
+.table_main td {
+  padding: 4px 5px;
+}
+.table_main tbody > tr:nth-child(odd) > td,
+.table_main tbody > tr:nth-child(odd) > th {
+  background-color: #f9f9f9;
+}
+
+ 
+.table_main th,
+.table_main td {
+  
+  line-height: 20px;
+  text-align: left;
+  vertical-align: top;
+  border-top: 1px solid #dddddd;
+}
+
+/*表格边框*/
+td{
+	border-top: 1px solid #ddd;
+	border-bottom: 1px solid #ddd; 
+	min-height: 25px;
+	overflow: hidden; 
+	text-overflow: ellipsis; 
+	white-space: nowrap;
+
+}
+
+/*内容表格*/
+.td_content {
+    cursor: default;
+    width: 398px;
+	
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+    padding-left: 3px !important;
+    padding-right: 5px !important;
+    padding-top: 8px;
+	padding-bottom: 8px;
+	
+}
+
+/*索引表格*/
+.td_index {
+    width: 25px !important;
+    vertical-align: middle !important;
+    text-align: center !important;
+    margin: 0px !important;
+    padding: 0px !important;
+ 
+}
+
+/*图片*/
+.td_content > img,.image {
+    max-height: 150px;
+    max-width: 390px;
+    vertical-align: middle;
+    text-align: left;
+    margin: 0px !important;
+    padding: 0px !important;
+	
+}
+ 
+
+ /*鼠标悬浮*/
+.tr_hover,.tr:hover {
+    
+	 
+}
+ 
+  .tr_hover > td ,.tr:hover >td{
+ 	 font-size: 14px;
+ }
+ 
+
+ 
+  /*body*/
+	body{
+	background-color: #EbF1Fb;
+	overflow-x: hidden;
+	margin-left: 1px;
+	margin-top:1px;
+	margin-right: 0px;
+	margin-bottom: 2px;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    display: none;
+    float: left;
+    width: 100px;
+	height: 40px;
+    padding: 5px 0;
+    margin: 2px 0 0;
+    list-style: none;
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    *border-right-width: 2px;
+    *border-bottom-width: 2px;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+    -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    -webkit-background-clip: padding-box;
+    -moz-background-clip: padding;
+    background-clip: padding-box;
+}
+.dropdown-menu >ul{
+	padding-left: 5px;
+	margin-left: 5px;
+	width: 80px;
+}
+.dropdown-menu.pull-right {
+    right: 0;
+    left: auto;
+}
+
+
+.dropdown-menu>ul>li{
+	list-style:none
+}
+.dropdown-menu >ul > li > a {
+
+    display: block;
+    padding: 3px 20px;
+    clear: both;
+    font-weight: normal;
+    line-height: 20px;
+    color: #333333;
+    white-space: nowrap;
+}
+
+.dropdown-menu >ul> li > a:hover, .dropdown-menu>ul > li > a:focus{
+    text-decoration: none;
+    color: #ffffff;
+    background-color: #0078d7;
+   
+}
+a { text-decoration:none} 
+
+#searchDiv{
+	height:35px;
+}
+#searchInput{
+	margin-top:6px;
+}

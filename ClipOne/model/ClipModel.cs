@@ -19,7 +19,7 @@ namespace ClipOne.model
         public string ClipValue { get; set; }
 
         /// <summary>
-        ///  对于QQ和FILE类型，用该字段做显示，ClipValue做赋值，其他类型的既显示又赋值
+        ///  显示的值
         /// </summary>
         public string DisplayValue { get; set; }
 
@@ -27,9 +27,6 @@ namespace ClipOne.model
         /// 源记录索引，用于在查询结果保留源记录的索引
         /// </summary>
         public int SourceId { get; set; }
-        /// <summary>
-        /// 大概需要的显示高度
-        /// </summary>
-        public int Height { get; set; }
+        
     }
 }

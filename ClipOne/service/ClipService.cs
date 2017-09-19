@@ -208,7 +208,7 @@ namespace ClipOne.service
                                 //html内容会固定出现在第16行。
                                 clip.DisplayValue = htmlStr.Split("\r\n".ToCharArray())[16];
                                 clip.Type = HTML_TYPE;
-                                clip.Height = 165;
+                                
                                 return;
                             }
                            
@@ -241,22 +241,7 @@ namespace ClipOne.service
                     }
 
                     clip.DisplayValue = tempStr;
-
-
-                    if (array.Length > 5)
-
-                    {
-                        clip.Height = 6 * 22;
-                    }
-                    else if (array.Length > 1)
-                    {
-                        clip.Height = (array.Length) * 22;
-                    }
-                    else
-                    {
-                        clip.Height = 33;
-                    }
-
+ 
                     return;
 
                 }
@@ -305,16 +290,7 @@ namespace ClipOne.service
 
                     clip.DisplayValue = displayStr;
 
-                    if (files.Length >= 5)
-
-                    {
-                        clip.Height = 6 * 22;
-                    }
-                    else
-                    {
-                        clip.Height = (files.Length + 1) * 22;
-                    }
-
+                    
                     break;
                 }
                 catch
@@ -340,8 +316,7 @@ namespace ClipOne.service
                     //html内容会固定出现在第16行。
                     clip.DisplayValue = htmlStr.Split("\r\n".ToCharArray())[16];
                     clip.Type = HTML_TYPE;
-                    clip.Height = 165;
-
+                    
                     break;
                 }
                 catch
@@ -366,11 +341,7 @@ namespace ClipOne.service
                     clip.Type = IMAGE_TYPE;
                     clip.ClipValue = path;
                     clip.DisplayValue = path;
-                    clip.Height = (int)bs.Height;
-                    if (bs.Height > 165)
-                    {
-                        clip.Height = 165;
-                    }
+                    
                     break;
 
                 }
@@ -435,7 +406,7 @@ namespace ClipOne.service
                         htmlStr = doc.DocumentNode.OuterHtml;
                     }
                     clip.DisplayValue = htmlStr;
-                    clip.Height = 165;
+                    
                     break;
 
 

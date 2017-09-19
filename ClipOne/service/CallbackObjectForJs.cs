@@ -21,14 +21,27 @@ namespace ClipOne.service
         /// 用于JS回调的方法，以粘贴条目到活动窗口
         /// </summary>
         /// <param name="msg"></param>
-        public void PasteValue(string id)
+        public void PasteValue(int id)
         {
 
             if (!MainWindow.isDevTools) { 
-            window.PasteValueByIndex(int.Parse(id));
+            window.PasteValueByIndex(id);
             }
 
-        } 
+        }
+        /// <summary>
+        /// 用于JS回调的方法，以粘贴条目到活动窗口
+        /// </summary>
+        /// <param name="msg"></param>
+        public void PasteValueByRange(int firstId,int currentId)
+        {
+
+            if (!MainWindow.isDevTools)
+            {
+                window.PasteValueByRange(firstId,currentId);
+            }
+
+        }
 
         /// <summary>
         /// 用于JS回调的方法，以预览图片
@@ -69,30 +82,19 @@ namespace ClipOne.service
             window.selectedIndex = id;
         }
 
-        public void ExitSearchMode()
-        {
-            window.ExitSearchMode();
-        }
-
+        
         public void Search(string value)
         {
             window.Search(value);
         }
-        public void ChangeWindowHeight(double height, string colorStr)
+        public void ChangeWindowHeight(double height)
         {
-
-            string[] str = colorStr.Replace("rgb(", "").Replace(")", "").Split(',');
-            int r = int.Parse(str[0].Trim());
-            int g = int.Parse(str[1].Trim());
-            int b = int.Parse(str[2].Trim());
-            SolidColorBrush brush = new SolidColorBrush(Color.FromRgb((byte)r, (byte)g, (byte)b));
-
-
+ 
             window.Dispatcher.Invoke(
         new Action(
       delegate
       {
-          window.Height = height + 35;
+          window.Height = height+25 ;
 
       }));
 
