@@ -6,13 +6,10 @@ using Microsoft.Win32;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
- 
+
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Xml;
@@ -50,6 +47,8 @@ namespace ClipOne.service
         /// 缓存目录
         /// </summary>
         public static string cacheDir = "cache";
+
+
         /// <summary>
         /// 设置开机启动
         /// </summary>
@@ -104,7 +103,7 @@ namespace ClipOne.service
         /// 设置条目到剪切板
         /// </summary>
         /// <param name="result"></param>
-        public static void SetValueToClip(ClipModel result)
+        public static void SetValueToClipboard(ClipModel result)
         {
             if (result.Type==IMAGE_TYPE)
             {
@@ -185,6 +184,11 @@ namespace ClipOne.service
             }
 
         }
+
+        /// <summary>
+        /// 处理剪切板文字类型
+        /// </summary>
+        /// <param name="clip"></param>
         public static void HandClipText(ClipModel clip)
         {
             for (int i = 0; i < 3; i++)
@@ -253,6 +257,10 @@ namespace ClipOne.service
             }
         }
 
+        /// <summary>
+        /// 处理剪切板文件类型
+        /// </summary>
+        /// <param name="clip"></param>
         public static void HandleClipFile(ClipModel clip)
         {
             for (int i = 0; i < 3; i++)
@@ -301,6 +309,11 @@ namespace ClipOne.service
             }
         }
 
+
+        /// <summary>
+        /// 处理剪切板HTML类型
+        /// </summary>
+        /// <param name="clip"></param>
         public static void HandleClipHtml(ClipModel clip)
         {
             for (int i = 0; i < 3; i++)
@@ -326,6 +339,10 @@ namespace ClipOne.service
             }
         }
 
+        /// <summary>
+        /// 处理剪切板图片类型
+        /// </summary>
+        /// <param name="clip"></param>
         public static void HandleClipImage(ClipModel clip)
         {
             for (int i = 0; i < 3; i++)
@@ -353,6 +370,10 @@ namespace ClipOne.service
             }
         }
 
+        /// <summary>
+        /// 处理剪切板QQ类型
+        /// </summary>
+        /// <param name="clip"></param>
         public static void HandleClipQQ(ClipModel clip)
         {
             for (int i = 0; i < 3; i++)

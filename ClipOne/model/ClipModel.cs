@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ClipOne.model
+﻿namespace ClipOne.model
 {
-   public class ClipModel
+    public class ClipModel
     {
         /// <summary>
         /// 数据类型

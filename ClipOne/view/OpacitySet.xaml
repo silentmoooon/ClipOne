@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ClipOne.view"
         mc:Ignorable="d"
-        Title="透明度" Height="70.45"  Width="300">
+        Title="透明度" Height="70.45"  Width="300" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="23*"/>

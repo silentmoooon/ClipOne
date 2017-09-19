@@ -1,24 +1,21 @@
 var previewTimeout = '';
-var selectTimeout = '';
 var deleteId = -1;
 var deleteNode = '';
 var clipObj = [];
-//var displayObj = [];
-var lastSelectedIndex = -1;
 var selectIndex = 0;
 var searchMode = false;
 var isShiftPressed = false;
-var firstSelectedIndex = -1;
+var lastSelectedIndex = -1;
 
 document.onkeydown = keyDown;
 document.onkeyup = keyUp;
 function keyDown(event) {
 
-    if (event.ctrlKey && event.keyCode == 70) {
+    if (event.ctrlKey && event.keyCode == 70) {  //ctrl+f
         if (!searchMode && clipObj.length > 0) {
             showSearch();
         } else {
-            closeSearch();
+            hideSearch();
             callbackObj.changeWindowHeight($("body").height());
         }
     } else if (event.keyCode == 9) {   //tab键
@@ -28,7 +25,7 @@ function keyDown(event) {
         $("#searchInput")[0].focus();
 
     }
-    else if (event.keyCode == 13) { //回车
+    else if (event.keyCode == 13) { //回车直接粘贴当前选中项
 
         callbackObj.pasteValue(selectIndex);
     }
@@ -55,7 +52,7 @@ function keyDown(event) {
     }
     else if (!searchMode) {
 
-        if (event.shiftKey) {
+        if (event.shiftKey) {    //多条操作
             isShiftPressed = true;
             var key = -1;
             if (event.keyCode >= 49 && event.keyCode <= 57) {  //数字键
@@ -66,18 +63,17 @@ function keyDown(event) {
                 return;
             }
 
-            if (firstSelectedIndex == -1) {
-                firstSelectedIndex = key;
+            if (lastSelectedIndex == -1) {
+                lastSelectedIndex = key;
             } else {
-                callbackObj.pasteValueByRange(firstSelectedIndex, key);
+                callbackObj.pasteValueByRange(lastSelectedIndex, key);
             }
         }
         else if (event.keyCode >= 49 && event.keyCode <= 57) {  //数字键
-
             callbackObj.pasteValue(event.keyCode - 49);
         } else if (event.keyCode >= 65 && event.keyCode <= 90) { //字母键
             callbackObj.pasteValue(event.keyCode - 56);
-        } else if (event.keyCode == 32) {  //空格
+        } else if (event.keyCode == 32) {  //空格直接粘贴第0项
             event.preventDefault();
             callbackObj.pasteValue(0);
         }
@@ -90,8 +86,7 @@ function keyDown(event) {
 function keyUp(event) {
 
     if (event.key == "Shift") {
-
-        firstSelectedIndex = -1;
+        lastSelectedIndex = -1;
         isShiftPressed = false;
         $(".tr_hover").removeClass("tr_hover");
     }
@@ -99,43 +94,36 @@ function keyUp(event) {
 
 $(document).ready(function () {
 
-
     $("#delete").on("click", function () { //删除操作
         $("#tr" + deleteId).parent().addClass("tr_hover");
         callbackObj.deleteClip(deleteId / 1);
         $(deleteNode).remove();
-        
-        $("#rightmenu").css("display", "none");
+
+        $("#rightMenu").css("display", "none");
 
 
     });
 
+    $("#searchInput").on("input", function (event) {  //查找
 
-
-    $("#searchInput").on("input", function (event) {
-       
-       // displayObj = [];
         var value = $("#searchInput").val().toLowerCase();
         callbackObj.search(value);
-        //for(var i=0;i<clipObj.length;i++){
-        //	if(clipObj[i].Type.toLowerCase()==value||clipObj[i].ClipValue.toLowerCase().indexOf(value)>=0){
-        //	int length=displayObj.putsh(clipObj[i]);
-        //	displayObj[length-1].SourceId=i;
-        //	}
-        //}
-        //displayData(displayObj);
+       
     });
 
 
 });
 
+//屏蔽鼠标选择操作
 document.onselectstart = function () {
     event.returnValue = false;
 }
+//屏蔽右键菜单
 document.oncontextmenu = function (e) {
     e.preventDefault();
 };
 
+//显示搜索框
 function showSearch() {
 
     $("#searchDiv").css("display", "block");
@@ -143,78 +131,75 @@ function showSearch() {
     searchMode = true;
     callbackObj.changeWindowHeight($("body").height());
 }
-function closeSearch() {
+//隐藏搜索框
+function hideSearch() {
     scrollTop();
     $("#searchDiv").css("display", "none");
     $(".table_main")[0].focus();
     $("#searchInput").val("");
     searchMode = false;
 }
-function tdEnter(event) {
 
-    $("#rightmenu").css("display", "none");
+//选中时高亮
+function trSelect(event) {
+
+    $("#rightMenu").css("display", "none");
     var index = event.getAttribute('index') / 1;
-    selectTimeout = setTimeout(function () {
-        callbackObj.selectIndex(index);
-    }, 200);
+    selectIndex = index;
+    selectItem(index);
     if (clipObj[index].Type == "image") {
         previewTimeout = setTimeout(function () {
-
             callbackObj.preview(index);
         }, 500);
     }
 }
 
-function tdOut() {
-
-    if (selectTimeout)
-        clearTimeout(selectTimeout);
-    if (previewTimeout)
+//反选
+function trUnselect() {
+    if (previewTimeout) {
         clearTimeout(previewTimeout);
-
+    }
     callbackObj.hidePreview();
 }
 
-function showmenu(e) {
+//显示右键菜单
+function showMenu(e) {
 
-    document.getElementById("rightmenu").style.left = e.pageX + 'px';
-    document.getElementById("rightmenu").style.top = e.pageY + 'px';
-    document.getElementById("rightmenu").style.display = "block";
+    document.getElementById("rightMenu").style.left = e.pageX + 'px';
+    document.getElementById("rightMenu").style.top = e.pageY + 'px';
+    document.getElementById("rightMenu").style.display = "block";
 
 }
 
-
-function hiddenrightmenu() {
-    document.getElementById("rightmenu").style.display = "none";
+//隐藏右键菜单
+function hideMenu() {
+    document.getElementById("rightMenu").style.display = "none";
 }
 
+//滚动到顶部
 function scrollTop() {
 
     window.scrollTo(0, 0);
 }
 
+//数字转换成字母
 function num2key(num) {
 
     return String.fromCharCode(55 + num);
 }
 
+//选中某项
 function selectItem(index) {
 
-    if (lastSelectedIndex != -1) {
-        $("#tr" + lastSelectedIndex).trigger("mouseout");
-        lastSelectedIndex = index;
-        $("#tr" + index).addClass("tr_hover");
+    $(".tr_hover").removeClass("tr_hover");
+    $("#tr" + index).addClass("tr_hover");
 
-        $("#tr" + index).one("mouseout", function () {
-            $("#tr" + index).removeClass("tr_hover");
-
-        });
-    }
 }
 
+//显示记录
 function showList(json, index) {
 
-    firstSelectedIndex = -1;
+    lastSelectedIndex = -1;
     json = decodeURIComponent(json.replace(/\+/g, '%20'));
 
     clipObj = JSON.parse(json);
@@ -225,7 +210,6 @@ function showList(json, index) {
     callbackObj.changeWindowHeight($("body").height());
     if (clipObj.length > 0) {
 
-        lastSelectedIndex = index;
         selectIndex = index;
 
         $("#tr" + index).addClass("tr_hover");
@@ -238,10 +222,9 @@ function showList(json, index) {
 
     }
 
-
-
 }
 
+//显示记录
 function displayData(data) {
 
     var tbody = "";
@@ -266,45 +249,41 @@ function displayData(data) {
             }
             if (data[i].Type == "image") {
 
-                trs = " <tr style='cursor: default' class='tr' id='tr" + i + "' index='" + i + "' onmouseup ='callback(this)'  onmouseenter='tdEnter(this)' onmouseleave='tdOut()'> <td  class='td_content' id='td" + i + "'  > <img class='image' src='../" + data[i].DisplayValue + "' /> </td><td class='td_index'  >" + num + "</td> </tr>";
+                trs = " <tr style='cursor: default' class='tr' id='tr" + i + "' index='" + i + "' onmouseup ='pasteValue(this)'  onmouseenter='trSelect(this)' onmouseleave='trUnselect()'> <td  class='td_content' id='td" + i + "'  > <img class='image' src='../" + data[i].DisplayValue + "' /> </td><td class='td_index'  >" + num + "</td> </tr>";
             } else {  //if (clipObj[i].Type=="html"||clipObj[i].Type == "QQ_Unicode_RichEdit_Format"||clipObj[i].Type=="file")
-                trs = " <tr style='cursor: default' class='tr' id='tr" + i + "' index='" + i + "' onmouseup ='callback(this)'  onmouseenter='tdEnter(this)' onmouseleave='tdOut()'> <td  class='td_content' id='td" + i + "' > " + data[i].DisplayValue + " </td><td class='td_index'  >" + num + "</td> </tr>";
+                trs = " <tr style='cursor: default' class='tr' id='tr" + i + "' index='" + i + "' onmouseup ='pasteValue(this)'  onmouseenter='trSelect(this)' onmouseleave='trUnselect()'> <td  class='td_content' id='td" + i + "' > " + data[i].DisplayValue + " </td><td class='td_index'  >" + num + "</td> </tr>";
 
             }
 
             tbody += trs;
         }
 
-
         $(".myTable").html(tbody);
     }
 
-
-
 }
 
-function callback(e) {
-
+//粘贴选择项
+function pasteValue(e) {
     var event = window.event;
-
     if (event.button == 0) {
-        if (isShiftPressed) {
-            if (firstSelectedIndex == -1) {
+        if (isShiftPressed) {  //多条
+            if (lastSelectedIndex == -1) {
                 $("#tr1").removeClass("tr_hover");
                 $("#" + e.id).addClass("tr_hover");
-                firstSelectedIndex = e.getAttribute('index') / 1;
+                lastSelectedIndex = e.getAttribute('index') / 1;
             } else {
-                callbackObj.pasteValueByRange(firstSelectedIndex, e.getAttribute('index') / 1);
+                callbackObj.pasteValueByRange(lastSelectedIndex, e.getAttribute('index') / 1);
             }
-        } else {
+        } else {   //单条
             $("#tr1").removeClass("tr_hover");
             $("#" + e.id).addClass("tr_hover");
             callbackObj.pasteValue(e.getAttribute('index') / 1);
         }
-    } else if (event.button == 2) {
+    } else if (event.button == 2) { //弹出右键菜单
         deleteNode = e;
         deleteId = e.getAttribute('index');
-        showmenu(event);
+        showMenu(event);
     }
 
 }

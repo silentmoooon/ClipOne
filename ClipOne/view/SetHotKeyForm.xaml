@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="快捷键" Height="204.515" Width="297.968" ResizeMode="NoResize" ShowInTaskbar="False" WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
     <Grid Name="MainGrid">
-        <ComboBox x:Name="cboKey" HorizontalAlignment="Left" Margin="151,54,0,0" VerticalAlignment="Top" Width="70" RenderTransformOrigin="0.44,1.596" Height="30"/>
+        <ComboBox x:Name="cboKey" HorizontalAlignment="Left" Margin="151,58,0,0" VerticalAlignment="Top" Width="70" RenderTransformOrigin="0.44,1.596" Height="23"/>
         <Button x:Name="btnOK" Content="确定" HorizontalAlignment="Left" Margin="45,138,0,0" VerticalAlignment="Top" Width="75" Click="btnOK_Click"/>
         <Button x:Name="btnCancel" Content="取消" HorizontalAlignment="Left" Margin="146,138,0,0" VerticalAlignment="Top" Width="75" Click="btnCancel_Click"/>
         <CheckBox x:Name="cboShift" Content="Shift" HorizontalAlignment="Left" Margin="56,28,0,0" VerticalAlignment="Top" Tag="4"/>

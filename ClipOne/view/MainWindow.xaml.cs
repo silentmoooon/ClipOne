@@ -1,31 +1,20 @@
 ﻿using CefSharp;
 using CefSharp.Wpf;
 using ClipOne.model;
-
+using ClipOne.service;
 using ClipOne.util;
-using Microsoft.Win32;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-
-using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Xml;
-using ClipOne.service;
-using static ClipOne.service.ClipService;
-using HtmlAgilityPack;
 using System.Windows.Resources;
-using System.Windows.Controls;
+using static ClipOne.service.ClipService;
 
 namespace ClipOne.view
 {
@@ -60,6 +49,9 @@ namespace ClipOne.view
         /// </summary>
         private static string defaultHtml = "html\\index.html";
 
+        /// <summary>
+        /// 活动窗口句柄,在显示本窗口前,缓存当前活动窗口
+        /// </summary>
         private IntPtr activeHwnd = IntPtr.Zero;
         /// <summary>
         /// 浏览器
@@ -83,10 +75,10 @@ namespace ClipOne.view
         CallbackObjectForJs cbOjb;
 
         /// <summary>
-        /// 是否显示开发者工具
+        /// 是否不允许隐藏,在打开开发者工具和设置透明度使用
         /// </summary>
-        public static bool isDevTools = false;
- 
+        public static bool isNotAllowHide = false;
+
         /// <summary>
         /// 剪切板事件
         /// </summary>
@@ -174,12 +166,7 @@ namespace ClipOne.view
         /// 用于连续粘贴 ，连续粘贴条目列表
         /// </summary>
         List<ClipModel> batchPasteList = new List<ClipModel>();
-       
 
-        /// <summary>
-        /// 当前选中行
-        /// </summary>
-        public int selectedIndex = -1;
  
         /// <summary>
         /// 预览窗口
@@ -200,12 +187,8 @@ namespace ClipOne.view
 
         }
 
-
-
-
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-
 
             if (!Directory.Exists(cacheDir))
             {
@@ -223,28 +206,27 @@ namespace ClipOne.view
                 InitConfig();
             }
 
-
+            //如果存在持久化记录则加载
             if (File.Exists(storePath))
             {
                 InitStore();
             }
 
-
-
+            //初始化浏览器
             InitWebView();
 
+            //初始化托盘图标
             InitialTray();
 
-
+            //注册热键,如果注册热键失败则弹出热键设置界面
             hotkeyAtom = HotKeyManager.GlobalAddAtom(hotkeyAtomStr);
-
-            //如果注册热键失败则弹出热键设置界面
             bool status = HotKeyManager.RegisterHotKey(wpfHwnd, hotkeyAtom, hotkeyModifier, hotkeyKey);
             if (!status)
             {
                 Hotkey_Click(null, null);
             }
 
+            //初始化预览窗口
             InitPreviewForm();
 
         }
@@ -290,12 +272,16 @@ namespace ClipOne.view
             preview.ShowInTaskbar = false;
             preview.ShowActivated = false;
         }
+
+        /// <summary>
+        /// /加载设置项
+        /// </summary>
         private static void InitConfig()
         {
-            //从持久化文件中读取设置项
+            
             string json = File.ReadAllText(settingsPath);
             settingsMap = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-            if (settingsMap.ContainsKey("startup"))
+            if (settingsMap.ContainsKey("startup"))  //自启动
             {
                 autoStartup = bool.Parse(settingsMap["startup"]);
                 if (autoStartup)
@@ -303,25 +289,25 @@ namespace ClipOne.view
                     SetStartup(autoStartup);
                 }
             }
-            if (settingsMap.ContainsKey("skin"))
+            if (settingsMap.ContainsKey("skin"))  //皮肤
             {
                 skinName = settingsMap["skin"];
             }
-            if (settingsMap.ContainsKey("record"))
+            if (settingsMap.ContainsKey("record"))  //保存记录数
             {
                 currentRecords = int.Parse(settingsMap["record"]);
             }
-            if (settingsMap.ContainsKey("key"))
+            if (settingsMap.ContainsKey("key"))   //快捷键
             {
                 hotkeyKey = int.Parse(settingsMap["key"]);
                 hotkeyModifier = int.Parse(settingsMap["modifier"]);
 
             }
-            if (settingsMap.ContainsKey("format"))
+            if (settingsMap.ContainsKey("format"))  //支持格式
             {
                 supportFormat = (ClipType)int.Parse(settingsMap["format"]);
             }
-            if (settingsMap.ContainsKey("opacity"))
+            if (settingsMap.ContainsKey("opacity"))  //透明度
             {
                 opacityValue = double.Parse(settingsMap["opacity"]);
             }
@@ -350,38 +336,39 @@ namespace ClipOne.view
             webView.BrowserSettings = browserSetting;
             webView.Address = "file:///" + defaultHtml;
 
-
-            cbOjb = new CallbackObjectForJs(this);
+             cbOjb = new CallbackObjectForJs(this);
             webView.RegisterAsyncJsObject("callbackObj", cbOjb);
 
             mainGrid.Children.Add(webView);
 
-
-
-
         }
 
+        /// <summary>
+        /// 定时持久化数据
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void BatchPasteTimer_Tick(object sender, EventArgs e)
         {
             SaveData(clipList, storePath);
         }
 
+
         /// <summary>
         /// 删除指定索引的数据
         /// </summary>
         /// <param name="index"></param>
-        public void DeleteClip(int index)
+        public void DeleteByIndex(int index)
         {
 
 
             //同时删除显示列表和保存列表中的条目
             ClipModel clip = displayList[index];
             displayList.RemoveAt(index);
-
             clipList.RemoveAt(clip.SourceId);
 
+            //重新展示记录并保存当前结果
             ShowList(displayList, 0);
-
             SaveData(clipList, storePath);
 
 
@@ -425,16 +412,14 @@ namespace ClipOne.view
 
             opaSet.Click += (sender, e) =>
             {
-                isDevTools = true;
+                isNotAllowHide = true;
                 ShowWindowAndList();
-                this.Top = 0;
-                this.Left = 100;
-                OpacitySet os = new OpacitySet(this,(1-opacityValue)/0.02);
-                os.Top = this.Top  ;
-                os.Left = this.Left+this.ActualWidth;
+                
+                OpacitySet os = new OpacitySet(this, (1 - opacityValue) / 0.02);
+               
                 os.Topmost = true;
                 os.ShowDialog();
-                isDevTools = false;
+                isNotAllowHide = false;
                 DiyHide();
             };
             devTools.Click += DevTools_Click;
@@ -505,8 +490,6 @@ namespace ClipOne.view
                 }
             }
 
-
-
             //关联菜单项至托盘
             System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { clear, format, separator3, reload, skin, opaSet, separator2, record, hotkey, separator1, devTools, startup, separator0, exit };
             notifyIcon.ContextMenu = new System.Windows.Forms.ContextMenu(childen);
@@ -514,6 +497,11 @@ namespace ClipOne.view
 
         }
 
+        /// <summary>
+        /// 选择支持格式
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void SubFormat_Click(object sender, EventArgs e)
         {
             System.Windows.Forms.MenuItem item = (System.Windows.Forms.MenuItem)sender;
@@ -534,13 +522,18 @@ namespace ClipOne.view
             SaveSettings();
         }
 
+        /// <summary>
+        /// 进入开发者模式
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void DevTools_Click(object sender, EventArgs e)
         {
             System.Windows.Forms.MenuItem item = (System.Windows.Forms.MenuItem)sender;
-            if (!isDevTools)
+            if (!isNotAllowHide)
             {
                 item.Checked = true;
-                isDevTools = true;
+                isNotAllowHide = true;
 
                 webView?.GetBrowser()?.ShowDevTools();
                 ShowWindowAndList();
@@ -549,7 +542,7 @@ namespace ClipOne.view
             {
                 item.Checked = false;
                 webView?.GetBrowser()?.CloseDevTools();
-                isDevTools = false;
+                isNotAllowHide = false;
                 DiyHide();
             }
         }
@@ -784,11 +777,11 @@ namespace ClipOne.view
                 }
                 if (clip.Type == TEXT_TYPE)
                 {
-                  for(int i = 0; i < clipList.Count; i++)
+                    for (int i = 0; i < clipList.Count; i++)
                     {
                         if (clipList[i].Type == TEXT_TYPE && clipList[i].ClipValue == clip.ClipValue)
                         {
-                           
+
                             clipList.RemoveAt(i);
                             break;
                         }
@@ -842,7 +835,7 @@ namespace ClipOne.view
             {
                 if (clipList.Count > currentRecords)
                 {
-                    DeleteClip(currentRecords);
+                    DeleteByIndex(currentRecords);
                 }
 
 
@@ -863,13 +856,24 @@ namespace ClipOne.view
                 displayList.Add(clipList[i]);
 
             }
-            selectedIndex = 1;
+           
 
-            ShowList(displayList, selectedIndex);
+            ShowList(displayList, 1);
 
             activeHwnd = WinAPIHelper.GetForegroundWindow();
-            WinAPIHelper.POINT point = new WinAPIHelper.POINT();
+            webView.Focus();
+            
 
+           
+
+
+        }
+
+
+        public void ChangeWindowHeight(double height)
+        {
+            this.Height = height + 25;
+            WinAPIHelper.POINT point = new WinAPIHelper.POINT();
             if (WinAPIHelper.GetCursorPos(out point))
             {
 
@@ -899,12 +903,8 @@ namespace ClipOne.view
                 DiyShow();
 
 
-
-                webView.Focus();
-
             }
-
-
+          
         }
 
         /// <summary>
@@ -982,48 +982,48 @@ namespace ClipOne.view
             {
                 return;
             }
-             
-                this.Dispatcher.Invoke(
-               new Action(
-             delegate
-             {
-                 DiyHide();
 
-                 preview.Hide();
+            this.Dispatcher.Invoke(
+           new Action(
+         delegate
+         {
+             DiyHide();
+
+             preview.Hide();
 
 
-             }));
+         }));
 
-                //从显示列表中获取记录，并根据sourceId从对保存列表中的该条记录做相应处理
-                ClipModel result = displayList[id];
+            //从显示列表中获取记录，并根据sourceId从对保存列表中的该条记录做相应处理
+            ClipModel result = displayList[id];
 
-                clipList.RemoveAt(result.SourceId);
+            clipList.RemoveAt(result.SourceId);
 
-                if (result.Type == FILE_TYPE)
+            if (result.Type == FILE_TYPE)
+            {
+                string[] files = result.ClipValue.Split(',');
+                foreach (string str in files)
                 {
-                    string[] files = result.ClipValue.Split(',');
-                    foreach (string str in files)
+                    if (!File.Exists(str))
                     {
-                        if (!File.Exists(str))
-                        {
-                            this.Dispatcher.Invoke(
-                         new Action(
-                       delegate
-                       {
-                           MessageBox.Show("源文件缺失，粘贴失败！");
-                       }));
-                            return;
-                        }
+                        this.Dispatcher.Invoke(
+                     new Action(
+                   delegate
+                   {
+                       MessageBox.Show("源文件缺失，粘贴失败！");
+                   }));
+                        return;
                     }
                 }
+            }
 
-                clipList.Insert(0, result);
+            clipList.Insert(0, result);
 
-                //加入待粘贴列表
-                batchPasteList.Clear();
-                batchPasteList.Add(result);
+            //加入待粘贴列表
+            batchPasteList.Clear();
+            batchPasteList.Add(result);
 
-                new Thread(new ParameterizedThreadStart(BatchPaste)).Start(true);
+            new Thread(new ParameterizedThreadStart(BatchPaste)).Start(true);
 
 
         }
@@ -1075,7 +1075,7 @@ namespace ClipOne.view
             //设置剪切板前取消监听
             WinAPIHelper.RemoveClipboardFormatListener(wpfHwnd);
 
-            ClipService.SetValueToClip(result);
+            ClipService.SetValueToClipboard(result);
             //设置剪切板后恢复监听
             WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
 
@@ -1100,19 +1100,19 @@ namespace ClipOne.view
         private void WindowLostFocusHandle()
         {
 
-           
+
             if (preview != null)
             {
                 preview.Hide();
             }
-            if (!isDevTools)
+            if (!isNotAllowHide)
             {
                 DiyHide();
             }
 
 
         }
-       
+
 
         /// <summary>
         /// 根据给点起始、结束索引来设置批量粘贴条目
@@ -1216,7 +1216,7 @@ namespace ClipOne.view
         }
 
         /// <summary>
-        /// 查找
+        /// 查找,如果value为""则显示全部且高亮第1项,如果有值则高亮第0项.
         /// </summary>
         /// <param name="value"></param>
         public void Search(string value)
@@ -1232,9 +1232,8 @@ namespace ClipOne.view
                     displayList.Add(clipList[i]);
                 }
             }
-            selectedIndex = (value == "") ? 1 : 0;
-            ShowList(displayList, selectedIndex);
-           
+            ShowList(displayList, (value == "") ? 1 : 0);
+
         }
 
 
@@ -1260,11 +1259,10 @@ namespace ClipOne.view
 
         }
 
+        //显示窗体,透明度为事先设置的值.
         private void DiyShow()
         {
-             
             this.Topmost = true;
-
             this.Activate();
             this.Opacity = opacityValue;
 
@@ -1278,7 +1276,7 @@ namespace ClipOne.view
         {
             this.Topmost = false;
             WinAPIHelper.SetForegroundWindow(activeHwnd);
-            webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("closeSearch()");
+            webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("hideSearch()");
             this.Opacity = 0;
         }
 

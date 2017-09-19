@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ClipOne.util
+﻿namespace ClipOne.util
 {
-  public  static class  StringUtil
+    public  static class  StringUtil
     {
         /// <summary>
         /// 只替换第一个匹配的字符串

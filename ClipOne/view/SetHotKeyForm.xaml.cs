@@ -103,6 +103,7 @@ namespace ClipOne.view
             hotkeyCboMap[4]=new List<CheckBox>() { cboShift};
             hotkeyCboMap[12]=new List<CheckBox>() { cboShift,cboWin };
             hotkeyCboMap[8]=new List<CheckBox>() { cboWin };
+
             if (HotkeyModifier != 0)
             {
                 foreach(CheckBox cb in hotkeyCboMap[HotkeyModifier])
