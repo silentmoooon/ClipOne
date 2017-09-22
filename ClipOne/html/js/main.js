@@ -281,9 +281,13 @@ function pasteValue(e) {
             callbackObj.pasteValue(e.getAttribute('index') / 1);
         }
     } else if (event.button == 2) { //弹出右键菜单
+		 if (isShiftPressed) { 
+			 callbackObj.pasteValueByRange(0, e.getAttribute('index') / 1);
+		 }else{
         deleteNode = e;
         deleteId = e.getAttribute('index');
         showMenu(event);
+		}
     }
 
 }

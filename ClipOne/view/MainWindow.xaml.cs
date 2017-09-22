@@ -869,7 +869,10 @@ namespace ClipOne.view
 
         }
 
-
+        /// <summary>
+        /// 根据页面高度改变窗体高度
+        /// </summary>
+        /// <param name="height">页面高度</param>
         public void ChangeWindowHeight(double height)
         {
             this.Height = height + 25;
@@ -1019,11 +1022,7 @@ namespace ClipOne.view
 
             clipList.Insert(0, result);
 
-            //加入待粘贴列表
-            batchPasteList.Clear();
-            batchPasteList.Add(result);
-
-            new Thread(new ParameterizedThreadStart(BatchPaste)).Start(true);
+            new Thread(new ParameterizedThreadStart(SinglePaste)).Start(result);
 
 
         }
@@ -1153,7 +1152,7 @@ namespace ClipOne.view
                 }
 
             }
-            else
+            else if(nowIndex<lastIndex)
             {
                 for (int i = lastIndex; i >= nowIndex; i--)
                 {
@@ -1182,6 +1181,11 @@ namespace ClipOne.view
                 }
 
             }
+            else
+            {
+                PasteValueByIndex(nowIndex);
+                return;
+            }
             this.Dispatcher.Invoke(
                          new Action(
                        delegate
@@ -1190,14 +1194,31 @@ namespace ClipOne.view
                            DiyHide();
                            preview.Hide();
                        }));
-            new Thread(new ParameterizedThreadStart(BatchPaste)).Start(false);
+            new Thread(BatchPaste).Start();
         }
 
+        /// <summary>
+        /// 单个粘贴
+        /// </summary>
+        /// <param name="clip"></param>
+        private void SinglePaste(object clip)
+        {
+            this.Dispatcher.Invoke(
+                      new Action(
+                    delegate
+                    {
+
+                        SetValueToClip((ClipModel)clip, true);
+                    }));
+          
+
+
+        }
         /// <summary>
         /// 批量粘贴，由于循环太快、发送粘贴按键消息太慢，故延时200ms
         /// </summary>
         /// <param name="needPause"></param>
-        private void BatchPaste(object needPause)
+        private void BatchPaste()
         {
 
             for (int i = 0; i < batchPasteList.Count; i++)
@@ -1207,7 +1228,13 @@ namespace ClipOne.view
                       new Action(
                     delegate
                     {
-                        SetValueToClip(batchPasteList[i], (bool)needPause);
+
+                        ClipModel clip = batchPasteList[i];
+                        if (i != batchPasteList.Count - 1)
+                        {
+                            clip.ClipValue = clip.ClipValue + "\n";
+                        }
+                        SetValueToClip(clip, false);
                     }));
                 Thread.Sleep(200);
             }

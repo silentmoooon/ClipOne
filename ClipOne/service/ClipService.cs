@@ -159,7 +159,7 @@ namespace ClipOne.service
                     System.Windows.Forms.Clipboard.SetDataObject(data, false);
 
                 }
-                catch   {   }
+                catch{   }
             }
         }
 
