@@ -353,12 +353,22 @@ namespace ClipOne.view
             SaveData(clipList, storePath);
         }
 
-
         /// <summary>
         /// 删除指定索引的数据
         /// </summary>
         /// <param name="index"></param>
-        public void DeleteByIndex(int index, bool NeedShowList)
+        public void DeleteOverClipByIndex(int index)
+        {
+
+            clipList.RemoveAt(index);
+           
+
+        }
+        /// <summary>
+        /// 删除指定索引的数据
+        /// </summary>
+        /// <param name="index"></param>
+        public void DeleteByIndex(int index)
         {
 
 
@@ -366,11 +376,10 @@ namespace ClipOne.view
             ClipModel clip = displayList[index];
             displayList.RemoveAt(index);
             clipList.RemoveAt(clip.SourceId);
-            if (NeedShowList) { 
             //重新展示记录并保存当前结果
             ShowList(displayList, 0);
             SaveData(clipList, storePath);
-            }
+           
 
 
 
@@ -821,7 +830,7 @@ namespace ClipOne.view
 
             clipList.Insert(0, clip);
 
-            await ClearImage();
+            await ClearRecord();
 
 
 
@@ -831,13 +840,20 @@ namespace ClipOne.view
         /// 清理多余条目，如果为图片类型则清理关联的图片
         /// </summary>
         /// <returns></returns>
-        private Task ClearImage()
+        private Task ClearRecord()
         {
             return Task.Run(() =>
             {
                 if (clipList.Count > currentRecords)
                 {
-                    DeleteByIndex(currentRecords,false);
+                     
+                    ClipModel model = clipList[currentRecords];
+                    DeleteOverClipByIndex(currentRecords);
+                    if (model.Type == IMAGE_TYPE)
+                    {
+                        File.Delete(model.ClipValue);
+                    }
+                     
                 }
 
 
