@@ -358,7 +358,7 @@ namespace ClipOne.view
         /// 删除指定索引的数据
         /// </summary>
         /// <param name="index"></param>
-        public void DeleteByIndex(int index)
+        public void DeleteByIndex(int index, bool NeedShowList)
         {
 
 
@@ -366,10 +366,11 @@ namespace ClipOne.view
             ClipModel clip = displayList[index];
             displayList.RemoveAt(index);
             clipList.RemoveAt(clip.SourceId);
-
+            if (NeedShowList) { 
             //重新展示记录并保存当前结果
             ShowList(displayList, 0);
             SaveData(clipList, storePath);
+            }
 
 
 
@@ -718,7 +719,7 @@ namespace ClipOne.view
         /// <returns></returns>
         public IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-
+            
             //当为剪切板消息时，由于获取数据会有失败的情况，所以循环3次，尽量确保成功
             if (msg == WM_CLIPBOARDUPDATE)
             {
@@ -795,9 +796,10 @@ namespace ClipOne.view
             //触发显示界面快捷键
             else if (msg == HotKeyManager.WM_HOTKEY)
             {
+                Console.WriteLine(msg);
                 if (hotkeyAtom == wParam.ToInt32())
                 {
-
+                    Console.WriteLine(hotkeyAtom);
                     ShowWindowAndList();
 
 
@@ -835,7 +837,7 @@ namespace ClipOne.view
             {
                 if (clipList.Count > currentRecords)
                 {
-                    DeleteByIndex(currentRecords);
+                    DeleteByIndex(currentRecords,false);
                 }
 
 

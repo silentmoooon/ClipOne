@@ -68,7 +68,7 @@ namespace ClipOne.service
         public void DeleteClip(int id)
         {
 
-            window.DeleteByIndex(id);
+            window.DeleteByIndex(id,true);
         }
 
         
