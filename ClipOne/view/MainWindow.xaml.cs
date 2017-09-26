@@ -228,7 +228,7 @@ namespace ClipOne.view
 
             //初始化预览窗口
             InitPreviewForm();
-
+            
         }
 
 
@@ -805,10 +805,13 @@ namespace ClipOne.view
             //触发显示界面快捷键
             else if (msg == HotKeyManager.WM_HOTKEY)
             {
-                Console.WriteLine(msg);
+                
                 if (hotkeyAtom == wParam.ToInt32())
                 {
-                    Console.WriteLine(hotkeyAtom);
+                   
+                    DiyHide();
+                    activeHwnd = WinAPIHelper.GetForegroundWindow();
+                    
                     ShowWindowAndList();
 
 
@@ -878,22 +881,10 @@ namespace ClipOne.view
 
             ShowList(displayList, 1);
 
-            activeHwnd = WinAPIHelper.GetForegroundWindow();
-            webView.Focus();
-            
-
            
+            webView.Focus();
 
-
-        }
-
-        /// <summary>
-        /// 根据页面高度改变窗体高度
-        /// </summary>
-        /// <param name="height">页面高度</param>
-        public void ChangeWindowHeight(double height)
-        {
-            this.Height = height + 25;
+            DiyShow();
             WinAPIHelper.POINT point = new WinAPIHelper.POINT();
             if (WinAPIHelper.GetCursorPos(out point))
             {
@@ -909,7 +900,7 @@ namespace ClipOne.view
                 }
                 else
                 {
-                    this.Left = mx - 2;
+                    this.Left = mx;
                 }
                 if (my > y - this.ActualHeight)
                 {
@@ -921,11 +912,33 @@ namespace ClipOne.view
                 }
 
 
-                DiyShow();
+            }
 
+
+
+        }
+
+        /// <summary>
+        /// 根据页面高度改变窗体高度
+        /// </summary>
+        /// <param name="height">页面高度</param>
+        public void ChangeWindowHeight(double height)
+        {
+            this.Height = height + 25;
+
+            WinAPIHelper.POINT point = new WinAPIHelper.POINT();
+            if (WinAPIHelper.GetCursorPos(out point))
+            {
+
+                 
+                double y = SystemParameters.WorkArea.Height;//得到屏幕工作区域高度
+                if (this.ActualHeight + this.Top > y)
+                {
+                    this.Top = y - this.ActualHeight;
+                }
 
             }
-          
+
         }
 
         /// <summary>
@@ -1013,6 +1026,7 @@ namespace ClipOne.view
              preview.Hide();
 
 
+            
          }));
 
             //从显示列表中获取记录，并根据sourceId从对保存列表中的该条记录做相应处理
@@ -1095,7 +1109,10 @@ namespace ClipOne.view
             ClipService.SetValueToClipboard(result);
             //设置剪切板后恢复监听
             WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
-
+            if (neadPause)
+            {
+                Thread.Sleep(50);
+            }
             System.Windows.Forms.SendKeys.SendWait("^v");
 
 
@@ -1306,7 +1323,7 @@ namespace ClipOne.view
 
         //显示窗体,透明度为事先设置的值.
         private void DiyShow()
-        {
+        {   
             this.Topmost = true;
             this.Activate();
             this.Opacity = opacityValue;
@@ -1320,6 +1337,7 @@ namespace ClipOne.view
         private void DiyHide()
         {
             this.Topmost = false;
+           
             WinAPIHelper.SetForegroundWindow(activeHwnd);
             webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("hideSearch()");
             this.Opacity = 0;

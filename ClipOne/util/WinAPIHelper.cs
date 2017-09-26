@@ -78,5 +78,29 @@ namespace ClipOne.util
         public static extern Int32 SetWindowLong(IntPtr hWnd, int nIndex, Int32 dwNewLong);
         [DllImport("user32.dll")]
         public static extern IntPtr GetWindowLong(IntPtr hWnd, int nIndex);
+        [DllImport("user32", EntryPoint = "GetDesktopWindow")]
+        public static extern IntPtr GetDesktopWindow();
+        [DllImport("user32", EntryPoint = "GetTopWindow")]
+        public static extern IntPtr GetTopWindow();
+
+        /*wCmd指定结果窗口与源窗口的关系，它们建立在下述常数基础上：
+              GW_CHILD
+              寻找源窗口的第一个子窗口
+              GW_HWNDFIRST
+              为一个源子窗口寻找第一个兄弟（同级）窗口，或寻找第一个顶级窗口
+              GW_HWNDLAST
+              为一个源子窗口寻找最后一个兄弟（同级）窗口，或寻找最后一个顶级窗口
+              GW_HWNDNEXT
+              为源窗口寻找下一个兄弟窗口
+              GW_HWNDPREV
+              为源窗口寻找前一个兄弟窗口
+              GW_OWNER
+              寻找窗口的所有者
+         */
+        [DllImport("user32.dll", EntryPoint = "GetWindow")]//获取窗体句柄，hwnd为源窗口句柄
+        public static extern IntPtr GetWindow(
+           IntPtr hwnd,
+           int wCmd
+       );
     }
 }
