@@ -146,7 +146,9 @@ function trSelect(event) {
     $("#rightMenu").css("display", "none");
     var index = event.getAttribute('index') / 1;
     selectIndex = index;
+	if (!isShiftPressed) { 
     selectItem(index);
+	}
     if (clipObj[index].Type == "image") {
         previewTimeout = setTimeout(function () {
             callbackObj.preview(index);
