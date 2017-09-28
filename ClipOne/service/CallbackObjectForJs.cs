@@ -73,15 +73,7 @@ namespace ClipOne.service
 
         
 
-        /// <summary>
-        /// 用于JS回调,提供搜索功能
-        /// </summary>
-        /// <param name="value"></param>
-        public void Search(string value)
-        {
-            window.Search(value);
-        }
-
+      
         /// <summary>
         /// 用于JS回调,页面显示完成后,反馈页面高度,以设置窗体高度
         /// </summary>

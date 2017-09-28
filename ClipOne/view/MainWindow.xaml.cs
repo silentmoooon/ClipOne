@@ -62,12 +62,7 @@ namespace ClipOne.view
         /// 复制条目保存记录
         /// </summary>
         List<ClipModel> clipList = new List<ClipModel>(maxRecords + 2);
-
-        /// <summary>
-        /// 用于显示的记录列表
-        /// </summary>
-        List<ClipModel> displayList = new List<ClipModel>(maxRecords);
-
+ 
 
         /// <summary>
         /// 供浏览器JS回调的接口
@@ -206,17 +201,19 @@ namespace ClipOne.view
                 InitConfig();
             }
 
+            //初始化浏览器
+            InitWebView();
+
+            //初始化托盘图标
+            InitialTray();
+
             //如果存在持久化记录则加载
             if (File.Exists(storePath))
             {
                 InitStore();
             }
 
-            //初始化浏览器
-            InitWebView();
-
-            //初始化托盘图标
-            InitialTray();
+           
 
             //注册热键,如果注册热键失败则弹出热键设置界面
             hotkeyAtom = HotKeyManager.GlobalAddAtom(hotkeyAtomStr);
@@ -245,6 +242,10 @@ namespace ClipOne.view
             string json = File.ReadAllText(storePath);
 
             List<ClipModel> list = JsonConvert.DeserializeObject<List<ClipModel>>(json);
+            
+
+            
+
             foreach (ClipModel clip in list)
             {
                 clipList.Add(clip);
@@ -257,9 +258,18 @@ namespace ClipOne.view
             saveDataTimer.Interval = 60000;
             saveDataTimer.Start();
             new Thread(new ParameterizedThreadStart(ClearExpireImage)).Start(lastSaveImg);
+            new Thread(new ParameterizedThreadStart(InitList)).Start(json);
+           
 
         }
 
+        private void InitList(object json)
+        {
+            Thread.Sleep(500);
+           string str = HttpUtility.UrlEncode(json.ToString());
+            webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("initItem('" + str + "')");
+           
+        }
         /// <summary>
         /// 初始化预览窗口
         /// </summary>
@@ -372,12 +382,9 @@ namespace ClipOne.view
         {
 
 
-            //同时删除显示列表和保存列表中的条目
-            ClipModel clip = displayList[index];
-            displayList.RemoveAt(index);
-            clipList.RemoveAt(clip.SourceId);
-            //重新展示记录并保存当前结果
-            ShowList(displayList, 0);
+           
+            ClipModel clip = clipList[index];
+            clipList.RemoveAt(index);
             SaveData(clipList, storePath);
            
 
@@ -808,10 +815,11 @@ namespace ClipOne.view
                 
                 if (hotkeyAtom == wParam.ToInt32())
                 {
-                   
-                    DiyHide();
-                    activeHwnd = WinAPIHelper.GetForegroundWindow();
-                    
+
+                    if (this.Opacity != opacityValue) { 
+                        activeHwnd = WinAPIHelper.GetForegroundWindow();
+                        DiyShow();
+                    }
                     ShowWindowAndList();
 
 
@@ -832,6 +840,13 @@ namespace ClipOne.view
         {
 
             clipList.Insert(0, clip);
+
+            string json = JsonConvert.SerializeObject(clip);
+
+            json = HttpUtility.UrlEncode(json);
+
+
+            webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("addItem('" + json + "')");
 
             await ClearRecord();
 
@@ -869,22 +884,15 @@ namespace ClipOne.view
         /// </summary>
         private void ShowWindowAndList()
         {
-            displayList.Clear();
-
-            for (int i = 0; i < clipList.Count; i++)
-            {
-                clipList[i].SourceId = i;
-                displayList.Add(clipList[i]);
-
-            }
+            
            
 
-            ShowList(displayList, 1);
+            ShowList();
 
            
             webView.Focus();
 
-            DiyShow();
+           
             WinAPIHelper.POINT point = new WinAPIHelper.POINT();
             if (WinAPIHelper.GetCursorPos(out point))
             {
@@ -942,19 +950,12 @@ namespace ClipOne.view
         }
 
         /// <summary>
-        /// 展示list数组并将指定索引项高亮
-        /// </summary>
-        /// <param name="list"></param>
-        /// <param name="index"></param>
-        private void ShowList(List<ClipModel> list, int index)
+        /// 展示
+      
+        private void ShowList()
         {
-
-            string json = JsonConvert.SerializeObject(list, displayJsonSettings);
-
-            json = HttpUtility.UrlEncode(json);
-
-
-            webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("showList('" + json + "'," + index + ")");
+ 
+            webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("showList()");
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -1012,7 +1013,7 @@ namespace ClipOne.view
         /// <param name="id">索引</param>
         public void PasteValueByIndex(int id)
         {
-            if (id >= displayList.Count)
+            if (id >= clipList.Count)
             {
                 return;
             }
@@ -1030,9 +1031,8 @@ namespace ClipOne.view
          }));
 
             //从显示列表中获取记录，并根据sourceId从对保存列表中的该条记录做相应处理
-            ClipModel result = displayList[id];
-
-            clipList.RemoveAt(result.SourceId);
+            ClipModel result = clipList[id];
+            clipList.RemoveAt(id);
 
             if (result.Type == FILE_TYPE)
             {
@@ -1155,14 +1155,15 @@ namespace ClipOne.view
         /// <param name="lastIndex">起始索引</param>
         public void PasteValueByRange(int lastIndex, int nowIndex)
         {
+            
             batchPasteList.Clear();
             if (nowIndex > lastIndex)
             {
                 for (int i = lastIndex; i <= nowIndex; i++)
                 {
-                    var result = displayList[i];
+                    var result = clipList[i];
 
-                    clipList.RemoveAt(result.SourceId);
+                    clipList.RemoveAt(i);
                     if (result.Type == FILE_TYPE)
                     {
                         string[] files = result.ClipValue.Split(',');
@@ -1193,7 +1194,7 @@ namespace ClipOne.view
                 {
                     var result = clipList[lastIndex];
 
-                    clipList.RemoveAt(result.SourceId);
+                    clipList.RemoveAt(lastIndex);
                     if (result.Type == FILE_TYPE)
                     {
                         string[] files = result.ClipValue.Split(',');
@@ -1263,7 +1264,6 @@ namespace ClipOne.view
                       new Action(
                     delegate
                     {
-
                         ClipModel clip = batchPasteList[i];
                         if (i != batchPasteList.Count - 1)
                         {
@@ -1271,32 +1271,13 @@ namespace ClipOne.view
                         }
                         SetValueToClip(clip, false);
                     }));
-                Thread.Sleep(200);
+                Thread.Sleep(300);
             }
 
 
         }
 
-        /// <summary>
-        /// 查找,如果value为""则显示全部且高亮第1项,如果有值则高亮第0项.
-        /// </summary>
-        /// <param name="value"></param>
-        public void Search(string value)
-        {
-            displayList.Clear();
-            value = value.ToLower();
-
-            for (int i = 0; i < clipList.Count; i++)
-            {
-                if (clipList[i].Type == value.Trim() || clipList[i].ClipValue.ToLower().IndexOf(value) >= 0)
-                {
-                    clipList[i].SourceId = i;
-                    displayList.Add(clipList[i]);
-                }
-            }
-            ShowList(displayList, (value == "") ? 1 : 0);
-
-        }
+     
 
 
 
@@ -1327,7 +1308,8 @@ namespace ClipOne.view
             this.Topmost = true;
             this.Activate();
             this.Opacity = opacityValue;
-
+            
+            
 
         }
 
@@ -1337,10 +1319,11 @@ namespace ClipOne.view
         private void DiyHide()
         {
             this.Topmost = false;
-           
+
             WinAPIHelper.SetForegroundWindow(activeHwnd);
             webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("hideSearch()");
             this.Opacity = 0;
+           // this.Hide();
         }
 
 

@@ -17,10 +17,7 @@
         /// </summary>
         public string DisplayValue { get; set; }
 
-        /// <summary>
-        /// 源记录索引，用于在查询结果保留源记录的索引
-        /// </summary>
-        public int SourceId { get; set; }
+      
         
     }
 }

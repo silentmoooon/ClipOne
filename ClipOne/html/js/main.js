@@ -7,6 +7,9 @@ var searchMode = false;
 var isShiftPressed = false;
 var lastSelectedIndex = -1;
 
+var maxRecords = 100;
+var searchValue = '';
+
 document.onkeydown = keyDown;
 document.onkeyup = keyUp;
 function keyDown(event) {
@@ -16,8 +19,9 @@ function keyDown(event) {
             showSearch();
         } else {
             hideSearch();
-            callbackObj.changeWindowHeight($("body").height());
+
         }
+        changeWindowHeight($("body").height());
     } else if (event.keyCode == 9) {   //tab键
 
         event.preventDefault();
@@ -27,7 +31,7 @@ function keyDown(event) {
     }
     else if (event.keyCode == 13) { //回车直接粘贴当前选中项
 
-        callbackObj.pasteValue(selectIndex);
+        pasteValue(selectIndex);
     }
     else if (event.keyCode == 38) { //上
 
@@ -66,21 +70,58 @@ function keyDown(event) {
             if (lastSelectedIndex == -1) {
                 lastSelectedIndex = key;
             } else {
-                callbackObj.pasteValueByRange(lastSelectedIndex, key);
+                pasteValueByRange(lastSelectedIndex, key);
             }
         }
         else if (event.keyCode >= 49 && event.keyCode <= 57) {  //数字键
-            callbackObj.pasteValue(event.keyCode - 49);
+            pasteValue(event.keyCode - 49);
         } else if (event.keyCode >= 65 && event.keyCode <= 90) { //字母键
-            callbackObj.pasteValue(event.keyCode - 56);
+            pasteValue(event.keyCode - 56);
         } else if (event.keyCode == 32) {  //空格直接粘贴第0项
             event.preventDefault();
-            callbackObj.pasteValue(0);
+            pasteValue(0);
         }
 
 
     }
 
+}
+function pasteValue(index){
+    obj=clipObj.splice(index,1);
+    clipObj.splice(0,0,obj[0]);
+    callbackObj.pasteValue(index);
+    
+}
+function pasteValueByRange(startIndex,endIndex){
+    if(endIndex>startIndex){
+        for (var i = startIndex; i <= endIndex; i++)
+        {
+            var result = clipObj.splice(i,1)[0];
+            clipObj.splice(0,0,result);
+        }  
+    }else if(endIndex<startIndex){
+        for (var i = startIndex; i >= endIndex; i--){
+            var result = clipObj.splice(i,1)[0];
+            clipObj.splice(0,0,result);
+        }
+    }else{
+        pasteValue(startIndex);
+        return;
+    }
+    callbackObj.pasteValueByRange(startIndex,endIndex);
+}
+
+function deleteClip(index){
+    callbackObj.deleteClip(index);
+}
+function changeWindowHeight(height){
+    callbackObj.changeWindowHeight(height);
+}
+function hidePreview(){
+    callbackObj.hidePreview();
+}
+function preview(index){
+    callbackObj.preview(index);
 }
 
 function keyUp(event) {
@@ -96,19 +137,20 @@ $(document).ready(function () {
 
     $("#delete").on("click", function () { //删除操作
         $("#tr" + deleteId).parent().addClass("tr_hover");
-        callbackObj.deleteClip(deleteId / 1);
-        $(deleteNode).remove();
-
+        clipObj.splice(deleteId, 1);
+        deleteClip(deleteId / 1);
         $("#rightMenu").css("display", "none");
-
+        displayData();
 
     });
 
     $("#searchInput").on("input", function (event) {  //查找
 
         var value = $("#searchInput").val().toLowerCase();
-        callbackObj.search(value);
-       
+        searchValue = value;
+        console.log("sdf");
+        displayData();
+
     });
 
 
@@ -129,7 +171,7 @@ function showSearch() {
     $("#searchDiv").css("display", "block");
     $("#searchInput")[0].focus();
     searchMode = true;
-    callbackObj.changeWindowHeight($("body").height());
+    changeWindowHeight($("body").height());
 }
 //隐藏搜索框
 function hideSearch() {
@@ -137,7 +179,23 @@ function hideSearch() {
     $("#searchDiv").css("display", "none");
     $(".table_main")[0].focus();
     $("#searchInput").val("");
+    searchValue = "";
+    lastSelectedIndex=-1;
+    isShiftPressed=false;
     searchMode = false;
+}
+function initItem(json) {
+    console.log(json);
+    json = decodeURIComponent(json.replace(/\+/g, '%20'));
+    clipObj = JSON.parse(json);
+}
+function addItem(data) {
+    data = decodeURIComponent(data.replace(/\+/g, '%20'));
+    var obj = JSON.parse(data);
+    clipObj.splice(0,0,obj);
+    if (clipObj.length > maxRecords) {
+        clipObj.splice(maxRecords, 1);
+    }
 }
 
 //选中时高亮
@@ -146,12 +204,12 @@ function trSelect(event) {
     $("#rightMenu").css("display", "none");
     var index = event.getAttribute('index') / 1;
     selectIndex = index;
-	if (!isShiftPressed) { 
-    selectItem(index);
-	}
+    if (!isShiftPressed) {
+        selectItem(index);
+    }
     if (clipObj[index].Type == "image") {
         previewTimeout = setTimeout(function () {
-            callbackObj.preview(index);
+            preview(index);
         }, 500);
     }
 }
@@ -161,7 +219,7 @@ function trUnselect() {
     if (previewTimeout) {
         clearTimeout(previewTimeout);
     }
-    callbackObj.hidePreview();
+    hidePreview();
 }
 
 //显示右键菜单
@@ -198,75 +256,77 @@ function selectItem(index) {
 
 }
 
+ 
+
 //显示记录
-function showList(json, index) {
+function showList() {
 
-    lastSelectedIndex = -1;
-    json = decodeURIComponent(json.replace(/\+/g, '%20'));
 
-    clipObj = JSON.parse(json);
 
-    displayData(clipObj);
+    displayData();
 
     $(".table_main")[0].focus();
-    callbackObj.changeWindowHeight($("body").height());
-    if (clipObj.length > 0) {
-
-        selectIndex = index;
-
-        $("#tr" + index).addClass("tr_hover");
-
-        $("#tr" + index).one("mouseout", function () {
-            $("#tr" + index).removeClass("tr_hover");
-
-        });
-
-
-    }
+    changeWindowHeight($("body").height());
 
 }
 
 //显示记录
-function displayData(data) {
+function displayData() {
 
     var tbody = "";
 
-    if (data.length == 0) {
+    var matchCount = -1;
+    for (var i = 0; i < clipObj.length; i++) {
+
+        var trs = "";
+        var num = "";
+
+        if (searchValue == "" || clipObj[i].Type == searchValue || clipObj[i].ClipValue.toLowerCase().indexOf(searchValue) >= 0) {
+            matchCount++;
+            if (matchCount < 9) {
+                num = "<u>" + (matchCount+1) + "</u>";
+            } else if (matchCount < 35) {
+                num = "<u>" + num2key( (matchCount+1)) + "</u>";
+            } else {
+                num = "" +  (matchCount+1);
+            }
+            if (clipObj[i].Type == "image") {
+
+                trs = " <tr style='cursor: default' class='tr' id='tr" + matchCount + "' index='" + i + "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' onmouseleave='trUnselect()'> <td  class='td_content' id='td" + i + "'  > <img class='image' src='../" + clipObj[i].DisplayValue + "' /> </td><td class='td_index'  >" + num + "</td> </tr>";
+            } else {  //if (clipObj[i].Type=="html"||clipObj[i].Type == "QQ_Unicode_RichEdit_Format"||clipObj[i].Type=="file")
+                trs = " <tr style='cursor: default' class='tr' id='tr" + matchCount + "' index='" + i + "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' onmouseleave='trUnselect()'> <td  class='td_content' id='td" + i + "' > " + clipObj[i].DisplayValue + " </td><td class='td_index'  >" + num + "</td> </tr>";
+
+            }
+        }
+        tbody += trs;
+    }
+
+    $(".myTable").html(tbody);
+    if (matchCount == -1) {
         tbody = " <tr style='cursor: default'> <td  class='td_content' style='cursor: default' > 无记录 </td> </tr>";
         $(".myTable").html(tbody);
 
     } else {
-
-
-        for (var i = 0; i < data.length; i++) {
-
-            var trs = "";
-            var num = "";
-            if (i < 9) {
-                num = "<u>" + (i + 1) + "</u>";
-            } else if (i < 35) {
-                num = "<u>" + num2key(i + 1) + "</u>";
-            } else {
-                num = "" + (i + 1);
-            }
-            if (data[i].Type == "image") {
-
-                trs = " <tr style='cursor: default' class='tr' id='tr" + i + "' index='" + i + "' onmouseup ='pasteValue(this)'  onmouseenter='trSelect(this)' onmouseleave='trUnselect()'> <td  class='td_content' id='td" + i + "'  > <img class='image' src='../" + data[i].DisplayValue + "' /> </td><td class='td_index'  >" + num + "</td> </tr>";
-            } else {  //if (clipObj[i].Type=="html"||clipObj[i].Type == "QQ_Unicode_RichEdit_Format"||clipObj[i].Type=="file")
-                trs = " <tr style='cursor: default' class='tr' id='tr" + i + "' index='" + i + "' onmouseup ='pasteValue(this)'  onmouseenter='trSelect(this)' onmouseleave='trUnselect()'> <td  class='td_content' id='td" + i + "' > " + data[i].DisplayValue + " </td><td class='td_index'  >" + num + "</td> </tr>";
-
-            }
-
-            tbody += trs;
+        if (searchValue != "") {
+            selectIndex = 0;
+            
+        } else {
+            selectIndex = 1;
         }
 
-        $(".myTable").html(tbody);
+        $("#tr" + selectIndex).addClass("tr_hover");
+
+        $("#tr" + selectIndex).one("mouseout", function () {
+            $("#tr" + selectIndex).removeClass("tr_hover");
+
+        });
     }
+
 
 }
 
 //粘贴选择项
-function pasteValue(e) {
+function mouseup(e) {
     var event = window.event;
     if (event.button == 0) {
         if (isShiftPressed) {  //多条
@@ -275,21 +335,21 @@ function pasteValue(e) {
                 $("#" + e.id).addClass("tr_hover");
                 lastSelectedIndex = e.getAttribute('index') / 1;
             } else {
-                callbackObj.pasteValueByRange(lastSelectedIndex, e.getAttribute('index') / 1);
+                pasteValueByRange(lastSelectedIndex, e.getAttribute('index') / 1);
             }
         } else {   //单条
             $("#tr1").removeClass("tr_hover");
             $("#" + e.id).addClass("tr_hover");
-            callbackObj.pasteValue(e.getAttribute('index') / 1);
+            pasteValue(e.getAttribute('index') / 1);
         }
     } else if (event.button == 2) { //弹出右键菜单
-		 if (isShiftPressed) { 
-			 callbackObj.pasteValueByRange(0, e.getAttribute('index') / 1);
-		 }else{
-        deleteNode = e;
-        deleteId = e.getAttribute('index');
-        showMenu(event);
-		}
+        if (isShiftPressed) {
+            pasteValueByRange(0, e.getAttribute('index') / 1);
+        } else {
+            deleteNode = e;
+            deleteId = e.getAttribute('index');
+            showMenu(event);
+        }
     }
 
 }
