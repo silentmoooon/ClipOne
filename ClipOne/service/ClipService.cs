@@ -74,14 +74,7 @@ namespace ClipOne.service
 
         }
 
-        /// <summary>
-        /// 持久化
-        /// </summary>
-        public static void SaveData(List<ClipModel> resultList,string storePath)
-        {
-            string json = JsonConvert.SerializeObject(resultList);
-            File.WriteAllText(storePath, json);
-        }
+        
 
         /// <summary>
         /// 保存图片到缓存目录
@@ -165,26 +158,7 @@ namespace ClipOne.service
 
         
 
-        /// <summary>
-        /// 程序启动时清理缓存目录中的失效图片，如果缓存目录中的图片在持久化的图片信息中找不到对应记录，则删掉
-        /// </summary>
-        /// <param name="cacheDir">缓存目录</param>
-        /// <param name="lastSaveImg">已经持久化的图片信息</param>
-        public static void ClearExpireImage( object lastSaveImg)
-        {
-
-
-            List<string> imageList = Directory.EnumerateFiles(cacheDir).ToList();
-            foreach (string str in imageList)
-            {
-                if (!lastSaveImg.ToString().Contains(str.Replace("\\", "/")))
-                {
-                    File.Delete(str);
-                }
-            }
-
-        }
-
+        
         /// <summary>
         /// 处理剪切板文字类型
         /// </summary>

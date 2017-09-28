@@ -1,5 +1,7 @@
 ﻿using ClipOne.view;
 using System;
+using System.IO;
+using System.Threading;
 
 namespace ClipOne.service
 {
@@ -15,12 +17,12 @@ namespace ClipOne.service
         /// 用于JS回调的方法，以粘贴条目到活动窗口
         /// </summary>
         /// <param name="msg"></param>
-        public void PasteValue(int id)
+        public void PasteValue(string clipStr)
         {
 
             if (!MainWindow.isNotAllowHide)
             {
-                window.PasteValueByIndex(id);
+                window.PasteValue(clipStr);
             }
 
         }
@@ -28,12 +30,12 @@ namespace ClipOne.service
         /// 用于JS回调的方法，以粘贴条目到活动窗口
         /// </summary>
         /// <param name="msg"></param>
-        public void PasteValueByRange(int firstId, int currentId)
+        public void PasteValueList(string clipListStr)
         {
 
             if (!MainWindow.isNotAllowHide)
             {
-                window.PasteValueByRange(firstId, currentId);
+                window.PasteValueList(clipListStr);
             }
 
         }
@@ -42,10 +44,17 @@ namespace ClipOne.service
         /// 用于JS回调的方法，以预览图片
         /// </summary>
         /// <param name="msg"></param>
-        public void Preview(int id)
+        public void Preview(string path)
         {
 
-            window.PreviewByIndex(id);
+            window.Dispatcher.Invoke(
+       new Action(
+     delegate
+     {
+         window.ShowPreviewForm(path);
+
+     }));
+
 
 
         }
@@ -65,15 +74,31 @@ namespace ClipOne.service
         /// JS回调方法，用于删除某一项数据
         /// </summary>
         /// <param name="msg"></param>
-        public void DeleteClip(int id)
+        public void DeleteImage(string path)
         {
-
-            window.DeleteByIndex(id);
+            new Thread(new ParameterizedThreadStart(DeleteFile)).Start(path);
         }
 
-        
+        private void DeleteFile(object path)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                Thread.Sleep(i*500);
+                try
+                {
+                    File.Delete(path.ToString());
+                    return;
+                }
+                catch
+                {
 
-      
+                }
+            }
+        }
+
+
+
+
         /// <summary>
         /// 用于JS回调,页面显示完成后,反馈页面高度,以设置窗体高度
         /// </summary>
