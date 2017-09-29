@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,7 +54,15 @@ namespace ClipOne.view
         /// </summary>
         ChromiumWebBrowser webView;
 
+        /// <summary>
+        /// 隐藏时将left设置为该值
+        /// </summary>
+        private int HideLeftValue = -10000;
 
+        /// <summary>
+        /// 透明度转换比例
+        /// </summary>
+        private double OpacityRatio = 0.06;
 
         /// <summary>
         /// 供浏览器JS回调的接口
@@ -157,7 +166,7 @@ namespace ClipOne.view
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-
+           
             if (!Directory.Exists(cacheDir))
             {
                 Directory.CreateDirectory(cacheDir);
@@ -196,7 +205,9 @@ namespace ClipOne.view
 
             //初始化预览窗口
             InitPreviewForm();
-            
+ 
+
+
         }
 
 
@@ -334,9 +345,10 @@ namespace ClipOne.view
             opaSet.Click += (sender, e) =>
             {
                 isNotAllowHide = true;
+                DiyShow();
                 ShowWindowAndList();
                 
-                OpacitySet os = new OpacitySet(this, (1 - opacityValue) / 0.02);
+                OpacitySet os = new OpacitySet(this, (1 - opacityValue) / OpacityRatio);
                
                 os.Topmost = true;
                 os.ShowDialog();
@@ -573,7 +585,7 @@ namespace ClipOne.view
         /// <param name="value"></param>
         public void ChangeOpacity(double value)
         {
-            opacityValue = 1 - value * 0.02;
+            opacityValue = 1 - value * OpacityRatio;
             this.Opacity = opacityValue;
             settingsMap["opacity"] = opacityValue.ToString();
             SaveSettings();
@@ -714,7 +726,7 @@ namespace ClipOne.view
                 if (hotkeyAtom == wParam.ToInt32())
                 {
 
-                    if (this.Opacity != opacityValue) { 
+                    if (this.Left == HideLeftValue) { 
                         activeHwnd = WinAPIHelper.GetForegroundWindow();
                         DiyShow();
                     }
@@ -1076,7 +1088,25 @@ namespace ClipOne.view
             exStyle |= (int)0x00000080;
             WinAPIHelper.SetWindowLong(wpfHwnd, -20, exStyle);
 
+            //高斯模糊
+            var accent = new AccentPolicy();
+            accent.AccentState = AccentState.ACCENT_ENABLE_BLURBEHIND;
+
+            var accentStructSize = Marshal.SizeOf(accent);
+
+            var accentPtr = Marshal.AllocHGlobal(accentStructSize);
+            Marshal.StructureToPtr(accent, accentPtr, false);
+
+            var data = new WindowCompositionAttributeData();
+            data.Attribute = WindowCompositionAttribute.WCA_ACCENT_POLICY;
+            data.SizeOfData = accentStructSize;
+            data.Data = accentPtr;
+
+            WinAPIHelper.SetWindowCompositionAttribute(wpfHwnd, ref data);
+
+           Marshal.FreeHGlobal(accentPtr);
             DiyHide();
+
 
         }
 
@@ -1085,7 +1115,8 @@ namespace ClipOne.view
         {   
             this.Topmost = true;
             this.Activate();
-            this.Opacity = opacityValue;
+            //this.Opacity = opacityValue;
+           
             
             
 
@@ -1097,13 +1128,15 @@ namespace ClipOne.view
         private void DiyHide()
         {
             this.Topmost = false;
-
-            WinAPIHelper.SetForegroundWindow(activeHwnd);
+            if (activeHwnd != IntPtr.Zero) {
+                WinAPIHelper.SetForegroundWindow(activeHwnd);
+            }
             webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("hide()");
-            this.Opacity = 0;
-           // this.Hide();
+            //this.Opacity = 0;
+            this.Left = HideLeftValue;
+            // this.Hide();
         }
-
+        
 
 
         internal class MenuHandler : IContextMenuHandler
@@ -1136,10 +1169,42 @@ namespace ClipOne.view
                 return false;
             }
         }
+        internal enum AccentState
+        {
+            ACCENT_DISABLED = 0,
+            ACCENT_ENABLE_GRADIENT = 1,
+            ACCENT_ENABLE_TRANSPARENTGRADIENT = 2,
+            ACCENT_ENABLE_BLURBEHIND = 3,
+            ACCENT_INVALID_STATE = 4
+        }
 
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct AccentPolicy
+        {
+            public AccentState AccentState;
+            public int AccentFlags;
+            public int GradientColor;
+            public int AnimationId;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct WindowCompositionAttributeData
+        {
+            public WindowCompositionAttribute Attribute;
+            public IntPtr Data;
+            public int SizeOfData;
+        }
+
+        internal enum WindowCompositionAttribute
+        {
+            // ...
+            WCA_ACCENT_POLICY = 19
+            // ...
+        }
 
     }
 
+   
 
 }
 

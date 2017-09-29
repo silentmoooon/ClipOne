@@ -18,6 +18,7 @@ namespace ClipOne.view
             InitializeComponent();
             this.window = window;
             sliderOpa.Value = opacityValue;
+           
         }
 
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
