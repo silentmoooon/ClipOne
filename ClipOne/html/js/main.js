@@ -309,7 +309,7 @@ function mouseup(e) {
 //初始化
 function init(recordsNum) {
     maxRecords = recordsNum;
-    console.log(clipObj.length);
+    show();
 
 }
 //隐藏时隐藏搜索框

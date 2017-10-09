@@ -218,7 +218,7 @@ namespace ClipOne.view
         {
             Thread.Sleep(500);
            
-            webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("init('" + 35 + "')");
+            webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("init('" + currentRecords + "')");
            
         }
         /// <summary>
