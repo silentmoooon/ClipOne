@@ -1,14 +1,18 @@
 
 /*全局字体*/
 * {
-    font-family: "Microsoft YaHei";
+    font-family: "Microsoft Yahei","微软雅黑";
     font-size: 12px;
 	 
 }
+
 /* 滚动条*/
 ::-webkit-scrollbar { 
     width: 4px;
-    opacity: 0.1;
+    opacity: 0.9;
+    height: 10px;
+    background-color: transparent;
+   
 }
 
 ::-webkit-scrollbar-track {
@@ -18,14 +22,15 @@
 }
 
 ::-webkit-scrollbar-track-piece {
-    background-color: #EbF1Fb;
+    background-color: #FFFFFF;
     margin: -2px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #aaa;
-    min-height: 150px;
-    min-width: 150px;
+    background: rgb(165, 154, 154);
+    opacity: 0.1;
+    max-height: 10px;
+    width: 1px;
     border-radius: 10px;
 }
 
@@ -98,13 +103,12 @@ td{
 
  /*鼠标悬浮*/
 .tr_hover,.tr:hover {
-    -webkit-box-shadow: 0 0 0 2px #0078d7 ;
-     border-radius: 2px;
+    
 	 
 }
  
   .tr_hover > td ,.tr:hover >td{
- 	 font-size: 14px;
+    background-color: #ACBAD4 !important;
  }
  
 
@@ -183,5 +187,14 @@ a { text-decoration:none}
 	height:35px;
 }
 #searchInput{
-	margin-top:6px;
+    margin-top:6px;
+    margin-left: 3px;
+    width: 200px;
+    height: 25px;
+    font-size: 14px;
+    border-top-width: 0px;
+    border-left-width: 0px;
+    border-right-width: 0px;
+    outline:none;
+    background-color: transparent;
 }

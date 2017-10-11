@@ -793,7 +793,7 @@ namespace ClipOne.view
                 }
                 if (my > y - this.ActualHeight)
                 {
-                    this.Top = y - this.ActualHeight;
+                    this.Top = y - this.ActualHeight-2;
                 }
                 else
                 {
@@ -823,7 +823,7 @@ namespace ClipOne.view
                 double y = SystemParameters.WorkArea.Height;//得到屏幕工作区域高度
                 if (this.ActualHeight + this.Top > y)
                 {
-                    this.Top = y - this.ActualHeight;
+                    this.Top = y - this.ActualHeight-2;
                 }
 
             }
@@ -1104,7 +1104,7 @@ namespace ClipOne.view
 
             WinAPIHelper.SetWindowCompositionAttribute(wpfHwnd, ref data);
 
-           Marshal.FreeHGlobal(accentPtr);
+            Marshal.FreeHGlobal(accentPtr);
             DiyHide();
 
 

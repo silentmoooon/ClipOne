@@ -26,7 +26,7 @@ $(document).ready(function () {
     $("#delete").on("click", function () { //删除操作
         $("#tr" + deleteId).parent().addClass("tr_hover");
         clipObj.splice(deleteId, 1);
-        deleteClip(deleteId / 1);
+        //deleteClip(deleteId / 1);
         $("#rightMenu").css("display", "none");
         displayData();
 

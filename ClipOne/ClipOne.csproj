@@ -199,6 +199,9 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <Content Include="html\css\modern\stand.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="html\css\striped\striped.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
