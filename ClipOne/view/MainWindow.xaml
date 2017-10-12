@@ -12,7 +12,7 @@
         Title="MainWindow" BorderThickness="0" BorderBrush="#0078d7"  Margin="0,0,0,0" Padding="0,0,0,0"  Height="100" Width="461"  Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None" Background="Transparent" ResizeMode="NoResize" Topmost="True" Visibility="Visible" ShowInTaskbar="False"   MaxHeight="620" SourceInitialized="Window_SourceInitialized" >
     <Border Margin="10" Background="Transparent">
         <Border.Effect>
-            <DropShadowEffect BlurRadius="15" Direction="-90" RenderingBias="Quality" ShadowDepth="2"/>
+            <DropShadowEffect Color="gray" BlurRadius="15" Direction="-90" RenderingBias="Quality" ShadowDepth="2"/>
         </Border.Effect>
 
         <Grid Name="mainGrid">
