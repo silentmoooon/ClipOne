@@ -22,7 +22,7 @@
 }
 
 ::-webkit-scrollbar-track-piece {
-    background-color: #FFFFFF;
+    background-color: #EbF1Fb;
     margin: -2px;
 }
 
@@ -34,21 +34,34 @@
     border-radius: 10px;
 }
 
-::-webkit-scrollbar-thumb:vertical:hover {
-    background: #555555
+ 
+  /*body*/
+body{
+    border: 1px solid #A9CBEE;
+	overflow: hidden;
+	margin-left: 0px;
+	margin-top:0px;
+	margin-right: 0px;
+    margin-bottom: 0px;
+    width: 441px;
+    max-height: 599px;
+	background-color: #EbF1Fb;
 }
 
-::-webkit-scrollbar-thumb:horizontal:hover {
-    background: #555555
+.content{
+    overflow-x: hidden;
+    overflow-y: auto;
+    margin: 0px;
+    padding: 0px;
+    width: 100%;
+    max-height: 599px;
 }
-
 
  /*table*/
 .table_main {
     width: 440px;
     cursor: default;
-	  background-color: transparent;
-   border: 1px;
+	
    border-collapse:collapse;
     table-layout: fixed;
 	border-spacing: 0;
@@ -70,12 +83,11 @@
   line-height: 20px;
   text-align: left;
   vertical-align: top;
-  border-top: 1px solid #dddddd;
+   
 }
 
 /*表格边框*/
 td{
-	border-top: 1px solid #ddd;
 	border-bottom: 1px solid #ddd; 
 	min-height: 25px;
 	overflow: hidden; 
@@ -130,17 +142,6 @@ td{
     background-color: #ACBAD4 !important;
  }
  
-
- 
-  /*body*/
-	body{
-	background-color: #EbF1Fb;
-	overflow-x: hidden;
-	margin-left: 1px;
-	margin-top:1px;
-	margin-right: 0px;
-	margin-bottom: 2px;
-}
 
 .dropdown-menu {
     position: absolute;
@@ -204,9 +205,10 @@ a { text-decoration:none}
 
 #searchDiv{
 	height:35px;
+	border-bottom: 1px solid #ddd;
 }
 #searchInput{
-    margin-top:6px;
+    margin-top:3px;
     margin-left: 3px;
     width: 200px;
     height: 25px;

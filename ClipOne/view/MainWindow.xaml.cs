@@ -813,7 +813,8 @@ namespace ClipOne.view
         /// <param name="height">页面高度</param>
         public void ChangeWindowHeight(double height)
         {
-            this.Height = height + 25;
+            
+            this.Height = height+21 ;
 
             WinAPIHelper.POINT point = new WinAPIHelper.POINT();
             if (WinAPIHelper.GetCursorPos(out point))
@@ -1087,24 +1088,24 @@ namespace ClipOne.view
             int exStyle = (int)WinAPIHelper.GetWindowLong(wpfHwnd, -20);
             exStyle |= (int)0x00000080;
             WinAPIHelper.SetWindowLong(wpfHwnd, -20, exStyle);
-
+            
             //高斯模糊
-            var accent = new AccentPolicy();
-            accent.AccentState = AccentState.ACCENT_ENABLE_BLURBEHIND;
+            //var accent = new AccentPolicy();
+            //accent.AccentState = AccentState.ACCENT_ENABLE_BLURBEHIND;
 
-            var accentStructSize = Marshal.SizeOf(accent);
+            //var accentStructSize = Marshal.SizeOf(accent);
 
-            var accentPtr = Marshal.AllocHGlobal(accentStructSize);
-            Marshal.StructureToPtr(accent, accentPtr, false);
+            //var accentPtr = Marshal.AllocHGlobal(accentStructSize);
+            //Marshal.StructureToPtr(accent, accentPtr, false);
 
-            var data = new WindowCompositionAttributeData();
-            data.Attribute = WindowCompositionAttribute.WCA_ACCENT_POLICY;
-            data.SizeOfData = accentStructSize;
-            data.Data = accentPtr;
+            //var data = new WindowCompositionAttributeData();
+            //data.Attribute = WindowCompositionAttribute.WCA_ACCENT_POLICY;
+            //data.SizeOfData = accentStructSize;
+            //data.Data = accentPtr;
 
-            WinAPIHelper.SetWindowCompositionAttribute(wpfHwnd, ref data);
+            //WinAPIHelper.SetWindowCompositionAttribute(wpfHwnd, ref data);
 
-            Marshal.FreeHGlobal(accentPtr);
+            //Marshal.FreeHGlobal(accentPtr);
             DiyHide();
 
 

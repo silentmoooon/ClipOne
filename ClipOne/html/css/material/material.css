@@ -22,7 +22,7 @@
 }
 
 ::-webkit-scrollbar-track-piece {
-    background-color: #FFFFFF;
+    background-color: #FAFAFA;
     margin: -2px;
 }
 
@@ -34,10 +34,16 @@
     border-radius: 10px;
 }
 
+::-webkit-scrollbar-thumb:vertical:hover {
+    background: #555555
+}
+
+::-webkit-scrollbar-thumb:horizontal:hover {
+    background: #555555
+}
 
   /*body*/
 body{
-	background-color: #FFFFFF;
     border: 1px solid #A9CBEE;
 	overflow: hidden;
 	margin-left: 0px;
@@ -46,9 +52,8 @@ body{
     margin-bottom: 0px;
     width: 441px;
     max-height: 599px;
-	 border-radius: 2px;
+	background-color: #FAFAFA;
 }
-
 
 .content{
     overflow-x: hidden;
@@ -58,21 +63,26 @@ body{
     width: 100%;
     max-height: 599px;
 }
+
  /*table*/
 .table_main {
-    width: 441px;
+    width: 440px;
     cursor: default;
 	
+
    border-collapse:collapse;
+    
     table-layout: fixed;
- 
+
 }
  
 
 /*表格边框*/
 td{
-	border-bottom: 1px solid #A9CBEE; 
-	min-height: 25px;
+	/*border-top: 1px solid #A9CBEE;
+	border-bottom: 1px solid #A9CBEE; */
+    min-height: 25px;
+    height: 30px;
 	overflow: hidden; 
 	text-overflow: ellipsis; 
 	white-space: nowrap; 
@@ -115,14 +125,18 @@ td{
 
  /*鼠标悬浮*/
 .tr_hover,.tr:hover {
-    
+    /*-webkit-box-shadow: 0 0 0 2px #0078d7 ;
+     border-radius: 2px;*/
+		
 }
 
  .tr_hover > td ,.tr:hover >td{
- 	 background-color: #0078d7;
-      color: #FFFFFF;
+    
+      background-color: #F44336;
+       
  }
  
+
 
 .dropdown-menu {
     position: absolute;
@@ -136,7 +150,7 @@ td{
     padding: 5px 0;
     margin: 2px 0 0;
     list-style: none;
-    background-color: #ffffff;
+    background-color: #FAFAFA;
     border: 1px solid #ccc;
     border: 1px solid rgba(0, 0, 0, 0.2);
     *border-right-width: 2px;
@@ -179,16 +193,14 @@ td{
 
 .dropdown-menu >ul> li > a:hover, .dropdown-menu>ul > li > a:focus{
     text-decoration: none;
-    color: #ffffff;
-    background-color: #0078d7;
+    color: #FFFFFF;
+    background-color: #E91E63;
    
 }
 a { text-decoration:none} 
 
 #searchDiv{
-    height:35px;
-    border-bottom: 1px solid #A9CBEE;
-	
+	height:35px;
 }
 #searchInput{
     margin-top:3px;
@@ -201,4 +213,5 @@ a { text-decoration:none}
     border-right-width: 0px;
     outline:none;
     background-color: transparent;
+
 }

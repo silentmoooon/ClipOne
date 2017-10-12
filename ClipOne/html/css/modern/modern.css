@@ -42,13 +42,34 @@
     background: #555555
 }
 
+  /*body*/
+body{
+    border: 1px solid #A9CBEE;
+	overflow: hidden;
+	margin-left: 0px;
+	margin-top:0px;
+	margin-right: 0px;
+    margin-bottom: 0px;
+    width: 441px;
+    max-height: 599px;
+	background-color: #FFFFFF;
+}
+
+.content{
+    overflow-x: hidden;
+    overflow-y: auto;
+    margin: 0px;
+    padding: 0px;
+    width: 100%;
+    max-height: 599px;
+}
 
  /*table*/
 .table_main {
     width: 440px;
     cursor: default;
-	  background-color: #FFFFFF;
-   border: 1px;
+	  
+
    border-collapse:collapse;
     
     table-layout: fixed;
@@ -115,16 +136,7 @@ td{
       color: #FFFFFF;
  }
  
- 
- 
-  /*body*/
-body{
-    overflow-x: hidden;
-	margin-left: 0px;
-	margin-top:0px;
-	margin-right: 0px;
-	margin-bottom: 0px;
-}
+
 
 .dropdown-menu {
     position: absolute;
@@ -191,7 +203,7 @@ a { text-decoration:none}
 	height:35px;
 }
 #searchInput{
-    margin-top:6px;
+    margin-top:3px;
     margin-left: 3px;
     width: 200px;
     height: 25px;
