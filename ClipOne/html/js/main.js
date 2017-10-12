@@ -82,6 +82,7 @@ function keyDown(event) {
         if (selectIndex > 0) {
 
             selectItem(--selectIndex);
+			scrollUp();
         } else if (selectIndex == 0) {
             $("#searchInput")[0].focus();
             searchMode = true;
@@ -95,6 +96,7 @@ function keyDown(event) {
         event.preventDefault();
         if (selectIndex < clipObj.length - 1) {
             selectItem(++selectIndex);
+			scrollDown();
         }
     }
     else if (!searchMode) {
@@ -151,7 +153,7 @@ function showSearch() {
 }
 //隐藏搜索框
 function hideSearch() {
-    scrollTop();
+   
     $("#searchDiv").css("display", "none");
     $(".table_main")[0].focus();
     $("#searchInput").val("");
@@ -203,9 +205,22 @@ function hideMenu() {
 //滚动到顶部
 function scrollTop() {
 
-    window.scrollTo(0, 0);
+    $(".content").scrollTop(0);
 }
-
+function scrollDown(){
+	var div=$(".content");
+	var tr=$("#tr"+selectIndex);
+	if(tr.offset().top+tr.height()>div.height()){
+		div.scrollTop( tr.height() + div.scrollTop());
+	}
+}
+function scrollUp(){
+	var div=$(".content");
+	var tr=$("#tr"+selectIndex);
+	if(tr.offset().top<0){
+	div.scrollTop(  div.scrollTop()- tr.height() );
+	}
+}
 //数字转换成字母
 function num2key(num) {
 
@@ -242,9 +257,9 @@ function displayData() {
             }
             if (clipObj[i].Type == "image") {
 
-                trs = " <tr style='cursor: default' class='tr' id='tr" + matchCount + "' index='" + i + "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' onmouseleave='trUnselect()'> <td  class='td_content' id='td" + i + "'  > <img class='image' src='../" + clipObj[i].DisplayValue + "' /> </td><td class='td_index'  >" + num + "</td> </tr>";
+                trs = " <tr style='cursor: default' class='tr tr"+i+"' id='tr" + matchCount + "' index='" + i + "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' onmouseleave='trUnselect()'> <td  class='td_content' id='td" + i + "'  > <img class='image' src='../" + clipObj[i].DisplayValue + "' /> </td><td class='td_index'  >" + num + "</td> </tr>";
             } else {  //if (clipObj[i].Type=="html"||clipObj[i].Type == "QQ_Unicode_RichEdit_Format"||clipObj[i].Type=="file")
-                trs = " <tr style='cursor: default' class='tr' id='tr" + matchCount + "' index='" + i + "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' onmouseleave='trUnselect()'> <td  class='td_content' id='td" + i + "' > " + clipObj[i].DisplayValue + " </td><td class='td_index'  >" + num + "</td> </tr>";
+                trs = " <tr style='cursor: default' class='tr tr"+i+"' id='tr" + matchCount + "' index='" + i + "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' onmouseleave='trUnselect()'> <td  class='td_content' id='td" + i + "' > " + clipObj[i].DisplayValue + " </td><td class='td_index'  >" + num + "</td> </tr>";
 
             }
         }
@@ -315,6 +330,7 @@ function init(recordsNum) {
 //隐藏时隐藏搜索框
 function hide(json) {
     hideSearch();
+	scrollTop();
 }
 //设置保存最大记录数
 function setMaxRecords(records) {
