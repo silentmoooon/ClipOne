@@ -431,6 +431,7 @@ function hidePreview() {
 function getAllClip() {
     return encodeURIComponent(JSON.stringify(clipObj));
 }
+
 function saveData() {
     window.localStorage.setItem("data", JSON.stringify(clipObj));
 

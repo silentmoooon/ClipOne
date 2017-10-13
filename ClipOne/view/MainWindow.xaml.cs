@@ -176,9 +176,6 @@ namespace ClipOne.view
             {
                 Directory.CreateDirectory(storeDir);
             }
-
-            
-
             //初始化浏览器
             InitWebView();
 
@@ -187,6 +184,9 @@ namespace ClipOne.view
             {
                 InitConfig();
             }
+
+          
+
             //设置保存最大数量到前端
             new Thread(SetRecords).Start();
             //初始化托盘图标
@@ -490,6 +490,7 @@ namespace ClipOne.view
             item.Checked = true;
             settingsMap["skin"] = item.Text;
             SaveSettings();
+            webView?.GetBrowser()?.MainFrame.EvaluateScriptAsync("saveData()").Wait();
             string css = item.Tag.ToString();
             ChangeSkin(css);
 
@@ -639,6 +640,7 @@ namespace ClipOne.view
         /// <param name="e"></param>
         private void Reload(object sender, EventArgs e)
         {
+            webView?.GetBrowser()?.MainFrame.EvaluateScriptAsync("saveData()").Wait();
             webView.GetBrowser().Reload(true);
         }
 
