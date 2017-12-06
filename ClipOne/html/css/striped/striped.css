@@ -133,12 +133,12 @@ td{
  
 
  /*鼠标悬浮*/
-.tr_hover,.tr:hover {
+.tr_hover,tr:hover {
     
 	 
 }
  
-  .tr_hover > td ,.tr:hover >td{
+  .tr_hover > td ,tr:hover >td{
     background-color: #ACBAD4 !important;
  }
  

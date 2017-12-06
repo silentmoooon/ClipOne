@@ -21,13 +21,13 @@ namespace ClipOne.service
         /// <summary>
         /// 图片类型，通过在内容前面增加前缀来标识
         /// </summary>
-        public   const string IMAGE_TYPE = "image";
+        public const string IMAGE_TYPE = "image";
         /// <summary>
         /// html类型，通过在内容前面增加前缀来标识
         /// </summary>
         public const string HTML_TYPE = "html";
 
-       
+
         /// <summary>
         /// 文件类型，通过在内容前面增加前缀来标识
         /// </summary>
@@ -37,6 +37,8 @@ namespace ClipOne.service
         /// QQ富文本类型
         /// </summary>
         public const string QQ_RICH_TYPE = "QQ_Unicode_RichEdit_Format";
+
+        public const string WECHAT_TYPE = "RTX_RichEdit_Format";
 
         /// <summary>
         /// Q文本类型
@@ -74,7 +76,7 @@ namespace ClipOne.service
 
         }
 
-        
+
 
         /// <summary>
         /// 保存图片到缓存目录
@@ -98,11 +100,17 @@ namespace ClipOne.service
         /// <param name="result"></param>
         public static void SetValueToClipboard(ClipModel result)
         {
-            if (result.Type==IMAGE_TYPE)
+            if (result.Type == WECHAT_TYPE)
+            {
+                MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
+                IDataObject data = new DataObject(WECHAT_TYPE, ms);
+                Clipboard.SetDataObject(data, false);
+            }
+            else if (result.Type == IMAGE_TYPE)
             {
                 try
                 {
-                    
+
                     BitmapImage bitImg = new BitmapImage();
                     bitImg.BeginInit();
                     bitImg.UriSource = new Uri(result.ClipValue, UriKind.Relative);
@@ -112,18 +120,18 @@ namespace ClipOne.service
 
 
                 }
-                catch {  return; }
+                catch { return; }
             }
             else if (result.Type == HTML_TYPE)
             {
-                
+
                 IDataObject data = new DataObject(DataFormats.Html, result.ClipValue);
                 Clipboard.SetDataObject(data, false);
             }
             else if (result.Type == QQ_RICH_TYPE)
             {
 
-                
+
                 MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
                 IDataObject data = new DataObject(QQ_RICH_TYPE, ms);
                 Clipboard.SetDataObject(data, false);
@@ -131,8 +139,8 @@ namespace ClipOne.service
             else if (result.Type == FILE_TYPE)
             {
                 string[] tmp = result.ClipValue.Split(',');
-                 
-                
+
+
                 try
                 {
                     IDataObject data = new DataObject(DataFormats.FileDrop, tmp);
@@ -142,7 +150,7 @@ namespace ClipOne.service
                     data.SetData("PreferredDropEffect", memo);
                     Clipboard.SetDataObject(data, false);
                 }
-                catch  {   return; }
+                catch { return; }
             }
             else
             {
@@ -152,13 +160,13 @@ namespace ClipOne.service
                     System.Windows.Forms.Clipboard.SetDataObject(data, false);
 
                 }
-                catch{   }
+                catch { }
             }
         }
 
-        
 
-        
+
+
         /// <summary>
         /// 处理剪切板文字类型
         /// </summary>
@@ -169,12 +177,12 @@ namespace ClipOne.service
             {
                 try
                 {
-                   
+
                     string textStr = Clipboard.GetText();
 
-                    if ((MainWindow.supportFormat&ClipType.html)!=0&& Clipboard.ContainsData(DataFormats.Html))
+                    if ((MainWindow.supportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
                     {
-                        
+
                         try
                         {
                             string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();
@@ -186,10 +194,10 @@ namespace ClipOne.service
                                 //html内容会固定出现在第16行。
                                 clip.DisplayValue = htmlStr.Split("\r\n".ToCharArray())[16];
                                 clip.Type = HTML_TYPE;
-                                
+
                                 return;
                             }
-                           
+
 
                         }
                         catch { }
@@ -210,7 +218,7 @@ namespace ClipOne.service
                             {
                                 tempStr += "<br>" + array[j];
                             }
-                            else if (j == 5&&j<array.Length-1)
+                            else if (j == 5 && j < array.Length - 1)
                             {
                                 tempStr += "<br>...";
                                 break;
@@ -219,7 +227,7 @@ namespace ClipOne.service
                     }
 
                     clip.DisplayValue = tempStr;
- 
+
                     return;
 
                 }
@@ -272,7 +280,7 @@ namespace ClipOne.service
 
                     clip.DisplayValue = displayStr;
 
-                    
+
                     break;
                 }
                 catch
@@ -303,7 +311,7 @@ namespace ClipOne.service
                     //html内容会固定出现在第16行。
                     clip.DisplayValue = htmlStr.Split("\r\n".ToCharArray())[16];
                     clip.Type = HTML_TYPE;
-                    
+
                     break;
                 }
                 catch
@@ -332,8 +340,58 @@ namespace ClipOne.service
                     clip.Type = IMAGE_TYPE;
                     clip.ClipValue = path;
                     clip.DisplayValue = path;
-                    
+
                     break;
+
+                }
+                catch
+                {
+
+
+                }
+            }
+        }
+
+        /// <summary>
+        /// 处理剪切板微信类型
+        /// </summary>
+        /// <param name="clip"></param>
+        public static void HandleClipWeChat(ClipModel clip)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                try
+                {
+
+                    MemoryStream stream = (MemoryStream)Clipboard.GetData(WECHAT_TYPE);
+                    byte[] b = stream.ToArray();
+                    string xmlStr = System.Text.Encoding.Default.GetString(b);
+                    // xmlStr = xmlStr.Substring(0, xmlStr.IndexOf("</QQRichEditFormat>") + "</QQRichEditFormat>".Length);
+
+                    clip.Type = WECHAT_TYPE;
+                    clip.ClipValue = xmlStr;
+
+                    XmlDocument document = new XmlDocument();
+                    document.LoadXml(xmlStr);
+                    String displayValue = string.Empty;
+                    foreach (XmlNode node in document.DocumentElement.ChildNodes)
+                    {
+                        if (node.Name == "EditElement" && node.Attributes["type"].Value == "0") //图片类型
+                        {
+                            displayValue += node.InnerText;
+
+                        }
+                        else
+                        {
+                            displayValue += "[表情]";
+                        }
+                    }
+
+                    clip.DisplayValue = displayValue;
+
+                    break;
+
+
 
                 }
                 catch
@@ -359,6 +417,7 @@ namespace ClipOne.service
                     byte[] b = stream.ToArray();
                     string xmlStr = System.Text.Encoding.UTF8.GetString(b);
                     xmlStr = xmlStr.Substring(0, xmlStr.IndexOf("</QQRichEditFormat>") + "</QQRichEditFormat>".Length);
+                   
 
                     string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();
 
@@ -382,6 +441,7 @@ namespace ClipOne.service
                         }
 
                     }
+
                     clip.Type = QQ_RICH_TYPE;
                     clip.ClipValue = xmlStr;
 
@@ -401,7 +461,7 @@ namespace ClipOne.service
                         htmlStr = doc.DocumentNode.OuterHtml;
                     }
                     clip.DisplayValue = htmlStr;
-                    
+
                     break;
 
 

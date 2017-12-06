@@ -124,13 +124,13 @@ td{
  
 
  /*鼠标悬浮*/
-.tr_hover,.tr:hover {
+.tr_hover,tr:hover {
     /*-webkit-box-shadow: 0 0 0 2px #0078d7 ;
      border-radius: 2px;*/
 		
 }
 
- .tr_hover > td ,.tr:hover >td{
+ .tr_hover > td ,tr:hover >td{
     
       background-color: #F44336;
        

@@ -671,9 +671,13 @@ namespace ClipOne.view
 
                 ClipModel clip = new ClipModel();
 
+                if(Clipboard.ContainsData(WECHAT_TYPE))
+                {
+                    HandleClipWeChat(clip);
+                }
 
                 //处理剪切板QQ自定义格式
-                if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
+               else if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
                 {
                     HandleClipQQ(clip);
 
@@ -1205,6 +1209,13 @@ namespace ClipOne.view
             // ...
         }
 
+        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Escape)
+            {
+                DiyHide();
+            }
+        }
     }
 
    
