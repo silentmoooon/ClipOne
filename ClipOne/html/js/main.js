@@ -157,6 +157,7 @@ function hideSearch() {
 	$(".table_main")[0].focus();
 	$("#searchInput").val("");
 	searchValue = "";
+	displayData();
 	lastSelectedIndex = -1;
 	isShiftPressed = false;
 	searchMode = false;

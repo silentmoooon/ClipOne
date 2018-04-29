@@ -271,6 +271,7 @@ namespace ClipOne.view
             if (settingsMap.ContainsKey("opacity"))  //透明度
             {
                 opacityValue = double.Parse(settingsMap["opacity"]);
+                
             }
         }
 
@@ -289,6 +290,7 @@ namespace ClipOne.view
             setting.CefCommandLineArgs.Add("Pragma", "no-cache");
             setting.CefCommandLineArgs.Add("expries", "-1");
             setting.CefCommandLineArgs.Add("disable-gpu", "1");
+             
             CefSharp.Cef.Initialize(setting);
             webView = new ChromiumWebBrowser();
             webView.MenuHandler = new MenuHandler();
@@ -297,7 +299,7 @@ namespace ClipOne.view
             browserSetting.DefaultEncoding = "utf-8";
             webView.BrowserSettings = browserSetting;
             webView.Address = "file:///" + defaultHtml;
-
+            
              cbOjb = new CallbackObjectForJs(this);
             webView.RegisterAsyncJsObject("callbackObj", cbOjb);
 
