@@ -26,9 +26,11 @@ namespace ClipOne.view
     {
 
         /// <summary>
-        /// 持久化目录
+        /// 缓存目录
         /// </summary>
-        private static string storeDir = "config";
+        public static string cacheDir = "cache";
+
+        private static string webChche = System.IO.Directory.GetCurrentDirectory() + @"\webCache";
         /// <summary>
         /// 配置文件路径
         /// </summary>
@@ -167,25 +169,20 @@ namespace ClipOne.view
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
            
-            if (!Directory.Exists(cacheDir))
-            {
-                Directory.CreateDirectory(cacheDir);
-            }
-
-            if (!Directory.Exists(storeDir))
-            {
-                Directory.CreateDirectory(storeDir);
-            }
-            //初始化浏览器
-            InitWebView();
 
             //如果配置文件存在则读取配置文件，否则按默认值设置
             if (File.Exists(settingsPath))
             {
                 InitConfig();
             }
+            if (!Directory.Exists(cacheDir))
+            {
+                Directory.CreateDirectory(cacheDir);
+            }
 
-          
+            //初始化浏览器
+            InitWebView();
+
 
             //设置保存最大数量到前端
             new Thread(SetRecords).Start();
@@ -273,6 +270,15 @@ namespace ClipOne.view
                 opacityValue = double.Parse(settingsMap["opacity"]);
                 
             }
+            if (settingsMap.ContainsKey("cache"))
+            {
+                cacheDir = settingsMap["cache"];
+            }
+            if (settingsMap.ContainsKey("webCache"))
+            {
+                webChche = settingsMap["webCache"];
+            }
+
         }
 
         /// <summary>
@@ -284,7 +290,7 @@ namespace ClipOne.view
             var setting = new CefSharp.CefSettings();
             setting.Locale = "zh-CN";
             setting.LogSeverity = LogSeverity.Disable;
-            setting.CachePath= System.IO.Directory.GetCurrentDirectory() + @"\webCache";
+            setting.CachePath= webChche;
             setting.WindowlessRenderingEnabled = true;
             setting.CefCommandLineArgs.Add("Cache-control", "no-cache");
             setting.CefCommandLineArgs.Add("Pragma", "no-cache");
@@ -734,10 +740,10 @@ namespace ClipOne.view
                 if (hotkeyAtom == wParam.ToInt32())
                 {
 
-                    if (this.Left == HideLeftValue) { 
-                        activeHwnd = WinAPIHelper.GetForegroundWindow();
-                        DiyShow();
-                    }
+                   
+                    activeHwnd = WinAPIHelper.GetForegroundWindow();
+                    DiyShow();
+                    
                     ShowWindowAndList();
 
 
@@ -1076,7 +1082,7 @@ namespace ClipOne.view
 
         }
 
-     
+      
 
 
 

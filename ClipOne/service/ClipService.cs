@@ -45,10 +45,7 @@ namespace ClipOne.service
         /// </summary>
         public const string TEXT_TYPE = "text";
 
-        /// <summary>
-        /// 缓存目录
-        /// </summary>
-        public static string cacheDir = "cache";
+       
 
 
         /// <summary>
@@ -85,7 +82,7 @@ namespace ClipOne.service
         /// <returns></returns>
         public static string SaveImage(BitmapSource bs)
         {
-            string path = cacheDir + "/" + Guid.NewGuid().ToString() + ".bmp";
+            string path = MainWindow.cacheDir + "/" + Guid.NewGuid().ToString() + ".bmp";
             BitmapEncoder encoder = new BmpBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(bs));
 
