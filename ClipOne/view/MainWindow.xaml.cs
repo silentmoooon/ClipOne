@@ -287,7 +287,8 @@ namespace ClipOne.view
         private void InitWebView()
         {
             ///初始化浏览器
-            var setting = new CefSharp.CefSettings();
+            CefSharpSettings.LegacyJavascriptBindingEnabled = true;
+            var setting = new CefSettings();
             setting.Locale = "zh-CN";
             setting.LogSeverity = LogSeverity.Disable;
             setting.CachePath= webChche;
@@ -308,7 +309,7 @@ namespace ClipOne.view
             
              cbOjb = new CallbackObjectForJs(this);
             webView.RegisterAsyncJsObject("callbackObj", cbOjb);
-
+           
             mainGrid.Children.Add(webView);
 
         }

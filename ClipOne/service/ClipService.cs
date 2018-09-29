@@ -366,25 +366,36 @@ namespace ClipOne.service
                     // xmlStr = xmlStr.Substring(0, xmlStr.IndexOf("</QQRichEditFormat>") + "</QQRichEditFormat>".Length);
 
                     clip.Type = WECHAT_TYPE;
-                    clip.ClipValue = xmlStr;
+                   clip.ClipValue = xmlStr;
 
                     XmlDocument document = new XmlDocument();
                     document.LoadXml(xmlStr);
                     String displayValue = string.Empty;
+                    string value = string.Empty;
+                    bool onlyText = true;
                     foreach (XmlNode node in document.DocumentElement.ChildNodes)
                     {
-                        if (node.Name == "EditElement" && node.Attributes["type"].Value == "0") //图片类型
+                        if (node.Name == "EditElement" && node.Attributes["type"].Value == "0") //文字类型
                         {
                             displayValue += node.InnerText;
+                            value += node.InnerText;
 
                         }
                         else
                         {
+                            onlyText = false;
                             displayValue += "[表情]";
+                            value +=" ";
                         }
                     }
-
+                    if (onlyText)
+                    {
+                        clip.Type = TEXT_TYPE;
+                        clip.ClipValue = value;
+                    }
+                     
                     clip.DisplayValue = displayValue;
+                    
 
                     break;
 

@@ -9,9 +9,7 @@ var lastSelectedIndex = -1;
 var storeInterval;
 var maxRecords = 100;
 var searchValue = '';
-
-
-
+ 
 //屏蔽鼠标选择操作
 document.onselectstart = function () {
 	event.returnValue = false;
@@ -413,6 +411,7 @@ function pasteValue(index) {
 	obj = clipObj.splice(index, 1)[0];
 	clipObj.splice(0, 0, obj);
 
+	 
 	callbackObj.pasteValue(encodeURIComponent(JSON.stringify(obj)));
 	displayData();
 }
