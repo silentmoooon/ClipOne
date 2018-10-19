@@ -1,5 +1,4 @@
-﻿using CefSharp;
-using CefSharp.Wpf;
+﻿ 
 using ClipOne.model;
 using ClipOne.service;
 using ClipOne.util;
@@ -45,17 +44,13 @@ namespace ClipOne.view
         /// <summary>
         /// 默认显示页面
         /// </summary>
-        private static string defaultHtml = "html\\index.html";
+        private static string defaultHtml = "html/index.html";
 
         /// <summary>
         /// 活动窗口句柄,在显示本窗口前,缓存当前活动窗口
         /// </summary>
         private IntPtr activeHwnd = IntPtr.Zero;
-        /// <summary>
-        /// 浏览器
-        /// </summary>
-        ChromiumWebBrowser webView;
-
+      
         /// <summary>
         /// 隐藏时将left设置为该值
         /// </summary>
@@ -169,7 +164,7 @@ namespace ClipOne.view
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
            
-
+            
             //如果配置文件存在则读取配置文件，否则按默认值设置
             if (File.Exists(settingsPath))
             {
@@ -185,7 +180,7 @@ namespace ClipOne.view
 
 
             //设置保存最大数量到前端
-            new Thread(SetRecords).Start();
+            SetRecords();
             //初始化托盘图标
             InitialTray();
 
@@ -210,13 +205,14 @@ namespace ClipOne.view
 
 
 
-        
-        private void SetRecords()
+
+        private   void SetRecords()
         {
             Thread.Sleep(500);
+
            
-            webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("init('" + currentRecords + "')");
-           
+              webView1.InvokeScript("init", currentRecords.ToString());
+            Console.WriteLine("------111");
         }
         /// <summary>
         /// 初始化预览窗口
@@ -286,36 +282,51 @@ namespace ClipOne.view
         /// </summary>
         private void InitWebView()
         {
-            ///初始化浏览器
-            CefSharpSettings.LegacyJavascriptBindingEnabled = true;
-            var setting = new CefSettings();
-            setting.Locale = "zh-CN";
-            setting.LogSeverity = LogSeverity.Disable;
-            setting.CachePath= webChche;
-            setting.WindowlessRenderingEnabled = true;
-            setting.CefCommandLineArgs.Add("Cache-control", "no-cache");
-            setting.CefCommandLineArgs.Add("Pragma", "no-cache");
-            setting.CefCommandLineArgs.Add("expries", "-1");
-            setting.CefCommandLineArgs.Add("disable-gpu", "1");
-             
-            CefSharp.Cef.Initialize(setting);
-            webView = new ChromiumWebBrowser();
-            webView.MenuHandler = new MenuHandler();
-            BrowserSettings browserSetting = new BrowserSettings();
-            browserSetting.ApplicationCache = CefState.Disabled;
-            browserSetting.DefaultEncoding = "utf-8";
-            webView.BrowserSettings = browserSetting;
-            webView.Address = "file:///" + defaultHtml;
-            
-             cbOjb = new CallbackObjectForJs(this);
-            webView.RegisterAsyncJsObject("callbackObj", cbOjb);
+       
+            cbOjb = new CallbackObjectForJs(this);
            
-            mainGrid.Children.Add(webView);
 
+            webView1.IsJavaScriptEnabled = true;
+            webView1.IsScriptNotifyAllowed = true;
+           
+            webView1.ScriptNotify += WebView1_ScriptNotify;
+            
+            webView1.NavigateToLocal(defaultHtml);
+ 
         }
 
-        
+        private void WebView1_ScriptNotify(object sender, Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT.WebViewControlScriptNotifyEventArgs e)
+        {
+            string [] args = e.Value.Split(':');
+            Console.WriteLine(e.Value);
+            if(args[0]== "PasteValue")
+            {
+                cbOjb.PasteValue(args[1]);
+            }else if(args[0]== "PasteValueList")
+            {
+                cbOjb.PasteValueList(args[1]);
+            }
+            else if (args[0] == "DeleteImage")
+            {
+                cbOjb.DeleteImage(args[1]);
+            }
+            else if (args[0] == "ChangeWindowHeight")
+            {
+                ChangeWindowHeight(double.Parse(args[1]));
+            }
+            else if (args[0] == "Preview")
+            {
+                cbOjb.Preview(args[1]);
+            }
+            else if (args[0] == "HidePreview")
+            {
+                cbOjb.HidePreview();
+            }
+        }
+
+      
  
+
         /// <summary>
         /// 初始化托盘图标及菜单
         /// </summary>
@@ -337,8 +348,7 @@ namespace ClipOne.view
             System.Windows.Forms.MenuItem exit = new System.Windows.Forms.MenuItem("退出");
             System.Windows.Forms.MenuItem separator0 = new System.Windows.Forms.MenuItem("-");
             System.Windows.Forms.MenuItem startup = new System.Windows.Forms.MenuItem("开机自启");
-            System.Windows.Forms.MenuItem devTools = new System.Windows.Forms.MenuItem("调试工具");
-
+            
             System.Windows.Forms.MenuItem separator1 = new System.Windows.Forms.MenuItem("-");
             System.Windows.Forms.MenuItem hotkey = new System.Windows.Forms.MenuItem("热键");
 
@@ -364,7 +374,7 @@ namespace ClipOne.view
                 isNotAllowHide = false;
                 DiyHide();
             };
-            devTools.Click += DevTools_Click;
+          
             clear.Click += Clear_Click;
             reload.Click += new EventHandler(Reload);
             exit.Click += new EventHandler(Exit_Click);
@@ -433,7 +443,7 @@ namespace ClipOne.view
             }
 
             //关联菜单项至托盘
-            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { clear, format, separator3, reload, skin, opaSet, separator2, record, hotkey, separator1, devTools, startup, separator0, exit };
+            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { clear, format, separator3, reload, skin, opaSet, separator2, record, hotkey, separator1,   startup, separator0, exit };
             notifyIcon.ContextMenu = new System.Windows.Forms.ContextMenu(childen);
 
 
@@ -464,30 +474,7 @@ namespace ClipOne.view
             SaveSettings();
         }
 
-        /// <summary>
-        /// 进入开发者模式
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void DevTools_Click(object sender, EventArgs e)
-        {
-            System.Windows.Forms.MenuItem item = (System.Windows.Forms.MenuItem)sender;
-            if (!isNotAllowHide)
-            {
-                item.Checked = true;
-                isNotAllowHide = true;
-
-                webView?.GetBrowser()?.ShowDevTools();
-                ShowWindowAndList();
-            }
-            else
-            {
-                item.Checked = false;
-                webView?.GetBrowser()?.CloseDevTools();
-                isNotAllowHide = false;
-                DiyHide();
-            }
-        }
+       
 
         private void SkinItem_Click(object sender, EventArgs e)
         {
@@ -499,7 +486,8 @@ namespace ClipOne.view
             item.Checked = true;
             settingsMap["skin"] = item.Text;
             SaveSettings();
-            webView?.GetBrowser()?.MainFrame.EvaluateScriptAsync("saveData()").Wait();
+           
+            webView1.InvokeScript( "saveData");
             string css = item.Tag.ToString();
             ChangeSkin(css);
 
@@ -535,7 +523,8 @@ namespace ClipOne.view
                 fileLines.Add(" <link rel='stylesheet' type='text/css' href='" + str + "'/>");
             }
             File.WriteAllLines(defaultHtml, fileLines, Encoding.UTF8);
-            webView.GetBrowser().Reload();
+            
+            webView1.Refresh();
 
 
         }
@@ -619,8 +608,8 @@ namespace ClipOne.view
             settingsMap["record"] = item.Text;
             SaveSettings();
 
-            webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("setMaxRecords(" + currentRecords + ")");
-
+           
+            webView1.InvokeScript("setMaxRecords", currentRecords.ToString());
 
 
         }
@@ -637,7 +626,8 @@ namespace ClipOne.view
             {
                 File.Delete(file);
             });
-            webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("clear()");
+           
+            webView1.InvokeScript( "clear");
         }
 
         
@@ -649,8 +639,9 @@ namespace ClipOne.view
         /// <param name="e"></param>
         private void Reload(object sender, EventArgs e)
         {
-            webView?.GetBrowser()?.MainFrame.EvaluateScriptAsync("saveData()").Wait();
-            webView.GetBrowser().Reload(true);
+           
+            webView1.InvokeScript(  "saveData");
+            webView1.Refresh();
         }
 
         private void Exit_Click(object sender, EventArgs e)
@@ -768,9 +759,9 @@ namespace ClipOne.view
 
             json = HttpUtility.UrlEncode(json);
 
-            webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("add('" + json + "')");
-
-
+           
+            webView1.InvokeScript("add",json);
+            
 
         }
 
@@ -785,8 +776,8 @@ namespace ClipOne.view
 
             ShowList();
 
-           
-            webView.Focus();
+           // webView.Focus();
+            webView1.Focus();
 
            
             WinAPIHelper.POINT point = new WinAPIHelper.POINT();
@@ -829,6 +820,7 @@ namespace ClipOne.view
         public void ChangeWindowHeight(double height)
         {
             
+            Console.WriteLine(height);
             this.Height = height+21 ;
 
             WinAPIHelper.POINT point = new WinAPIHelper.POINT();
@@ -849,31 +841,26 @@ namespace ClipOne.view
         /// <summary>
         /// 展示
       
-        private void ShowList()
+        private   void ShowList()
         {
- 
-            webView.GetBrowser().MainFrame.ExecuteJavaScriptAsync("show()");
+             
+               webView1.InvokeScript("showRecord" );
+             
+            
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            webView1.InvokeScript("saveData");
             
-            webView?.GetBrowser()?.MainFrame.EvaluateScriptAsync("saveData()").Wait();
 
             if (notifyIcon != null)
             {
                 notifyIcon.Dispose();
             }
-            try
-            {
-                if (webView != null)
-                {
-                    webView.GetBrowser().CloseBrowser(true);
-                    webView.Dispose();
-                    Cef.Shutdown();
-                }
-            }
-            catch { }
+             
+            webView1.Dispose();
+            
 
             if (wpfHwnd != null)
             {
@@ -1147,7 +1134,8 @@ namespace ClipOne.view
             if (activeHwnd != IntPtr.Zero) {
                 WinAPIHelper.SetForegroundWindow(activeHwnd);
             }
-            webView?.GetBrowser()?.MainFrame.ExecuteJavaScriptAsync("hide()");
+            webView1.InvokeScript(  "hide");
+          
             //this.Opacity = 0;
             this.Left = HideLeftValue;
             // this.Hide();
@@ -1155,36 +1143,7 @@ namespace ClipOne.view
         
 
 
-        internal class MenuHandler : IContextMenuHandler
-        {
-            /// <summary>
-            /// 阻止默认的右键菜单
-            /// </summary>
-            /// <param name="browserControl"></param>
-            /// <param name="browser"></param>
-            /// <param name="frame"></param>
-            /// <param name="parameters"></param>
-            /// <param name="model"></param>
-            public void OnBeforeContextMenu(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, IMenuModel model)
-            {
-                model.Clear();
-            }
-
-            public bool OnContextMenuCommand(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, CefMenuCommand commandId, CefEventFlags eventFlags)
-            {
-                return false;
-            }
-
-            public void OnContextMenuDismissed(IWebBrowser browserControl, IBrowser browser, IFrame frame)
-            {
-
-            }
-
-            public bool RunContextMenu(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, IMenuModel model, IRunContextMenuCallback callback)
-            {
-                return false;
-            }
-        }
+         
         internal enum AccentState
         {
             ACCENT_DISABLED = 0,

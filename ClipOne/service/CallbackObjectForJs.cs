@@ -1,5 +1,6 @@
 ﻿using ClipOne.view;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 
@@ -8,9 +9,16 @@ namespace ClipOne.service
     public class CallbackObjectForJs
     {
         MainWindow window;
+        
         public CallbackObjectForJs(MainWindow w)
         {
             this.window = w;
+           
+        }
+
+        public void init()
+        {
+           
         }
 
         /// <summary>

@@ -40,7 +40,7 @@ $(document).ready(function () {
 
 	$(document).on("keydown", keyDown);
 	$(document).on("keyup", keyUp);
-
+	 
 	var str = window.localStorage.getItem("data");
 	if (str != null) {
 		clipObj = JSON.parse(str);
@@ -61,7 +61,7 @@ function keyDown(event) {
 			hideSearch();
 
 		}
-		changeWindowHeight($("body").height());
+		//changeWindowHeight($("body").height());
 	} else if (event.keyCode == 9) {   //tab键
 
 		event.preventDefault();
@@ -179,11 +179,15 @@ function trSelect(event) {
 }
 
 //反选
-function trUnselect() {
+function trUnselect(event) {
+
 	if (previewTimeout) {
-		clearTimeout(previewTimeout);
-	}
-	hidePreview();
+        clearTimeout(previewTimeout);
+        previewTimeout = undefined;
+        hidePreview();
+    }
+
+	
 }
 
 //显示右键菜单
@@ -321,7 +325,8 @@ function mouseup(e) {
 
 //初始化
 function init(recordsNum) {
-	maxRecords = recordsNum;
+    maxRecords = recordsNum;
+     
     displayData();
 
 }
@@ -378,7 +383,7 @@ function add(data) {
 
 
 //显示记录
-function show() {
+function showRecord() {
 
     if (clipObj.length != 0) {
         
@@ -411,8 +416,8 @@ function pasteValue(index) {
 	obj = clipObj.splice(index, 1)[0];
 	clipObj.splice(0, 0, obj);
 
-	 
-	callbackObj.pasteValue(encodeURIComponent(JSON.stringify(obj)));
+    window.external.notify("PasteValue:" + encodeURIComponent(JSON.stringify(obj)));
+	//callbackObj.pasteValue(encodeURIComponent(JSON.stringify(obj)));
 	displayData();
 }
 //粘贴多条
@@ -433,28 +438,34 @@ function pasteValueByRange(startIndex, endIndex) {
 	} else {
 		pasteValue(startIndex);
 		return;
-	}
-	callbackObj.pasteValueList(encodeURIComponent(JSON.stringify(clipList)));
+    }
+    window.external.notify("PasteValueList:" + encodeURIComponent(JSON.stringify(obj)));
+	//callbackObj.pasteValueList(encodeURIComponent(JSON.stringify(clipList)));
 	displayData();
 }
 
 //删除
 function deleteImage(path) {
-	callbackObj.deleteImage(path);
+    //callbackObj.deleteImage(path);
+    window.external.notify("DeleteImage:" + path);
 }
 //调整高度
 function changeWindowHeight(height) {
-	callbackObj.changeWindowHeight(height);
+    //callbackObj.changeWindowHeight(height);
+     
+    window.external.notify("ChangeWindowHeight:" + height);
 }
 
 //预览
 function preview(path) {
-	callbackObj.preview(path);
+    //callbackObj.preview(path);
+    window.external.notify("Preview:" + path);
 }
 
 //隐藏预览
 function hidePreview() {
-	callbackObj.hidePreview();
+    //callbackObj.hidePreview();
+    window.external.notify("HidePreview:" +"11");
 }
 
 //获取所有记录,用来持久化
