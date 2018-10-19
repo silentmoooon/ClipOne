@@ -150,7 +150,6 @@
     </ApplicationDefinition>
     <Compile Include="model\ClipModel.cs" />
     <Compile Include="model\ClipType.cs" />
-    <Compile Include="service\CallbackObjectForJs.cs" />
     <Compile Include="service\ClipService.cs" />
     <Compile Include="util\LimitPropsContractResolver.cs" />
     <Compile Include="util\StringUtil.cs" />
@@ -223,6 +222,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="html\css\striped\striped.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="html\js\jquery.nicescroll.min.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="卸载前清理注册表.bat">

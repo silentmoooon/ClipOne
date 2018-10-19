@@ -89,7 +89,6 @@ namespace ClipOne.util
            IntPtr hwnd,
            int wCmd
        );
-        [DllImport("user32.dll")]
-        internal static extern int SetWindowCompositionAttribute(IntPtr hwnd, ref WindowCompositionAttributeData data);
+         
     }
 }
