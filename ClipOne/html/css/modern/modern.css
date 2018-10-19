@@ -1,4 +1,50 @@
 
+
+/* 名称：012.ScrollBar.FirefoxQuantum.MsEdge.catcat520 */
+/* 别名：012.ScrollBar.FirefoxQuantum.MsEdge.catcat520 */
+/* 感谢： */
+/* 功能：修改滚动条 */ /* AGENT_SHEET */
+/* 注释： */
+/* 适用：Win/*nix 系统 Microsoft Edge 和 Firefox Quantum 57 及之后的版本 内核浏览器 */ /* i really want this to be global */
+/* 网址：https://userstyles.org/styles/149652/ */
+/* 帮助：http://bbs.kafan.cn/thread-2105629-1-1.html */ /* 反馈问题需附上网址 url，对比截图，浏览器名称，字体名称 */
+
+@-moz-document url-prefix("http"), url-prefix("file"), url-prefix("ftp") {
+    @ supports(-moz-animation: none) or (-ms-ime-align: auto) {
+        html, : root {
+            overflow: hidden;
+        }
+
+        body {
+            overflow: auto;
+            margin-left: 2px;
+            padding-right: calc(9px - /*[[ScrollbarWidth]]*/ );
+            margin-top: -13px;
+            min-width: auto;
+            -webkit-box-sizing: content-box;
+            -moz-box-sizing: content-box;
+            box-sizing: content-box;
+        }
+
+            body > * {
+                margin-top: 13px;
+            }
+
+        html, body {
+            width: 100%;
+            height: 102%;
+        }
+    }
+}
+
+@-moz-document domain("userstyles.org") {
+    @ supports(-moz-animation: none) or (-ms-ime-align: auto) {
+        html, : root {
+            overflow: auto;
+        }
+    }
+}
+ 
 /*全局字体*/
 * {
     font-family: "Microsoft Yahei","微软雅黑";
@@ -6,41 +52,8 @@
 	 
 }
 
-/* 滚动条*/
-::-webkit-scrollbar { 
-    width: 4px;
-    opacity: 0.9;
-    height: 10px;
-    background-color: transparent;
-   
-}
+ 
 
-::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.3);
-    border-radius: 10px; /*滚动条的背景区域的圆角*/
-    background-color: red; /*滚动条的背景颜色*/
-}
-
-::-webkit-scrollbar-track-piece {
-    background-color: #FFFFFF;
-    margin: -2px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgb(165, 154, 154);
-    opacity: 0.1;
-    max-height: 10px;
-    width: 1px;
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:vertical:hover {
-    background: #555555
-}
-
-::-webkit-scrollbar-thumb:horizontal:hover {
-    background: #555555
-}
 
   /*body*/
 body{
