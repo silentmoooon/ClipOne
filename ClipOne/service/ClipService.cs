@@ -97,6 +97,8 @@ namespace ClipOne.service
         /// <param name="result"></param>
         public static void SetValueToClipboard(ClipModel result)
         {
+            Console.WriteLine(result.ClipValue);
+            Console.WriteLine(result.DisplayValue);
             if (result.Type == WECHAT_TYPE)
             {
                 MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
@@ -136,8 +138,7 @@ namespace ClipOne.service
             else if (result.Type == FILE_TYPE)
             {
                 string[] tmp = result.ClipValue.Split(',');
-
-
+                 
                 try
                 {
                     IDataObject data = new DataObject(DataFormats.FileDrop, tmp);
@@ -154,10 +155,13 @@ namespace ClipOne.service
                 try
                 {
                     IDataObject data = new DataObject(DataFormats.Text, result.ClipValue);
+
                     System.Windows.Forms.Clipboard.SetDataObject(data, false);
 
                 }
-                catch { }
+                catch (Exception e){
+                    Console.WriteLine(e.StackTrace);
+                }
             }
         }
 

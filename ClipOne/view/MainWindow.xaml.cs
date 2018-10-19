@@ -1,7 +1,8 @@
-﻿ 
+﻿
 using ClipOne.model;
 using ClipOne.service;
 using ClipOne.util;
+using Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -50,7 +51,7 @@ namespace ClipOne.view
         /// 活动窗口句柄,在显示本窗口前,缓存当前活动窗口
         /// </summary>
         private IntPtr activeHwnd = IntPtr.Zero;
-      
+
         /// <summary>
         /// 隐藏时将left设置为该值
         /// </summary>
@@ -61,21 +62,18 @@ namespace ClipOne.view
         /// </summary>
         private double OpacityRatio = 0.06;
 
-        /// <summary>
-        /// 供浏览器JS回调的接口
-        /// </summary>
-        CallbackObjectForJs cbOjb;
 
-        /// <summary>
-        /// 是否不允许隐藏,在打开开发者工具和设置透明度使用
-        /// </summary>
-        public static bool isNotAllowHide = false;
+     private static   bool ctrlPress = false;
+
+ 
+
+        public static bool isShow = false;
 
         /// <summary>
         /// 剪切板事件
         /// </summary>
         private static int WM_CLIPBOARDUPDATE = 0x031D;
- 
+
         /// <summary>
         /// 注册快捷键全局原子字符串 
         /// </summary>
@@ -143,7 +141,7 @@ namespace ClipOne.view
         /// </summary>
         private IntPtr wpfHwnd;
 
-      
+
         /// <summary>
         /// 预览窗口
         /// </summary>
@@ -156,15 +154,15 @@ namespace ClipOne.view
             InitializeComponent();
 
             System.IO.Directory.SetCurrentDirectory(System.Windows.Forms.Application.StartupPath);
-           
+
 
 
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-           
-            
+
+
             //如果配置文件存在则读取配置文件，否则按默认值设置
             if (File.Exists(settingsPath))
             {
@@ -178,14 +176,12 @@ namespace ClipOne.view
             //初始化浏览器
             InitWebView();
 
-
-            //设置保存最大数量到前端
-            SetRecords();
+ 
             //初始化托盘图标
             InitialTray();
 
-           
-           
+
+
 
             //注册热键,如果注册热键失败则弹出热键设置界面
             hotkeyAtom = HotKeyManager.GlobalAddAtom(hotkeyAtomStr);
@@ -199,21 +195,13 @@ namespace ClipOne.view
             InitPreviewForm();
  
 
-
         }
 
 
 
 
 
-        private   void SetRecords()
-        {
-            Thread.Sleep(500);
-
-           
-              webView1.InvokeScript("init", currentRecords.ToString());
-            Console.WriteLine("------111");
-        }
+      
         /// <summary>
         /// 初始化预览窗口
         /// </summary>
@@ -232,7 +220,7 @@ namespace ClipOne.view
         /// </summary>
         private static void InitConfig()
         {
-            
+
             string json = File.ReadAllText(settingsPath);
             settingsMap = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
             if (settingsMap.ContainsKey("startup"))  //自启动
@@ -264,7 +252,7 @@ namespace ClipOne.view
             if (settingsMap.ContainsKey("opacity"))  //透明度
             {
                 opacityValue = double.Parse(settingsMap["opacity"]);
-                
+
             }
             if (settingsMap.ContainsKey("cache"))
             {
@@ -282,33 +270,67 @@ namespace ClipOne.view
         /// </summary>
         private void InitWebView()
         {
-       
-            cbOjb = new CallbackObjectForJs(this);
-           
 
-            webView1.IsJavaScriptEnabled = true;
-            webView1.IsScriptNotifyAllowed = true;
            
+            webView1.IsScriptNotifyAllowed = true;
+
             webView1.ScriptNotify += WebView1_ScriptNotify;
-            
+            webView1.KeyDown += WebView1_KeyDown;
+            webView1.KeyUp += WebView1_KeyUp;
+
             webView1.NavigateToLocal(defaultHtml);
- 
+
+
+        }
+      
+        private void WebView1_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.LeftCtrl)
+            {
+                ctrlPress = false;
+            }
+        }
+
+     
+        private void WebView1_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if(e.Key== System.Windows.Input.Key.LeftCtrl)
+            {
+                ctrlPress = true;
+            }
+            if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                Console.WriteLine("togglePasteValue----");
+                webView1.InvokeScript("togglePasteValue");
+            }
+            if (ctrlPress) { 
+                if (e.Key == System.Windows.Input.Key.F)
+                {
+                    webView1.InvokeScript("changeSearchMode");
+                }
+            }
+            Console.WriteLine(e.Key.ToString());
         }
 
         private void WebView1_ScriptNotify(object sender, Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT.WebViewControlScriptNotifyEventArgs e)
         {
-            string [] args = e.Value.Split(':');
+            string[] args = e.Value.Split(':');
             Console.WriteLine(e.Value);
-            if(args[0]== "PasteValue")
+            if (args[0] == "PasteValue")
             {
-                cbOjb.PasteValue(args[1]);
-            }else if(args[0]== "PasteValueList")
+                 
+                    PasteValue(args[1]);
+                 
+            }
+            else if (args[0] == "PasteValueList")
             {
-                cbOjb.PasteValueList(args[1]);
+                 
+                    PasteValueList(args[1]);
+                
             }
             else if (args[0] == "DeleteImage")
             {
-                cbOjb.DeleteImage(args[1]);
+                new Thread(new ParameterizedThreadStart(DeleteFile)).Start(args[1]);
             }
             else if (args[0] == "ChangeWindowHeight")
             {
@@ -316,16 +338,31 @@ namespace ClipOne.view
             }
             else if (args[0] == "Preview")
             {
-                cbOjb.Preview(args[1]);
+                ShowPreviewForm(args[1]);
             }
             else if (args[0] == "HidePreview")
             {
-                cbOjb.HidePreview();
+                HidePreview();
             }
         }
 
-      
- 
+
+        private void DeleteFile(object path)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                Thread.Sleep(i * 500);
+                try
+                {
+                    File.Delete(path.ToString());
+                    return;
+                }
+                catch
+                {
+
+                }
+            }
+        }
 
         /// <summary>
         /// 初始化托盘图标及菜单
@@ -348,7 +385,7 @@ namespace ClipOne.view
             System.Windows.Forms.MenuItem exit = new System.Windows.Forms.MenuItem("退出");
             System.Windows.Forms.MenuItem separator0 = new System.Windows.Forms.MenuItem("-");
             System.Windows.Forms.MenuItem startup = new System.Windows.Forms.MenuItem("开机自启");
-            
+
             System.Windows.Forms.MenuItem separator1 = new System.Windows.Forms.MenuItem("-");
             System.Windows.Forms.MenuItem hotkey = new System.Windows.Forms.MenuItem("热键");
 
@@ -363,18 +400,14 @@ namespace ClipOne.view
 
             opaSet.Click += (sender, e) =>
             {
-                isNotAllowHide = true;
-                DiyShow();
-                ShowWindowAndList();
                 
                 OpacitySet os = new OpacitySet(this, (1 - opacityValue) / OpacityRatio);
-               
+
                 os.Topmost = true;
                 os.ShowDialog();
-                isNotAllowHide = false;
-                DiyHide();
+                
             };
-          
+
             clear.Click += Clear_Click;
             reload.Click += new EventHandler(Reload);
             exit.Click += new EventHandler(Exit_Click);
@@ -423,8 +456,8 @@ namespace ClipOne.view
             //根据css文件创建皮肤菜单项
             if (Directory.Exists(cssDir))
             {
-               string[] fileList = Directory.GetDirectories(cssDir);
-               
+                string[] fileList = Directory.GetDirectories(cssDir);
+
                 foreach (string file in fileList)
                 {
 
@@ -443,7 +476,7 @@ namespace ClipOne.view
             }
 
             //关联菜单项至托盘
-            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { clear, format, separator3, reload, skin, opaSet, separator2, record, hotkey, separator1,   startup, separator0, exit };
+            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { clear, format, separator3, reload, skin, opaSet, separator2, record, hotkey, separator1, startup, separator0, exit };
             notifyIcon.ContextMenu = new System.Windows.Forms.ContextMenu(childen);
 
 
@@ -474,7 +507,7 @@ namespace ClipOne.view
             SaveSettings();
         }
 
-       
+
 
         private void SkinItem_Click(object sender, EventArgs e)
         {
@@ -486,8 +519,8 @@ namespace ClipOne.view
             item.Checked = true;
             settingsMap["skin"] = item.Text;
             SaveSettings();
-           
-            webView1.InvokeScript( "saveData");
+
+            webView1.InvokeScript("saveData");
             string css = item.Tag.ToString();
             ChangeSkin(css);
 
@@ -515,15 +548,15 @@ namespace ClipOne.view
                 }
             }
             string[] files = Directory.GetFiles(cssPath);
-           
+
             foreach (string file in files)
             {
-                
+
                 string str = file.Replace("\\", "/").Replace("html/", "");
                 fileLines.Add(" <link rel='stylesheet' type='text/css' href='" + str + "'/>");
             }
             File.WriteAllLines(defaultHtml, fileLines, Encoding.UTF8);
-            
+
             webView1.Refresh();
 
 
@@ -608,7 +641,7 @@ namespace ClipOne.view
             settingsMap["record"] = item.Text;
             SaveSettings();
 
-           
+
             webView1.InvokeScript("setMaxRecords", currentRecords.ToString());
 
 
@@ -626,11 +659,11 @@ namespace ClipOne.view
             {
                 File.Delete(file);
             });
-           
-            webView1.InvokeScript( "clear");
+
+            webView1.InvokeScript("clear");
         }
 
-        
+
 
         /// <summary>
         /// 刷新页面
@@ -639,8 +672,8 @@ namespace ClipOne.view
         /// <param name="e"></param>
         private void Reload(object sender, EventArgs e)
         {
-           
-            webView1.InvokeScript(  "saveData");
+
+            webView1.InvokeScript("saveData");
             webView1.Refresh();
         }
 
@@ -663,7 +696,7 @@ namespace ClipOne.view
         /// <returns></returns>
         public IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            
+
             //当为剪切板消息时，由于获取数据会有失败的情况，所以循环3次，尽量确保成功
             if (msg == WM_CLIPBOARDUPDATE)
             {
@@ -671,13 +704,13 @@ namespace ClipOne.view
 
                 ClipModel clip = new ClipModel();
 
-                if(Clipboard.ContainsData(WECHAT_TYPE))
+                if (Clipboard.ContainsData(WECHAT_TYPE))
                 {
                     HandleClipWeChat(clip);
                 }
 
                 //处理剪切板QQ自定义格式
-               else if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
+                else if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
                 {
                     HandleClipQQ(clip);
 
@@ -728,14 +761,14 @@ namespace ClipOne.view
             //触发显示界面快捷键
             else if (msg == HotKeyManager.WM_HOTKEY)
             {
-                
+
                 if (hotkeyAtom == wParam.ToInt32())
                 {
 
-                   
+
                     activeHwnd = WinAPIHelper.GetForegroundWindow();
                     DiyShow();
-                    
+
                     ShowWindowAndList();
 
 
@@ -752,34 +785,30 @@ namespace ClipOne.view
         /// 增加条目
         /// </summary>
         /// <param name="str"></param>
-        private  void EnQueue(ClipModel clip)
+        private void EnQueue(ClipModel clip)
         {
 
             string json = JsonConvert.SerializeObject(clip);
 
             json = HttpUtility.UrlEncode(json);
 
-           
-            webView1.InvokeScript("add",json);
-            
+
+            webView1.InvokeScript("add", json);
+
 
         }
 
-       
+
         /// <summary>
         /// 显示窗口并列出所有条目
         /// </summary>
         private void ShowWindowAndList()
         {
-            
-           
-
+ 
             ShowList();
-
-           // webView.Focus();
+ 
             webView1.Focus();
-
-           
+ 
             WinAPIHelper.POINT point = new WinAPIHelper.POINT();
             if (WinAPIHelper.GetCursorPos(out point))
             {
@@ -799,7 +828,7 @@ namespace ClipOne.view
                 }
                 if (my > y - this.ActualHeight)
                 {
-                    this.Top = y - this.ActualHeight-2;
+                    this.Top = y - this.ActualHeight - 2;
                 }
                 else
                 {
@@ -820,18 +849,17 @@ namespace ClipOne.view
         public void ChangeWindowHeight(double height)
         {
             
-            Console.WriteLine(height);
-            this.Height = height+21 ;
+            this.Height = height + 21;
 
             WinAPIHelper.POINT point = new WinAPIHelper.POINT();
             if (WinAPIHelper.GetCursorPos(out point))
             {
 
-                 
+
                 double y = SystemParameters.WorkArea.Height;//得到屏幕工作区域高度
                 if (this.ActualHeight + this.Top > y)
                 {
-                    this.Top = y - this.ActualHeight-2;
+                    this.Top = y - this.ActualHeight - 2;
                 }
 
             }
@@ -840,27 +868,27 @@ namespace ClipOne.view
 
         /// <summary>
         /// 展示
-      
-        private   void ShowList()
+
+        private void ShowList()
         {
-             
-               webView1.InvokeScript("showRecord" );
-             
-            
+
+            webView1.InvokeScript("showRecord");
+
+
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             webView1.InvokeScript("saveData");
-            
+
 
             if (notifyIcon != null)
             {
                 notifyIcon.Dispose();
             }
-             
+
             webView1.Dispose();
-            
+
 
             if (wpfHwnd != null)
             {
@@ -872,28 +900,21 @@ namespace ClipOne.view
 
         }
 
-       
+
         /// <summary>
         /// 根据索引粘贴条目到活动窗口
         /// </summary>
         /// <param name="id">索引</param>
         public void PasteValue(string clipStr)
         {
-            ClipModel clip=JsonConvert.DeserializeObject<ClipModel>(HttpUtility.UrlDecode(clipStr));
-            this.Dispatcher.Invoke(
-           new Action(
-         delegate
-         {
-             DiyHide();
+            ClipModel clip = JsonConvert.DeserializeObject<ClipModel>(HttpUtility.UrlDecode(clipStr));
+            DiyHide();
 
-             preview.Hide();
+            preview.Hide();
 
-
-            
-         }));
 
             //从显示列表中获取记录，并根据sourceId从对保存列表中的该条记录做相应处理
-           
+
             if (clip.Type == FILE_TYPE)
             {
                 string[] files = clip.ClipValue.Split(',');
@@ -901,17 +922,14 @@ namespace ClipOne.view
                 {
                     if (!File.Exists(str))
                     {
-                        this.Dispatcher.Invoke(
-                     new Action(
-                   delegate
-                   {
-                       MessageBox.Show("源文件缺失，粘贴失败！");
-                   }));
+                        MessageBox.Show("源文件缺失，粘贴失败！");
                         return;
                     }
                 }
             }
-
+            Console.WriteLine("1111111111111111111");
+            Console.WriteLine(clip.ClipValue);
+            Console.WriteLine("2222222222222222222");
             new Thread(new ParameterizedThreadStart(SinglePaste)).Start(clip);
 
 
@@ -923,13 +941,8 @@ namespace ClipOne.view
         public void HidePreview()
         {
 
-            this.Dispatcher.Invoke(
-              new Action(
-            delegate
-            {
-                if (preview.IsVisible)
-                    preview.Hide();
-            }));
+            if (preview.IsVisible)
+                preview.Hide();
 
 
 
@@ -942,12 +955,12 @@ namespace ClipOne.view
         public void ShowPreviewForm(string path)
         {
             preview.Hide();
-          
-                preview.ImgPath = path;
 
-                preview.Show();
+            preview.ImgPath = path;
 
-           
+            preview.Show();
+
+
 
         }
         /// <summary>
@@ -961,8 +974,11 @@ namespace ClipOne.view
 
             //设置剪切板前取消监听
             WinAPIHelper.RemoveClipboardFormatListener(wpfHwnd);
-
-            ClipService.SetValueToClipboard(result);
+            this.Dispatcher.Invoke(new Action(delegate
+            {
+                ClipService.SetValueToClipboard(result);
+            }));
+            
             //设置剪切板后恢复监听
             WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
             if (neadPause)
@@ -970,10 +986,7 @@ namespace ClipOne.view
                 Thread.Sleep(50);
             }
             System.Windows.Forms.SendKeys.SendWait("^v");
-
-
-
-
+ 
         }
 
 
@@ -995,10 +1008,9 @@ namespace ClipOne.view
             {
                 preview.Hide();
             }
-            if (!isNotAllowHide)
-            {
-                DiyHide();
-            }
+            
+              DiyHide();
+            
 
 
         }
@@ -1011,17 +1023,9 @@ namespace ClipOne.view
         /// <param name="lastIndex">起始索引</param>
         public void PasteValueList(string clipListStr)
         {
-            List<ClipModel>  clipList = JsonConvert.DeserializeObject < List<ClipModel>>(HttpUtility.UrlDecode(clipListStr));
-            
-            
-            this.Dispatcher.Invoke(
-                         new Action(
-                       delegate
-                       {
-
-                           DiyHide();
-                           preview.Hide();
-                       }));
+            List<ClipModel> clipList = JsonConvert.DeserializeObject<List<ClipModel>>(HttpUtility.UrlDecode(clipListStr));
+            DiyHide();
+            preview.Hide();
             new Thread(new ParameterizedThreadStart(BatchPaste)).Start(clipList);
         }
 
@@ -1031,15 +1035,7 @@ namespace ClipOne.view
         /// <param name="clip"></param>
         private void SinglePaste(object clip)
         {
-            this.Dispatcher.Invoke(
-                      new Action(
-                    delegate
-                    {
-
-                        SetValueToClip((ClipModel)clip, true);
-                    }));
-          
-
+            SetValueToClip((ClipModel)clip, true);
 
         }
         /// <summary>
@@ -1053,26 +1049,18 @@ namespace ClipOne.view
             for (int i = 0; i < list.Count; i++)
             {
 
-                this.Dispatcher.Invoke(
-                      new Action(
-                    delegate
-                    {
-                        ClipModel clip = list[i];
-                        if (i != list.Count - 1)
-                        {
-                            clip.ClipValue = clip.ClipValue + "\n";
-                        }
-                        SetValueToClip(clip, false);
-                    }));
+                ClipModel clip = list[i];
+                if (i != list.Count - 1)
+                {
+                    clip.ClipValue = clip.ClipValue + "\n";
+                }
+                SetValueToClip(clip, false);
                 Thread.Sleep(300);
             }
 
 
         }
-
-      
-
-
+ 
 
         /// <summary>
         /// 添加剪切板监听， 更改窗体属性,不在alt+tab中显示
@@ -1090,92 +1078,38 @@ namespace ClipOne.view
             int exStyle = (int)WinAPIHelper.GetWindowLong(wpfHwnd, -20);
             exStyle |= (int)0x00000080;
             WinAPIHelper.SetWindowLong(wpfHwnd, -20, exStyle);
-            
-            //高斯模糊
-            //var accent = new AccentPolicy();
-            //accent.AccentState = AccentState.ACCENT_ENABLE_BLURBEHIND;
-
-            //var accentStructSize = Marshal.SizeOf(accent);
-
-            //var accentPtr = Marshal.AllocHGlobal(accentStructSize);
-            //Marshal.StructureToPtr(accent, accentPtr, false);
-
-            //var data = new WindowCompositionAttributeData();
-            //data.Attribute = WindowCompositionAttribute.WCA_ACCENT_POLICY;
-            //data.SizeOfData = accentStructSize;
-            //data.Data = accentPtr;
-
-            //WinAPIHelper.SetWindowCompositionAttribute(wpfHwnd, ref data);
-
-            //Marshal.FreeHGlobal(accentPtr);
-            DiyHide();
-
+ 
 
         }
 
         //显示窗体,透明度为事先设置的值.
         private void DiyShow()
-        {   
+        {
             this.Topmost = true;
             this.Activate();
-            //this.Opacity = opacityValue;
-           
-            
-            
+            isShow = true;
 
         }
 
         /// <summary>
-        /// 通过把透明度设置为0来代替窗体隐藏，防止到窗体显示时才开始渲染
+        ///  
         /// </summary>
         private void DiyHide()
         {
             this.Topmost = false;
-            if (activeHwnd != IntPtr.Zero) {
-                WinAPIHelper.SetForegroundWindow(activeHwnd);
+            if (isShow) { 
+                if (activeHwnd != IntPtr.Zero)
+                {
+                    WinAPIHelper.SetForegroundWindow(activeHwnd);
+                }
+                 
+                     webView1.InvokeScript("hideEvent");
+               
             }
-            webView1.InvokeScript(  "hide");
-          
-            //this.Opacity = 0;
             this.Left = HideLeftValue;
-            // this.Hide();
-        }
-        
 
-
-         
-        internal enum AccentState
-        {
-            ACCENT_DISABLED = 0,
-            ACCENT_ENABLE_GRADIENT = 1,
-            ACCENT_ENABLE_TRANSPARENTGRADIENT = 2,
-            ACCENT_ENABLE_BLURBEHIND = 3,
-            ACCENT_INVALID_STATE = 4
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct AccentPolicy
-        {
-            public AccentState AccentState;
-            public int AccentFlags;
-            public int GradientColor;
-            public int AnimationId;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct WindowCompositionAttributeData
-        {
-            public WindowCompositionAttribute Attribute;
-            public IntPtr Data;
-            public int SizeOfData;
-        }
-
-        internal enum WindowCompositionAttribute
-        {
-            // ...
-            WCA_ACCENT_POLICY = 19
-            // ...
-        }
 
         private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
@@ -1183,10 +1117,11 @@ namespace ClipOne.view
             {
                 DiyHide();
             }
+           
         }
     }
 
-   
+
 
 }
 

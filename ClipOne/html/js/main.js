@@ -9,7 +9,7 @@ var lastSelectedIndex = -1;
 var storeInterval;
 var maxRecords = 100;
 var searchValue = '';
- 
+
 //屏蔽鼠标选择操作
 document.onselectstart = function () {
 	event.returnValue = false;
@@ -19,8 +19,9 @@ document.oncontextmenu = function (e) {
 	e.preventDefault();
 };
 
-$(document).ready(function () {
 
+$(document).ready(function () {
+	$(".content").niceScroll(".table_main", { cursorborder: "", cursoropacitymin: 0, cursoropacitymax: 0.7, cursorwidth: "2px", cursorcolor: "#808080", boxzoom: true });
 	$("#delete").on("click", function () { //删除操作
 		$("#tr" + deleteId).parent().addClass("tr_hover");
 		clipObj.splice(deleteId, 1);
@@ -40,15 +41,17 @@ $(document).ready(function () {
 
 	$(document).on("keydown", keyDown);
 	$(document).on("keyup", keyUp);
-	 
+
 	var str = window.localStorage.getItem("data");
 	if (str != null) {
 		clipObj = JSON.parse(str);
 	}
+
+	maxRecords = window.localStorage.getItem("recordCount");
 	storeInterval = setInterval(saveData, 120000);
+	displayData();
 
 });
-
 
 
 
@@ -61,7 +64,7 @@ function keyDown(event) {
 			hideSearch();
 
 		}
-		//changeWindowHeight($("body").height());
+
 	} else if (event.keyCode == 9) {   //tab键
 
 		event.preventDefault();
@@ -69,10 +72,7 @@ function keyDown(event) {
 		$("#searchInput")[0].focus();
 
 	}
-	else if (event.keyCode == 13) { //回车直接粘贴当前选中项
-
-		pasteValue(selectIndex);
-	}
+	 
 	else if (event.keyCode == 38) { //上
 
 		event.preventDefault();
@@ -168,6 +168,7 @@ function trSelect(event) {
 	$("#rightMenu").css("display", "none");
 	var index = event.getAttribute('index') / 1;
 	selectIndex = index;
+	window.external.notify("selectIndex:" + selectIndex);
 	if (!isShiftPressed) {
 		selectItem(index);
 	}
@@ -182,12 +183,12 @@ function trSelect(event) {
 function trUnselect(event) {
 
 	if (previewTimeout) {
-        clearTimeout(previewTimeout);
-        previewTimeout = undefined;
-        hidePreview();
-    }
+		clearTimeout(previewTimeout);
+		previewTimeout = undefined;
+		hidePreview();
+	}
 
-	
+
 }
 
 //显示右键菜单
@@ -321,23 +322,17 @@ function mouseup(e) {
 
 }
 
-//供本地代码调用
-
-//初始化
-function init(recordsNum) {
-    maxRecords = recordsNum;
-     
-    displayData();
-
-}
+ 
+ 
 //隐藏时隐藏搜索框
-function hide(json) {
+function hideEvent(json) {
 	hideSearch();
 	scrollTop();
 }
 //设置保存最大记录数
 function setMaxRecords(records) {
 	maxRecords = records;
+	window.localStorage.setItem("recordCount", maxRecords);
 }
 //增加条目
 function add(data) {
@@ -354,29 +349,15 @@ function add(data) {
 	clipObj.splice(0, 0, obj);
 	setTimeout(function () {
 		if (clipObj.length > maxRecords) {
-			//$(".tr" + (maxRecords - 1)).remove();
+			 
 			var clip = clipObj.splice(maxRecords, 1)[0];
 			if (clip.Type == "image") {
 				deleteImage(clip.ClipValue);
 			}
 		}
 	}, 0);
-    displayData();
-	//var num="";
-	// $(".myTable >tr").each(function(index,element){
-	// 	var tmpIndex=index+1;
-	// 	if (tmpIndex < 9) {
-	// 		num = "<u>" + (tmpIndex + 1) + "</u>";
-	// 	} else if (tmpIndex < 35) {
-	// 		num = "<u>" + num2key((tmpIndex + 1)) + "</u>";
-	// 	} else {
-	// 		num = "" + (tmpIndex + 1);
-	// 	}
-		 
-	// 	$(this).attr("id", (index + 1)).attr("index",(index + 1));
-	// 	$(this).children(".td_index").html(num);
-	// });
-	// $(".myTable")
+	displayData();
+
 
 }
 
@@ -385,22 +366,22 @@ function add(data) {
 //显示记录
 function showRecord() {
 
-    if (clipObj.length != 0) {
-        
-        if (searchValue != "") {
-            selectIndex = 0;
+	if (clipObj.length != 0) {
 
-        } else {
-            selectIndex = 1;
-        }
-        $(".tr_hover").removeClass("tr_hover");
-        $("#tr" + selectIndex).addClass("tr_hover");
+		if (searchValue != "") {
+			selectIndex = 0;
 
-        $("#tr" + selectIndex).one("mouseout", function () {
-            $("#tr" + selectIndex).removeClass("tr_hover");
+		} else {
+			selectIndex = 1;
+		}
+		$(".tr_hover").removeClass("tr_hover");
+		$("#tr" + selectIndex).addClass("tr_hover");
 
-        });
-    }
+		$("#tr" + selectIndex).one("mouseout", function () {
+			$("#tr" + selectIndex).removeClass("tr_hover");
+
+		});
+	}
 
 	$(".table_main")[0].focus();
 	changeWindowHeight($("body").height());
@@ -416,8 +397,8 @@ function pasteValue(index) {
 	obj = clipObj.splice(index, 1)[0];
 	clipObj.splice(0, 0, obj);
 
-    window.external.notify("PasteValue:" + encodeURIComponent(JSON.stringify(obj)));
-	//callbackObj.pasteValue(encodeURIComponent(JSON.stringify(obj)));
+	window.external.notify("PasteValue:" + encodeURIComponent(JSON.stringify(obj)));
+
 	displayData();
 }
 //粘贴多条
@@ -438,34 +419,33 @@ function pasteValueByRange(startIndex, endIndex) {
 	} else {
 		pasteValue(startIndex);
 		return;
-    }
-    window.external.notify("PasteValueList:" + encodeURIComponent(JSON.stringify(obj)));
-	//callbackObj.pasteValueList(encodeURIComponent(JSON.stringify(clipList)));
+	}
+	window.external.notify("PasteValueList:" + encodeURIComponent(JSON.stringify(obj)));
+
 	displayData();
 }
 
 //删除
 function deleteImage(path) {
-    //callbackObj.deleteImage(path);
-    window.external.notify("DeleteImage:" + path);
+
+	window.external.notify("DeleteImage:" + path);
 }
 //调整高度
 function changeWindowHeight(height) {
-    //callbackObj.changeWindowHeight(height);
-     
-    window.external.notify("ChangeWindowHeight:" + height);
+
+	window.external.notify("ChangeWindowHeight:" + height);
 }
 
 //预览
 function preview(path) {
-    //callbackObj.preview(path);
-    window.external.notify("Preview:" + path);
+
+	window.external.notify("Preview:" + path);
 }
 
 //隐藏预览
 function hidePreview() {
-    //callbackObj.hidePreview();
-    window.external.notify("HidePreview:" +"11");
+
+	window.external.notify("HidePreview:" + "11");
 }
 
 //获取所有记录,用来持久化
@@ -476,6 +456,9 @@ function getAllClip() {
 function saveData() {
 	window.localStorage.setItem("data", JSON.stringify(clipObj));
 
+}
+function saveRecordCount() {
+	window.localStorage.setItem("recordCount", maxRecords);
 }
 function clear() {
 	clipObj = [];
