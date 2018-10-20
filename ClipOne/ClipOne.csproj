@@ -225,10 +225,9 @@
     <Content Include="html\css\striped\striped.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="html\js\jquery-3.3.1.js">
+    <Content Include="html\js\jquery-3.3.1.min.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="html\js\jquery-3.3.1.min.js" />
     <Content Include="html\js\jquery.nicescroll.min.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -261,9 +260,6 @@
     </Content>
     <Content Include="html\index.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="html\js\jquery-3.2.1.min.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="html\js\main.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

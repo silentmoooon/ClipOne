@@ -270,54 +270,26 @@ namespace ClipOne.view
         /// </summary>
         private void InitWebView()
         {
-
+          
             webView1.IsJavaScriptEnabled = true;
             webView1.IsScriptNotifyAllowed = true;
+       
             webView1.IsIndexedDBEnabled = true;
             webView1.ScriptNotify += WebView1_ScriptNotify;
-            Console.WriteLine("file:///" + System.IO.Directory.GetCurrentDirectory().Replace("\\", "/") + "/" + defaultHtml);
-            webView1.Source = new Uri(defaultHtml,UriKind.Relative);
-            webView1.KeyDown += WebView1_KeyDown;
-            webView1.KeyUp += WebView1_KeyUp;
+            
+            webView1.NavigateToLocal(defaultHtml);
+             
 
-           
+
 
 
         }
       
-        private void WebView1_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            if (e.Key == System.Windows.Input.Key.LeftCtrl)
-            {
-                ctrlPress = false;
-            }
-        }
-
-     
-        private void WebView1_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            if(e.Key== System.Windows.Input.Key.LeftCtrl)
-            {
-                ctrlPress = true;
-            }
-            if (e.Key == System.Windows.Input.Key.Enter)
-            {
-                Console.WriteLine("togglePasteValue----");
-                webView1.InvokeScript("togglePasteValue");
-            }
-            if (ctrlPress) { 
-                if (e.Key == System.Windows.Input.Key.F)
-                {
-                    webView1.InvokeScript("changeSearchMode");
-                }
-            }
-            Console.WriteLine(e.Key.ToString());
-        }
-
+         
         private void WebView1_ScriptNotify(object sender, Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT.WebViewControlScriptNotifyEventArgs e)
         {
             string[] args = e.Value.Split(':');
-            Console.WriteLine(e.Value);
+         
             if (args[0] == "PasteValue")
             {
                  
@@ -766,10 +738,40 @@ namespace ClipOne.view
 
                 if (hotkeyAtom == wParam.ToInt32())
                 {
-
-
+                    
                     activeHwnd = WinAPIHelper.GetForegroundWindow();
-                    DiyShow();
+
+                    this.Topmost = true;
+                    this.Activate();
+                    isShow = true;
+ 
+                    WinAPIHelper.POINT point = new WinAPIHelper.POINT();
+                    if (WinAPIHelper.GetCursorPos(out point))
+                    {
+                        double x = SystemParameters.WorkArea.Width;//得到屏幕工作区域宽度
+                        double y = SystemParameters.WorkArea.Height;//得到屏幕工作区域高度
+                        double mx = CursorHelp.ConvertPixelsToDIPixels(point.X);
+                        double my = CursorHelp.ConvertPixelsToDIPixels(point.Y);
+
+                        if (mx > x - this.ActualWidth)
+                        {
+                            this.Left = x - this.ActualWidth;
+                        }
+                        else
+                        {
+                            this.Left = mx;
+                        }
+                        if (my > y - this.ActualHeight)
+                        {
+                            this.Top = y - this.ActualHeight - 2;
+                        }
+                        else
+                        {
+                            this.Top = my - 2;
+                        }
+
+
+                    }
 
                     ShowWindowAndList();
 
@@ -793,7 +795,7 @@ namespace ClipOne.view
             string json = JsonConvert.SerializeObject(clip);
 
             json = HttpUtility.UrlEncode(json);
-            Console.WriteLine(json);
+           
           
          await   webView1.InvokeScriptAsync("addData", json );
 
@@ -804,42 +806,10 @@ namespace ClipOne.view
         /// <summary>
         /// 显示窗口并列出所有条目
         /// </summary>
-        private void ShowWindowAndList()
+        private async void ShowWindowAndList()
         {
- 
-            ShowList();
- 
-            webView1.Focus();
- 
-            WinAPIHelper.POINT point = new WinAPIHelper.POINT();
-            if (WinAPIHelper.GetCursorPos(out point))
-            {
 
-                double x = SystemParameters.WorkArea.Width;//得到屏幕工作区域宽度
-                double y = SystemParameters.WorkArea.Height;//得到屏幕工作区域高度
-                double mx = CursorHelp.ConvertPixelsToDIPixels(point.X);
-                double my = CursorHelp.ConvertPixelsToDIPixels(point.Y);
-
-                if (mx > x - this.ActualWidth)
-                {
-                    this.Left = x - this.ActualWidth;
-                }
-                else
-                {
-                    this.Left = mx;
-                }
-                if (my > y - this.ActualHeight)
-                {
-                    this.Top = y - this.ActualHeight - 2;
-                }
-                else
-                {
-                    this.Top = my - 2;
-                }
-
-
-            }
-
+            await webView1.InvokeScriptAsync("showRecord");
 
 
         }
@@ -850,7 +820,7 @@ namespace ClipOne.view
         /// <param name="height">页面高度</param>
         public void ChangeWindowHeight(double height)
         {
-            
+           
             this.Height = height + 21;
 
             WinAPIHelper.POINT point = new WinAPIHelper.POINT();
@@ -868,16 +838,7 @@ namespace ClipOne.view
 
         }
 
-        /// <summary>
-        /// 展示
-
-        private void ShowList()
-        {
-            
-            webView1.InvokeScript("showRecord");
-
-
-        }
+       
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -909,11 +870,10 @@ namespace ClipOne.view
         /// <param name="id">索引</param>
         public void PasteValue(string clipStr)
         {
-            ClipModel clip = JsonConvert.DeserializeObject<ClipModel>(HttpUtility.UrlDecode(clipStr));
             DiyHide();
-
             preview.Hide();
-
+            ClipModel clip = JsonConvert.DeserializeObject<ClipModel>(HttpUtility.UrlDecode(clipStr));
+            
 
             //从显示列表中获取记录，并根据sourceId从对保存列表中的该条记录做相应处理
 
@@ -929,10 +889,9 @@ namespace ClipOne.view
                     }
                 }
             }
-            Console.WriteLine("1111111111111111111");
-            Console.WriteLine(clip.ClipValue);
-            Console.WriteLine("2222222222222222222");
-            new Thread(new ParameterizedThreadStart(SinglePaste)).Start(clip);
+
+            SinglePaste(clip);
+          //  new Thread(new ParameterizedThreadStart(SinglePaste)).Start(clip);
 
 
         }
@@ -976,11 +935,12 @@ namespace ClipOne.view
 
             //设置剪切板前取消监听
             WinAPIHelper.RemoveClipboardFormatListener(wpfHwnd);
-            this.Dispatcher.Invoke(new Action(delegate
-            {
-                ClipService.SetValueToClipboard(result);
-            }));
-            
+            ClipService.SetValueToClipboard(result);
+            //this.Dispatcher.Invoke(new Action(delegate
+            //{
+
+            //}));
+
             //设置剪切板后恢复监听
             WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
             if (neadPause)
@@ -1035,9 +995,9 @@ namespace ClipOne.view
         /// 单个粘贴
         /// </summary>
         /// <param name="clip"></param>
-        private void SinglePaste(object clip)
+        private void SinglePaste(ClipModel clip)
         {
-            SetValueToClip((ClipModel)clip, true);
+            SetValueToClip(clip, true);
 
         }
         /// <summary>
@@ -1099,20 +1059,21 @@ namespace ClipOne.view
         private void DiyHide()
         {
             this.Topmost = false;
-            if (isShow) { 
+            if (isShow) {
+               
+                
                 if (activeHwnd != IntPtr.Zero)
                 {
                     WinAPIHelper.SetForegroundWindow(activeHwnd);
                 }
-                 
-                     webView1.InvokeScript("eval","hideEvent");
-               
+                
+              
+                 isShow = false;
             }
             this.Left = HideLeftValue;
 
         }
-
-
+        
         private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.Escape)
