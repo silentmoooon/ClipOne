@@ -271,14 +271,16 @@ namespace ClipOne.view
         private void InitWebView()
         {
 
-           
+            webView1.IsJavaScriptEnabled = true;
             webView1.IsScriptNotifyAllowed = true;
-
+            webView1.IsIndexedDBEnabled = true;
             webView1.ScriptNotify += WebView1_ScriptNotify;
+            Console.WriteLine("file:///" + System.IO.Directory.GetCurrentDirectory().Replace("\\", "/") + "/" + defaultHtml);
+            webView1.Source = new Uri(defaultHtml,UriKind.Relative);
             webView1.KeyDown += WebView1_KeyDown;
             webView1.KeyUp += WebView1_KeyUp;
 
-            webView1.NavigateToLocal(defaultHtml);
+           
 
 
         }
@@ -785,15 +787,15 @@ namespace ClipOne.view
         /// 增加条目
         /// </summary>
         /// <param name="str"></param>
-        private void EnQueue(ClipModel clip)
+        private async void EnQueue(ClipModel clip)
         {
 
             string json = JsonConvert.SerializeObject(clip);
 
             json = HttpUtility.UrlEncode(json);
-
-
-            webView1.InvokeScript("add", json);
+            Console.WriteLine(json);
+          
+         await   webView1.InvokeScriptAsync("addData", json );
 
 
         }
@@ -871,7 +873,7 @@ namespace ClipOne.view
 
         private void ShowList()
         {
-
+            
             webView1.InvokeScript("showRecord");
 
 
@@ -1103,7 +1105,7 @@ namespace ClipOne.view
                     WinAPIHelper.SetForegroundWindow(activeHwnd);
                 }
                  
-                     webView1.InvokeScript("hideEvent");
+                     webView1.InvokeScript("eval","hideEvent");
                
             }
             this.Left = HideLeftValue;

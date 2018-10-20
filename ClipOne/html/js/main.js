@@ -9,6 +9,7 @@ var lastSelectedIndex = -1;
 var storeInterval;
 var maxRecords = 100;
 var searchValue = '';
+var changeStatus=true;
 
 //屏蔽鼠标选择操作
 document.onselectstart = function () {
@@ -21,11 +22,11 @@ document.oncontextmenu = function (e) {
 
 
 $(document).ready(function () {
-	$(".content").niceScroll(".table_main", { cursorborder: "", cursoropacitymin: 0, cursoropacitymax: 0.7, cursorwidth: "2px", cursorcolor: "#808080", boxzoom: true });
+	$(".content").niceScroll(".table_main", { cursorborder: "", cursoropacitymin: 0, cursoropacitymax: 0.7, cursorwidth: "2px", cursorcolor: "#808080" });
 	$("#delete").on("click", function () { //删除操作
 		$("#tr" + deleteId).parent().addClass("tr_hover");
 		clipObj.splice(deleteId, 1);
-		//deleteClip(deleteId / 1);
+	 
 		$("#rightMenu").css("display", "none");
 		displayData();
 
@@ -168,7 +169,7 @@ function trSelect(event) {
 	$("#rightMenu").css("display", "none");
 	var index = event.getAttribute('index') / 1;
 	selectIndex = index;
-	window.external.notify("selectIndex:" + selectIndex);
+	 
 	if (!isShiftPressed) {
 		selectItem(index);
 	}
@@ -240,7 +241,10 @@ function selectItem(index) {
 
 //显示记录
 function displayData() {
-
+	if(!changeStatus){
+		return;
+	}
+	
 	var tbody = "";
 
 	var matchCount = -1;
@@ -289,7 +293,7 @@ function displayData() {
 
 		});
 	}
-
+	changeStatus=false;
 
 }
 
@@ -335,7 +339,8 @@ function setMaxRecords(records) {
 	window.localStorage.setItem("recordCount", maxRecords);
 }
 //增加条目
-function add(data) {
+function addData(data) {
+window.external.notify("test:" + data);
 	data = decodeURIComponent(data.replace(/\+/g, '%20'));
 	var obj = JSON.parse(data);
 	if (obj.Type == "text") {
@@ -346,18 +351,19 @@ function add(data) {
 			}
 		}
 	}
+	
 	clipObj.splice(0, 0, obj);
-	setTimeout(function () {
-		if (clipObj.length > maxRecords) {
-			 
-			var clip = clipObj.splice(maxRecords, 1)[0];
-			if (clip.Type == "image") {
-				deleteImage(clip.ClipValue);
-			}
-		}
-	}, 0);
-	displayData();
-
+	if (clipObj.length > maxRecords) {
+		setTimeout(function () {
+		 
+				var clip = clipObj.splice(maxRecords, 1)[0];
+				if (clip.Type == "image") {
+					deleteImage(clip.ClipValue);
+				}
+		
+		}, 0);
+	 }
+	changeStatus=true;	
 
 }
 
