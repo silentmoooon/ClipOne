@@ -22,42 +22,60 @@ document.oncontextmenu = function (e) {
 
 
 $(document).ready(function () {
-	$(".content").niceScroll(".table_main", { cursorborder: "", cursoropacitymin: 0, cursoropacitymax: 0.7, cursorwidth: "2px", cursorcolor: "#808080" });
-	$("#delete").on("click", function () { //删除操作
+    $(".content").niceScroll(".table_main", { cursorborder: "", cursoropacitymin: 0, cursoropacitymax: 0.7, cursorwidth: "2px", cursorcolor: "#808080" });
+
+    //window.external.notify("testload:");
+
+    //删除操作
+	$("#delete").on("click", function () { 
 		$("#tr" + deleteId).parent().addClass("tr_hover");
 		clipObj.splice(deleteId, 1);
 	 
 		$("#rightMenu").css("display", "none");
 		displayData();
 
-	});
+    });
 
-	$("#searchInput").on("input", function (event) {  //查找
-
+   // window.external.notify("testload:");
+    //查找
+	$("#searchInput").on("input", function (event) {  
+       
 		var value = $("#searchInput").val().toLowerCase();
 		searchValue = value;
 		displayData();
 
-	});
-
-	$(document).on("keydown", keyDown);
-	$(document).on("keyup", keyUp);
+    });
+    
+   // window.external.notify("testload:");
+	$("body").on("keydown", keyDown);
+	$("body").on("keyup", keyUp);
 
 	var str = window.localStorage.getItem("data");
 	if (str != null) {
 		clipObj = JSON.parse(str);
 	}
 
-	maxRecords = window.localStorage.getItem("recordCount");
-	storeInterval = setInterval(saveData, 120000);
-	displayData();
+    maxRecords = window.localStorage.getItem("recordCount");
+    if (maxRecords == null) {
+        maxRecords = 100;
+    }
+    storeInterval = setInterval(saveData, 120000);
+   
+   // window.external.notify("testload:");
 
 });
 
-
-
+ 
 function keyDown(event) {
 
+    if (event.keyCode == 13) { //回车直接粘贴当前选中项
+
+        pasteValue(selectIndex);
+    }  
+
+    if (searchMode)
+        return;
+    
 	if (event.ctrlKey && event.keyCode == 70) {  //ctrl+f
 		if (!searchMode && clipObj.length > 0) {
 			showSearch();
@@ -66,37 +84,8 @@ function keyDown(event) {
 
 		}
 
-	} else if (event.keyCode == 9) {   //tab键
-
-		event.preventDefault();
-		scrollTop();
-		$("#searchInput")[0].focus();
-
-	}
-	 
-	else if (event.keyCode == 38) { //上
-
-		event.preventDefault();
-		if (selectIndex > 0) {
-
-			selectItem(--selectIndex);
-			scrollUp();
-		} else if (selectIndex == 0) {
-			$("#searchInput")[0].focus();
-			searchMode = true;
-			scrollTop();
-		}
-	}
-	else if (event.keyCode == 40) { //下
-
-		$("#searchInput")[0].blur();
-		searchMode = false;
-		event.preventDefault();
-		if (selectIndex < clipObj.length - 1) {
-			selectItem(++selectIndex);
-			scrollDown();
-		}
-	}
+	} 
+	
 	else if (!searchMode) {
 
 		if (event.shiftKey) {    //多条操作
@@ -145,7 +134,8 @@ function keyUp(event) {
 function showSearch() {
 
 	$("#searchDiv").css("display", "block");
-	$("#searchInput")[0].focus();
+    $("#searchInput")[0].focus();
+    
 	searchMode = true;
 
 }
@@ -153,13 +143,15 @@ function showSearch() {
 function hideSearch() {
 
 	$("#searchDiv").css("display", "none");
-	$(".table_main")[0].focus();
-	$("#searchInput").val("");
-	searchValue = "";
-	displayData();
-	lastSelectedIndex = -1;
-	isShiftPressed = false;
-	searchMode = false;
+    
+    if ($("#searchInput").val() != "") {
+        window.external.notify("testhide:"  );
+		$("#searchInput").val("");
+		searchValue = "";
+		displayData();
+	}	
+	
+	
 }
 
 
@@ -241,15 +233,20 @@ function selectItem(index) {
 
 //显示记录
 function displayData() {
-	if(!changeStatus){
+
+    if (!changeStatus && !searchMode) {
 		return;
 	}
-	
+    window.external.notify("tes1t:displayData");
 	var tbody = "";
 
-	var matchCount = -1;
-	for (var i = 0; i < clipObj.length; i++) {
-
+    var matchCount = -1;
+    
+    for (var i = 0; i < clipObj.length; i++) {
+        if (clipObj[i] == null) {
+            clipObj.splice(i, 1);
+            i--;
+        }
 		var trs = "";
 		var num = "";
 
@@ -263,16 +260,16 @@ function displayData() {
 				num = "" + (matchCount + 1);
 			}
 			if (clipObj[i].Type == "image") {
-				//id='td" + i + "' 
+				 
 				trs = " <tr style='cursor: default' index='" + i + "' id='tr" + matchCount + "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' onmouseleave='trUnselect()'> <td  class='td_content' > <img class='image' src='../" + clipObj[i].DisplayValue + "' /> </td><td class='td_index'  >" + num + "</td> </tr>";
-			} else {  //if (clipObj[i].Type=="html"||clipObj[i].Type == "QQ_Unicode_RichEdit_Format"||clipObj[i].Type=="file")
+			} else {  
 				trs = " <tr style='cursor: default' index='" + i + "' id='tr" + matchCount + "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' onmouseleave='trUnselect()'> <td  class='td_content' > " + clipObj[i].DisplayValue + " </td><td class='td_index'  >" + num + "</td> </tr>";
 
 			}
 		}
 		tbody += trs;
 	}
-
+  
 	$(".myTable").html(tbody);
 	if (matchCount == -1) {
 		tbody = " <tr style='cursor: default'> <td  class='td_content' style='cursor: default' > 无记录 </td> </tr>";
@@ -292,9 +289,10 @@ function displayData() {
 			$("#tr" + selectIndex).removeClass("tr_hover");
 
 		});
-	}
+    }
+    
 	changeStatus=false;
-
+    changeWindowHeight($("body").height());
 }
 
 //粘贴选择项
@@ -328,11 +326,7 @@ function mouseup(e) {
 
  
  
-//隐藏时隐藏搜索框
-function hideEvent(json) {
-	hideSearch();
-	scrollTop();
-}
+ 
 //设置保存最大记录数
 function setMaxRecords(records) {
 	maxRecords = records;
@@ -340,9 +334,14 @@ function setMaxRecords(records) {
 }
 //增加条目
 function addData(data) {
-window.external.notify("test:" + data);
+   
 	data = decodeURIComponent(data.replace(/\+/g, '%20'));
-	var obj = JSON.parse(data);
+    var obj = JSON.parse(data);
+   
+    if (obj == null) {
+        return;
+    }
+   // window.external.notify("tes1t:" + obj);
 	if (obj.Type == "text") {
 		for (var i = 0; i < clipObj.length; i++) {
 			if (clipObj[i].ClipValue == obj.ClipValue) {
@@ -351,8 +350,9 @@ window.external.notify("test:" + data);
 			}
 		}
 	}
-	
-	clipObj.splice(0, 0, obj);
+    
+    clipObj.splice(0, 0, obj);
+    
 	if (clipObj.length > maxRecords) {
 		setTimeout(function () {
 		 
@@ -363,15 +363,27 @@ window.external.notify("test:" + data);
 		
 		}, 0);
 	 }
-	changeStatus=true;	
-
+    changeStatus = true;	
+  
+    
 }
 
 
 
 //显示记录
 function showRecord() {
+    lastSelectedIndex = -1;
+    isShiftPressed = false;
+    searchMode = false;
+    scrollTop();
+    $("#searchDiv").css("display", "none");
 
+    if ($("#searchInput").val() != "") {
+        $("#searchInput").val("");
+        searchValue = "";
+        changeStatus = true;
+    } 
+    displayData();
 	if (clipObj.length != 0) {
 
 		if (searchValue != "") {
@@ -388,10 +400,10 @@ function showRecord() {
 
 		});
 	}
-
-	$(".table_main")[0].focus();
-	changeWindowHeight($("body").height());
-
+    $("#searchText").show(); 
+    $("#searchText")[0].focus();
+    $("#searchText").hide();
+    
 }
 
 
@@ -402,10 +414,10 @@ function showRecord() {
 function pasteValue(index) {
 	obj = clipObj.splice(index, 1)[0];
 	clipObj.splice(0, 0, obj);
-
-	window.external.notify("PasteValue:" + encodeURIComponent(JSON.stringify(obj)));
-
-	displayData();
+    changeStatus = true;
+    window.external.notify("PasteValue:" + encodeURIComponent(JSON.stringify(obj)));
+   
+	//displayData();
 }
 //粘贴多条
 function pasteValueByRange(startIndex, endIndex) {
@@ -425,10 +437,11 @@ function pasteValueByRange(startIndex, endIndex) {
 	} else {
 		pasteValue(startIndex);
 		return;
-	}
+    }
+    changeStatus = true;
 	window.external.notify("PasteValueList:" + encodeURIComponent(JSON.stringify(obj)));
 
-	displayData();
+	//displayData();
 }
 
 //删除
