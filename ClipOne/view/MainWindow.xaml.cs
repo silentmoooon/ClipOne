@@ -3,6 +3,7 @@ using ClipOne.model;
 using ClipOne.service;
 using ClipOne.util;
 using Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT;
+using Microsoft.Toolkit.Win32.UI.Controls.WPF;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -30,7 +31,7 @@ namespace ClipOne.view
         /// </summary>
         public static string cacheDir = "cache";
 
-        private static string webChche = System.IO.Directory.GetCurrentDirectory() + @"\webCache";
+        
         /// <summary>
         /// 配置文件路径
         /// </summary>
@@ -61,9 +62,6 @@ namespace ClipOne.view
         /// 透明度转换比例
         /// </summary>
         private double OpacityRatio = 0.06;
-
-
-     private static   bool ctrlPress = false;
 
  
 
@@ -113,6 +111,7 @@ namespace ClipOne.view
         /// </summary>
         private static int maxRecords = 300;
 
+       
 
         /// <summary>
         /// 默认皮肤
@@ -258,10 +257,7 @@ namespace ClipOne.view
             {
                 cacheDir = settingsMap["cache"];
             }
-            if (settingsMap.ContainsKey("webCache"))
-            {
-                webChche = settingsMap["webCache"];
-            }
+           
 
         }
 
@@ -270,7 +266,7 @@ namespace ClipOne.view
         /// </summary>
         private void InitWebView()
         {
-          
+            
             webView1.IsJavaScriptEnabled = true;
             webView1.IsScriptNotifyAllowed = true;
        
@@ -278,14 +274,11 @@ namespace ClipOne.view
             webView1.ScriptNotify += WebView1_ScriptNotify;
             
             webView1.NavigateToLocal(defaultHtml);
-             
-
-
-
+ 
 
         }
-      
-         
+
+        
         private void WebView1_ScriptNotify(object sender, Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT.WebViewControlScriptNotifyEventArgs e)
         {
             string[] args = e.Value.Split(':');
@@ -744,7 +737,7 @@ namespace ClipOne.view
                     this.Topmost = true;
                     this.Activate();
                     isShow = true;
- 
+                   
                     WinAPIHelper.POINT point = new WinAPIHelper.POINT();
                     if (WinAPIHelper.GetCursorPos(out point))
                     {
@@ -842,7 +835,7 @@ namespace ClipOne.view
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            webView1.InvokeScript("saveData");
+            webView1?.InvokeScript("saveData");
 
 
             if (notifyIcon != null)
@@ -850,7 +843,7 @@ namespace ClipOne.view
                 notifyIcon.Dispose();
             }
 
-            webView1.Dispose();
+            webView1?.Dispose();
 
 
             if (wpfHwnd != null)
@@ -1058,7 +1051,9 @@ namespace ClipOne.view
         /// </summary>
         private void DiyHide()
         {
+           
             this.Topmost = false;
+           
             if (isShow) {
                
                 
@@ -1069,7 +1064,11 @@ namespace ClipOne.view
                 
               
                  isShow = false;
+
+                
+
             }
+
             this.Left = HideLeftValue;
 
         }

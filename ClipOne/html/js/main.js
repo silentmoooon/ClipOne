@@ -9,7 +9,7 @@ var lastSelectedIndex = -1;
 var storeInterval;
 var maxRecords = 100;
 var searchValue = '';
-var changeStatus=true;
+ 
 
 //屏蔽鼠标选择操作
 document.onselectstart = function () {
@@ -24,7 +24,7 @@ document.oncontextmenu = function (e) {
 $(document).ready(function () {
     $(".content").niceScroll(".table_main", { cursorborder: "", cursoropacitymin: 0, cursoropacitymax: 0.7, cursorwidth: "2px", cursorcolor: "#808080" });
 
-    //window.external.notify("testload:");
+     
 
     //删除操作
 	$("#delete").on("click", function () { 
@@ -36,7 +36,7 @@ $(document).ready(function () {
 
     });
 
-   // window.external.notify("testload:");
+    
     //查找
 	$("#searchInput").on("input", function (event) {  
        
@@ -46,7 +46,7 @@ $(document).ready(function () {
 
     });
     
-   // window.external.notify("testload:");
+    
 	$("body").on("keydown", keyDown);
 	$("body").on("keyup", keyUp);
 
@@ -60,11 +60,11 @@ $(document).ready(function () {
         maxRecords = 100;
     }
     storeInterval = setInterval(saveData, 120000);
-   
-   // window.external.notify("testload:");
+
+    displayData();
 
 });
-
+ 
  
 function keyDown(event) {
 
@@ -193,6 +193,7 @@ function showMenu(e) {
 
 }
 
+
 //隐藏右键菜单
 function hideMenu() {
 	document.getElementById("rightMenu").style.display = "none";
@@ -234,10 +235,6 @@ function selectItem(index) {
 //显示记录
 function displayData() {
 
-    if (!changeStatus && !searchMode) {
-		return;
-	}
-    window.external.notify("tes1t:displayData");
 	var tbody = "";
 
     var matchCount = -1;
@@ -291,7 +288,7 @@ function displayData() {
 		});
     }
     
-	changeStatus=false;
+	 
     changeWindowHeight($("body").height());
 }
 
@@ -341,7 +338,7 @@ function addData(data) {
     if (obj == null) {
         return;
     }
-   // window.external.notify("tes1t:" + obj);
+   
 	if (obj.Type == "text") {
 		for (var i = 0; i < clipObj.length; i++) {
 			if (clipObj[i].ClipValue == obj.ClipValue) {
@@ -363,25 +360,26 @@ function addData(data) {
 		
 		}, 0);
 	 }
-    changeStatus = true;	
+    displayData();
   
     
 }
 
-
+ 
 
 //显示记录
 function showRecord() {
     lastSelectedIndex = -1;
     isShiftPressed = false;
     searchMode = false;
-    scrollTop();
-    $("#searchDiv").css("display", "none");
 
+    scrollTop();
+
+    $("#searchDiv").css("display", "none");
     if ($("#searchInput").val() != "") {
         $("#searchInput").val("");
         searchValue = "";
-        changeStatus = true;
+         
     } 
     displayData();
 	if (clipObj.length != 0) {
@@ -403,6 +401,7 @@ function showRecord() {
     $("#searchText").show(); 
     $("#searchText")[0].focus();
     $("#searchText").hide();
+   
     
 }
 
@@ -414,10 +413,10 @@ function showRecord() {
 function pasteValue(index) {
 	obj = clipObj.splice(index, 1)[0];
 	clipObj.splice(0, 0, obj);
-    changeStatus = true;
+    
     window.external.notify("PasteValue:" + encodeURIComponent(JSON.stringify(obj)));
    
-	//displayData();
+	displayData();
 }
 //粘贴多条
 function pasteValueByRange(startIndex, endIndex) {
@@ -438,10 +437,10 @@ function pasteValueByRange(startIndex, endIndex) {
 		pasteValue(startIndex);
 		return;
     }
-    changeStatus = true;
+    
 	window.external.notify("PasteValueList:" + encodeURIComponent(JSON.stringify(obj)));
 
-	//displayData();
+    displayData();
 }
 
 //删除
