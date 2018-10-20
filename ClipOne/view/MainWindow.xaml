@@ -1,4 +1,4 @@
-﻿<Window
+﻿<Window x:Class="ClipOne.view.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,7 +7,7 @@
         
         xmlns:Microsoft_Windows_Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero"
         xmlns:local="clr-namespace:ClipOne.view"
-        xmlns:WPF="clr-namespace:Microsoft.Toolkit.Win32.UI.Controls.WPF;assembly=Microsoft.Toolkit.Win32.UI.Controls" x:Class="ClipOne.view.MainWindow"
+        xmlns:WPF="clr-namespace:Microsoft.Toolkit.Win32.UI.Controls.WPF;assembly=Microsoft.Toolkit.Win32.UI.Controls" 
         mc:Ignorable="d"
         Title="MainWindow" BorderThickness="0" BorderBrush="#0078d7"  Margin="0,0,0,0" Padding="0,0,0,0"  Height="100" Width="461"  Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None" Background="Transparent" ResizeMode="NoResize" Topmost="True" Visibility="Visible" ShowInTaskbar="False"   MaxHeight="620" SourceInitialized="Window_SourceInitialized" KeyDown="Window_KeyDown" >
     <Border Margin="10" Background="Transparent">
