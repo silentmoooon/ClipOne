@@ -97,8 +97,7 @@ namespace ClipOne.service
         /// <param name="result"></param>
         public static void SetValueToClipboard(ClipModel result)
         {
-            Console.WriteLine(result.ClipValue);
-            Console.WriteLine(result.DisplayValue);
+             
             if (result.Type == WECHAT_TYPE)
             {
                 MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
@@ -160,7 +159,7 @@ namespace ClipOne.service
 
                 }
                 catch (Exception e){
-                    Console.WriteLine(e.StackTrace);
+                     
                 }
             }
         }

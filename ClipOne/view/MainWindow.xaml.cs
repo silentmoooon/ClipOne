@@ -63,10 +63,7 @@ namespace ClipOne.view
         /// </summary>
         private double OpacityRatio = 0.06;
 
- 
-
-        public static bool isShow = false;
-
+   
         /// <summary>
         /// 剪切板事件
         /// </summary>
@@ -154,24 +151,23 @@ namespace ClipOne.view
 
             System.IO.Directory.SetCurrentDirectory(System.Windows.Forms.Application.StartupPath);
 
-
-
+         
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
 
-
+             
+            if(!Directory.Exists(cacheDir))
+            {
+                Directory.CreateDirectory(cacheDir);
+            }
             //如果配置文件存在则读取配置文件，否则按默认值设置
             if (File.Exists(settingsPath))
             {
                 InitConfig();
             }
-            if (!Directory.Exists(cacheDir))
-            {
-                Directory.CreateDirectory(cacheDir);
-            }
-
+           
             //初始化浏览器
             InitWebView();
 
@@ -253,11 +249,8 @@ namespace ClipOne.view
                 opacityValue = double.Parse(settingsMap["opacity"]);
 
             }
-            if (settingsMap.ContainsKey("cache"))
-            {
-                cacheDir = settingsMap["cache"];
-            }
-           
+            
+
 
         }
 
@@ -282,12 +275,12 @@ namespace ClipOne.view
         private void WebView1_ScriptNotify(object sender, Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT.WebViewControlScriptNotifyEventArgs e)
         {
             string[] args = e.Value.Split(':');
-         
+            
             if (args[0] == "PasteValue")
             {
                  
                     PasteValue(args[1]);
-                 
+                
             }
             else if (args[0] == "PasteValueList")
             {
@@ -297,7 +290,7 @@ namespace ClipOne.view
             }
             else if (args[0] == "DeleteImage")
             {
-                new Thread(new ParameterizedThreadStart(DeleteFile)).Start(args[1]);
+              new Thread( new ParameterizedThreadStart(DeleteFile)).Start(args[1]);
             }
             else if (args[0] == "ChangeWindowHeight")
             {
@@ -311,23 +304,41 @@ namespace ClipOne.view
             {
                 HidePreview();
             }
+            else if (args[0] == "clearImage")
+            {
+                new Thread(new ParameterizedThreadStart(ClearImage)).Start(args[1]);
+            }
         }
 
-
-        private void DeleteFile(object path)
+        private void ClearImage(object images)
+        {
+            
+            string [] image = JsonConvert.DeserializeObject<string[]>(HttpUtility.UrlDecode(images.ToString()));
+            foreach(var img in Directory.GetFiles(cacheDir))
+            {
+                if(!image.Contains(img.Replace("\\", "/")))
+                {
+                    DeleteFile(img);
+                }
+                
+            }
+             
+        }
+        private   void DeleteFile(object path)
         {
             for (int i = 0; i < 3; i++)
             {
                 Thread.Sleep(i * 500);
                 try
                 {
-                    File.Delete(path.ToString());
+                  File.Delete(path.ToString());
                     return;
                 }
                 catch
                 {
 
                 }
+               
             }
         }
 
@@ -622,11 +633,9 @@ namespace ClipOne.view
         private void Clear_Click(object sender, EventArgs e)
         {
             string[] list = Directory.GetFiles(cacheDir);
-            Parallel.ForEach(list, file =>
-            {
-                File.Delete(file);
-            });
-
+            Directory.Delete(cacheDir, true);
+            Directory.CreateDirectory(cacheDir);
+           
             webView1.InvokeScript("clear");
         }
 
@@ -733,10 +742,10 @@ namespace ClipOne.view
                 {
                     
                     activeHwnd = WinAPIHelper.GetForegroundWindow();
-
+                    
                     this.Topmost = true;
                     this.Activate();
-                    isShow = true;
+                    
                    
                     WinAPIHelper.POINT point = new WinAPIHelper.POINT();
                     if (WinAPIHelper.GetCursorPos(out point))
@@ -801,7 +810,7 @@ namespace ClipOne.view
         /// </summary>
         private async void ShowWindowAndList()
         {
-
+            
             await webView1.InvokeScriptAsync("showRecord");
 
 
@@ -1025,6 +1034,7 @@ namespace ClipOne.view
         private void Window_SourceInitialized(object sender, EventArgs e)
         {
 
+             
             HwndSource source = PresentationSource.FromVisual(this) as HwndSource;
             source.AddHook(WndProc);
             wpfHwnd = (new WindowInteropHelper(this)).Handle;
@@ -1036,39 +1046,22 @@ namespace ClipOne.view
  
 
         }
-
-        //显示窗体,透明度为事先设置的值.
-        private void DiyShow()
-        {
-            this.Topmost = true;
-            this.Activate();
-            isShow = true;
-
-        }
+ 
 
         /// <summary>
         ///  
         /// </summary>
         private void DiyHide()
         {
-           
+             
             this.Topmost = false;
            
-            if (isShow) {
-               
-                
+           
                 if (activeHwnd != IntPtr.Zero)
                 {
                     WinAPIHelper.SetForegroundWindow(activeHwnd);
                 }
-                
-              
-                 isShow = false;
-
-                
-
-            }
-
+          
             this.Left = HideLeftValue;
 
         }

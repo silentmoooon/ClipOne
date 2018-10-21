@@ -7,6 +7,7 @@ var searchMode = false;
 var isShiftPressed = false;
 var lastSelectedIndex = -1;
 var storeInterval;
+var clearImageInterval;
 var maxRecords = 100;
 var searchValue = '';
  
@@ -61,10 +62,23 @@ $(document).ready(function () {
     }
     storeInterval = setInterval(saveData, 120000);
 
+	clearImageInterval=setInterval(clearImage,2*3600*1000);
+
     displayData();
 
 });
- 
+
+function clearImage(){
+   var images=[];
+	for(var i=0;i<clipObj.length;i++){
+		if(clipObj[i].Type=="image"){
+			images.push(clipObj[i].DisplayValue);
+		}
+	}
+	  window.external.notify("clearImage:" + encodeURIComponent(JSON.stringify(images)));
+	  
+
+}
  
 function keyDown(event) {
 
@@ -72,21 +86,18 @@ function keyDown(event) {
 
         pasteValue(selectIndex);
     }  
-
-    if (searchMode)
-        return;
-    
-	if (event.ctrlKey && event.keyCode == 70) {  //ctrl+f
+	 
+	else if (event.ctrlKey && event.keyCode == 70) {  //ctrl+f
 		if (!searchMode && clipObj.length > 0) {
 			showSearch();
 		} else {
 			hideSearch();
 
 		}
-
+		return;
 	} 
-	
-	else if (!searchMode) {
+	   
+	else  if (!searchMode) {
 
 		if (event.shiftKey) {    //多条操作
 			isShiftPressed = true;
@@ -143,7 +154,7 @@ function showSearch() {
 function hideSearch() {
 
 	$("#searchDiv").css("display", "none");
-    
+		searchMode=false;
     if ($("#searchInput").val() != "") {
         window.external.notify("testhide:"  );
 		$("#searchInput").val("");
@@ -288,7 +299,7 @@ function displayData() {
 		});
     }
     
-	 
+	   $(".content").getNiceScroll().resize();
     changeWindowHeight($("body").height());
 }
 
@@ -465,7 +476,9 @@ function hidePreview() {
 
 	window.external.notify("HidePreview:" + "11");
 }
-
+function hideUi(){
+	//scrollTop();
+}
 //获取所有记录,用来持久化
 function getAllClip() {
 	return encodeURIComponent(JSON.stringify(clipObj));
@@ -481,6 +494,7 @@ function saveRecordCount() {
 function clear() {
 	clipObj = [];
 	window.localStorage.clear();
+	displayData();
 }
 
 
