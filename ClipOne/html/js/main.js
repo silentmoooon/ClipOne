@@ -392,7 +392,7 @@ function showRecord() {
         searchValue = "";
          
     } 
-    displayData();
+   // displayData();
 	if (clipObj.length != 0) {
 
 		if (searchValue != "") {
