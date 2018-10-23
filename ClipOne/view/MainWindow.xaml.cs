@@ -31,7 +31,7 @@ namespace ClipOne.view
         /// </summary>
         public static string cacheDir = "cache";
 
-        
+
         /// <summary>
         /// 配置文件路径
         /// </summary>
@@ -63,7 +63,7 @@ namespace ClipOne.view
         /// </summary>
         private double OpacityRatio = 0.06;
 
-   
+
         /// <summary>
         /// 剪切板事件
         /// </summary>
@@ -108,7 +108,7 @@ namespace ClipOne.view
         /// </summary>
         private static int maxRecords = 300;
 
-       
+
 
         /// <summary>
         /// 默认皮肤
@@ -137,11 +137,7 @@ namespace ClipOne.view
         /// </summary>
         private IntPtr wpfHwnd;
 
-
-        /// <summary>
-        /// 预览窗口
-        /// </summary>
-        private PreviewForm preview;
+ 
 
 
 
@@ -151,14 +147,14 @@ namespace ClipOne.view
 
             System.IO.Directory.SetCurrentDirectory(System.Windows.Forms.Application.StartupPath);
 
-         
+
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
 
-             
-            if(!Directory.Exists(cacheDir))
+
+            if (!Directory.Exists(cacheDir))
             {
                 Directory.CreateDirectory(cacheDir);
             }
@@ -167,11 +163,11 @@ namespace ClipOne.view
             {
                 InitConfig();
             }
-           
+
             //初始化浏览器
             InitWebView();
 
- 
+
             //初始化托盘图标
             InitialTray();
 
@@ -185,29 +181,16 @@ namespace ClipOne.view
             {
                 Hotkey_Click(null, null);
             }
+ 
 
-            //初始化预览窗口
-            InitPreviewForm();
-          
         }
 
 
 
 
 
-      
-        /// <summary>
-        /// 初始化预览窗口
-        /// </summary>
-        private void InitPreviewForm()
-        {
-            preview = new PreviewForm(this);
-            preview.Focusable = false;
-            preview.IsHitTestVisible = false;
-            preview.IsTabStop = false;
-            preview.ShowInTaskbar = false;
-            preview.ShowActivated = false;
-        }
+
+       
 
         /// <summary>
         /// /加载设置项
@@ -248,7 +231,7 @@ namespace ClipOne.view
                 opacityValue = double.Parse(settingsMap["opacity"]);
 
             }
-            
+
 
 
         }
@@ -258,55 +241,50 @@ namespace ClipOne.view
         /// </summary>
         private void InitWebView()
         {
-            
+
             webView1.IsJavaScriptEnabled = true;
             webView1.IsScriptNotifyAllowed = true;
-       
+
             webView1.IsIndexedDBEnabled = true;
             webView1.ScriptNotify += WebView1_ScriptNotify;
-            
+
             webView1.NavigateToLocal(defaultHtml);
- 
+
 
         }
 
-        
+
         private void WebView1_ScriptNotify(object sender, Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT.WebViewControlScriptNotifyEventArgs e)
         {
             string[] args = e.Value.Split(':');
-            
+
             if (args[0] == "PasteValue")
             {
-                 
-                    PasteValue(args[1]);
-                
+
+                PasteValue(args[1]);
+
             }
             else if (args[0] == "PasteValueList")
             {
-                 
-                    PasteValueList(args[1]);
-                
+
+
+                PasteValueList(args[1]);
+
             }
             else if (args[0] == "DeleteImage")
             {
-              new Thread( new ParameterizedThreadStart(DeleteFile)).Start(args[1]);
+                new Thread(new ParameterizedThreadStart(DeleteFile)).Start(args[1]);
             }
             else if (args[0] == "ChangeWindowHeight")
             {
                 ChangeWindowHeight(double.Parse(args[1]));
             }
-            else if (args[0] == "Preview")
-            {
-                ShowPreviewForm(args[1]);
-            }
-            else if (args[0] == "HidePreview")
-            {
-                HidePreview();
-            }
+            
             else if (args[0] == "clearImage")
             {
                 new Thread(new ParameterizedThreadStart(ClearImage)).Start(args[1]);
-            }else if (args[0] == "esc")
+            }
+            else if (args[0] == "esc")
             {
                 DiyHide();
             }
@@ -314,33 +292,33 @@ namespace ClipOne.view
 
         private void ClearImage(object images)
         {
-            
-            string [] image = JsonConvert.DeserializeObject<string[]>(HttpUtility.UrlDecode(images.ToString()));
-            foreach(var img in Directory.GetFiles(cacheDir))
+
+            string[] image = JsonConvert.DeserializeObject<string[]>(HttpUtility.UrlDecode(images.ToString()));
+            foreach (var img in Directory.GetFiles(cacheDir))
             {
-                if(!image.Contains(img.Replace("\\", "/")))
+                if (!image.Contains(img.Replace("\\", "/")))
                 {
                     DeleteFile(img);
                 }
-                
+
             }
-             
+
         }
-        private   void DeleteFile(object path)
+        private void DeleteFile(object path)
         {
             for (int i = 0; i < 3; i++)
             {
                 Thread.Sleep(i * 500);
                 try
                 {
-                  File.Delete(path.ToString());
+                    File.Delete(path.ToString());
                     return;
                 }
                 catch
                 {
 
                 }
-               
+
             }
         }
 
@@ -380,12 +358,12 @@ namespace ClipOne.view
 
             opaSet.Click += (sender, e) =>
             {
-                
+
                 OpacitySet os = new OpacitySet(this, (1 - opacityValue) / OpacityRatio);
 
                 os.Topmost = true;
                 os.ShowDialog();
-                
+
             };
 
             clear.Click += Clear_Click;
@@ -637,7 +615,7 @@ namespace ClipOne.view
             string[] list = Directory.GetFiles(cacheDir);
             Directory.Delete(cacheDir, true);
             Directory.CreateDirectory(cacheDir);
-           
+
             webView1.InvokeScript("clear");
         }
 
@@ -742,13 +720,13 @@ namespace ClipOne.view
 
                 if (hotkeyAtom == wParam.ToInt32())
                 {
-                    
+
                     activeHwnd = WinAPIHelper.GetForegroundWindow();
-                    
+
                     this.Topmost = true;
                     this.Activate();
-                    
-                   
+
+
                     WinAPIHelper.POINT point = new WinAPIHelper.POINT();
                     if (WinAPIHelper.GetCursorPos(out point))
                     {
@@ -799,9 +777,9 @@ namespace ClipOne.view
             string json = JsonConvert.SerializeObject(clip);
 
             json = HttpUtility.UrlEncode(json);
-           
-          
-         await   webView1.InvokeScriptAsync("addData", json );
+
+
+            await webView1.InvokeScriptAsync("addData", json);
 
 
         }
@@ -812,7 +790,7 @@ namespace ClipOne.view
         /// </summary>
         private async void ShowWindowAndList()
         {
-            
+
             await webView1.InvokeScriptAsync("showRecord");
 
 
@@ -824,7 +802,7 @@ namespace ClipOne.view
         /// <param name="height">页面高度</param>
         public void ChangeWindowHeight(double height)
         {
-           
+
             this.Height = height + 21;
 
             WinAPIHelper.POINT point = new WinAPIHelper.POINT();
@@ -842,7 +820,7 @@ namespace ClipOne.view
 
         }
 
-       
+
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -875,84 +853,32 @@ namespace ClipOne.view
         public void PasteValue(string clipStr)
         {
             DiyHide();
-            preview.Hide();
+
             ClipModel clip = JsonConvert.DeserializeObject<ClipModel>(HttpUtility.UrlDecode(clipStr));
-            
 
-            //从显示列表中获取记录，并根据sourceId从对保存列表中的该条记录做相应处理
 
-            if (clip.Type == FILE_TYPE)
-            {
-                string[] files = clip.ClipValue.Split(',');
-                foreach (string str in files)
-                {
-                    if (!File.Exists(str))
-                    {
-                        MessageBox.Show("源文件缺失，粘贴失败！");
-                        return;
-                    }
-                }
-            }
 
             SinglePaste(clip);
-          //  new Thread(new ParameterizedThreadStart(SinglePaste)).Start(clip);
-
-
-        }
-
-        /// <summary>
-        /// 隐藏预览窗口
-        /// </summary>
-        public void HidePreview()
-        {
-
-            if (preview.IsVisible)
-                preview.Hide();
 
 
 
         }
-
-        /// <summary>
-        /// 显示图片预览窗口
-        /// </summary>
-        /// <param name="id"></param>
-        public void ShowPreviewForm(string path)
-        {
-            preview.Hide();
-
-            preview.ImgPath = path;
-
-            preview.Show();
-
-
-
-        }
+ 
         /// <summary>
         /// 粘贴条目到活动窗口 
         /// </summary>
         /// <param name="result">需要粘贴的值</param>
         /// /// <param name="neadPause">是否需要延时，单条需要，批量不需要</param>
-        private void SetValueToClip(ClipModel result, bool neadPause)
+        private void SetValueToClip(ClipModel result)
         {
 
 
-            //设置剪切板前取消监听
-            WinAPIHelper.RemoveClipboardFormatListener(wpfHwnd);
             ClipService.SetValueToClipboard(result);
-            //this.Dispatcher.Invoke(new Action(delegate
-            //{
 
-            //}));
+            Thread.Sleep(100);
 
-            //设置剪切板后恢复监听
-            WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
-            if (neadPause)
-            {
-                Thread.Sleep(50);
-            }
             System.Windows.Forms.SendKeys.SendWait("^v");
- 
+
         }
 
 
@@ -968,15 +894,9 @@ namespace ClipOne.view
         /// </summary>
         private void WindowLostFocusHandle()
         {
+ 
+            DiyHide();
 
-
-            if (preview != null)
-            {
-                preview.Hide();
-            }
-            
-              DiyHide();
-            
 
 
         }
@@ -989,10 +909,12 @@ namespace ClipOne.view
         /// <param name="lastIndex">起始索引</param>
         public void PasteValueList(string clipListStr)
         {
+
             List<ClipModel> clipList = JsonConvert.DeserializeObject<List<ClipModel>>(HttpUtility.UrlDecode(clipListStr));
             DiyHide();
-            preview.Hide();
-            new Thread(new ParameterizedThreadStart(BatchPaste)).Start(clipList);
+            //preview.Hide();
+            // new Thread(new ParameterizedThreadStart(BatchPaste)).Start(clipList);
+            BatchPaste(clipList);
         }
 
         /// <summary>
@@ -1001,32 +923,41 @@ namespace ClipOne.view
         /// <param name="clip"></param>
         private void SinglePaste(ClipModel clip)
         {
-            SetValueToClip(clip, true);
+            //设置剪切板前取消监听
+            WinAPIHelper.RemoveClipboardFormatListener(wpfHwnd);
+            SetValueToClip(clip);
+            //设置剪切板后恢复监听
+            WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
 
         }
         /// <summary>
         /// 批量粘贴，由于循环太快、发送粘贴按键消息太慢，故延时200ms
         /// </summary>
         /// <param name="needPause"></param>
-        private void BatchPaste(object clipList)
+        private void BatchPaste(List<ClipModel> clipList)
         {
-            List<ClipModel> list = (List<ClipModel>)clipList;
 
-            for (int i = 0; i < list.Count; i++)
+            //设置剪切板前取消监听
+            WinAPIHelper.RemoveClipboardFormatListener(wpfHwnd);
+
+
+            for (int i = 0; i < clipList.Count; i++)
             {
 
-                ClipModel clip = list[i];
-                if (i != list.Count - 1)
+                ClipModel clip = clipList[i];
+                if (i != clipList.Count - 1)
                 {
                     clip.ClipValue = clip.ClipValue + "\n";
                 }
-                SetValueToClip(clip, false);
-                Thread.Sleep(300);
+                SetValueToClip(clip);
+                Thread.Sleep(100);
             }
+            //设置剪切板后恢复监听
+            WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
 
 
         }
- 
+
 
         /// <summary>
         /// 添加剪切板监听， 更改窗体属性,不在alt+tab中显示
@@ -1036,7 +967,7 @@ namespace ClipOne.view
         private void Window_SourceInitialized(object sender, EventArgs e)
         {
 
-             
+
             HwndSource source = PresentationSource.FromVisual(this) as HwndSource;
             source.AddHook(WndProc);
             wpfHwnd = (new WindowInteropHelper(this)).Handle;
@@ -1045,30 +976,30 @@ namespace ClipOne.view
             int exStyle = (int)WinAPIHelper.GetWindowLong(wpfHwnd, -20);
             exStyle |= (int)0x00000080;
             WinAPIHelper.SetWindowLong(wpfHwnd, -20, exStyle);
- 
+
 
         }
- 
+
 
         /// <summary>
         ///  
         /// </summary>
         private void DiyHide()
         {
-             
+
             this.Topmost = false;
-           
-           
-                if (activeHwnd != IntPtr.Zero)
-                {
-                    WinAPIHelper.SetForegroundWindow(activeHwnd);
-                }
-          
+
+
+            if (activeHwnd != IntPtr.Zero)
+            {
+                WinAPIHelper.SetForegroundWindow(activeHwnd);
+            }
+
             this.Left = HideLeftValue;
 
         }
-        
-         
+
+
     }
 
 

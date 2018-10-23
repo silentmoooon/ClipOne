@@ -153,13 +153,14 @@ namespace ClipOne.service
             {
                 try
                 {
+                    
                     IDataObject data = new DataObject(DataFormats.Text, result.ClipValue);
 
                     System.Windows.Forms.Clipboard.SetDataObject(data, false);
 
                 }
                 catch (Exception e){
-                     
+                    //Console.WriteLine(e.StackTrace);
                 }
             }
         }

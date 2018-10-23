@@ -179,11 +179,11 @@ function trSelect(event) {
 	if (!isShiftPressed) {
 		selectItem(index);
 	}
-	if (clipObj[index].Type == "image") {
-		previewTimeout = setTimeout(function () {
-			preview(clipObj[index].ClipValue);
-		}, 500);
-	}
+	//if (clipObj[index].Type == "image") {
+	//	previewTimeout = setTimeout(function () {
+	//		preview(clipObj[index].ClipValue);
+	//	}, 500);
+	//}
 }
 
 //反选
@@ -272,9 +272,9 @@ function displayData() {
 			}
 			if (clipObj[i].Type == "image") {
 				 
-				trs = " <tr style='cursor: default' index='" + i + "' id='tr" + matchCount + "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' onmouseleave='trUnselect()'> <td  class='td_content' > <img class='image' src='../" + clipObj[i].DisplayValue + "' /> </td><td class='td_index'  >" + num + "</td> </tr>";
+				trs = " <tr style='cursor: default' index='" + i + "' id='tr" + matchCount + "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' )'> <td  class='td_content' > <img class='image' src='../" + clipObj[i].DisplayValue + "' /> </td><td class='td_index'  >" + num + "</td> </tr>";
 			} else {  
-				trs = " <tr style='cursor: default' index='" + i + "' id='tr" + matchCount + "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' onmouseleave='trUnselect()'> <td  class='td_content' > " + clipObj[i].DisplayValue + " </td><td class='td_index'  >" + num + "</td> </tr>";
+				trs = " <tr style='cursor: default' index='" + i + "' id='tr" + matchCount + "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' '> <td  class='td_content' > " + clipObj[i].DisplayValue + " </td><td class='td_index'  >" + num + "</td> </tr>";
 
 			}
 		}
@@ -452,7 +452,7 @@ function pasteValueByRange(startIndex, endIndex) {
 		return;
     }
     
-	window.external.notify("PasteValueList:" + encodeURIComponent(JSON.stringify(obj)));
+	window.external.notify("PasteValueList:" + encodeURIComponent(JSON.stringify(clipList)));
 
     displayData();
 }
@@ -468,17 +468,7 @@ function changeWindowHeight(height) {
 	window.external.notify("ChangeWindowHeight:" + height);
 }
 
-//预览
-function preview(path) {
-
-	window.external.notify("Preview:" + path);
-}
-
-//隐藏预览
-function hidePreview() {
-
-	window.external.notify("HidePreview:" + "11");
-}
+ 
 function hideUi(){
 	//scrollTop();
 }
