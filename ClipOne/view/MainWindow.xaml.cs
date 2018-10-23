@@ -188,8 +188,7 @@ namespace ClipOne.view
 
             //初始化预览窗口
             InitPreviewForm();
- 
-
+          
         }
 
 
@@ -307,6 +306,9 @@ namespace ClipOne.view
             else if (args[0] == "clearImage")
             {
                 new Thread(new ParameterizedThreadStart(ClearImage)).Start(args[1]);
+            }else if (args[0] == "esc")
+            {
+                DiyHide();
             }
         }
 
@@ -1066,14 +1068,7 @@ namespace ClipOne.view
 
         }
         
-        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            if (e.Key == System.Windows.Input.Key.Escape)
-            {
-                DiyHide();
-            }
-           
-        }
+         
     }
 
 

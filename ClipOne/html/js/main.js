@@ -81,8 +81,11 @@ function clearImage(){
 }
  
 function keyDown(event) {
-
-    if (event.keyCode == 13) { //回车直接粘贴当前选中项
+    if (event.keyCode == 27) {
+        scrollTop();
+        window.external.notify("esc:1");
+    }
+   else if (event.keyCode == 13) { //回车直接粘贴当前选中项
 
         pasteValue(selectIndex);
     }  
