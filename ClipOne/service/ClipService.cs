@@ -160,7 +160,7 @@ namespace ClipOne.service
 
                 }
                 catch (Exception e){
-                    //Console.WriteLine(e.StackTrace);
+                    File.AppendAllText("C:/Users/xiecan/test.txt", e.Message + "\n");
                 }
             }
         }

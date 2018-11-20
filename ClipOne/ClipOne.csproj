@@ -104,7 +104,7 @@
       <HintPath>..\packages\HtmlAgilityPack.1.8.8\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Toolkit.Win32.UI.Controls, Version=4.0.0.0, Culture=neutral, PublicKeyToken=4aff67a105548ee2, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Toolkit.Win32.UI.Controls.4.0.1\lib\net462\Microsoft.Toolkit.Win32.UI.Controls.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Toolkit.Win32.UI.Controls.4.0.3\lib\net462\Microsoft.Toolkit.Win32.UI.Controls.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
