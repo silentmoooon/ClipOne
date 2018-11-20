@@ -144,16 +144,14 @@ namespace ClipOne.view
         public MainWindow()
         {
             InitializeComponent();
-
-            System.IO.Directory.SetCurrentDirectory(System.Windows.Forms.Application.StartupPath);
-            
-
+           
+          
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-           
 
+           
             if (!Directory.Exists(cacheDir))
             {
                 Directory.CreateDirectory(cacheDir);
@@ -996,7 +994,7 @@ namespace ClipOne.view
             if (activeHwnd != IntPtr.Zero)
             {
                 WinAPIHelper.SetForegroundWindow(activeHwnd);
-               // File.AppendAllText("C:/Users/xiecan/test.txt", activeHwnd+"\n");
+               
             }
 
           
