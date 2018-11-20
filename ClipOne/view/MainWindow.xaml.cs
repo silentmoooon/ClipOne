@@ -146,13 +146,13 @@ namespace ClipOne.view
             InitializeComponent();
 
             System.IO.Directory.SetCurrentDirectory(System.Windows.Forms.Application.StartupPath);
-
+            
 
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-
+           
 
             if (!Directory.Exists(cacheDir))
             {
@@ -184,13 +184,7 @@ namespace ClipOne.view
  
 
         }
-
-
-
-
-
-
-       
+         
 
         /// <summary>
         /// /加载设置项
@@ -260,8 +254,9 @@ namespace ClipOne.view
 
             if (args[0] == "PasteValue")
             {
-
+                
                 PasteValue(args[1]);
+              
 
             }
             else if (args[0] == "PasteValueList")
@@ -288,6 +283,11 @@ namespace ClipOne.view
             {
                 DiyHide();
             }
+            //else if (args[0].StartsWith("test"))
+            //{
+            //    File.AppendAllText("C:/Users/xiecan/test.txt", args[0] + " " + args[1] + "\n");
+            //}
+            
         }
 
         private void ClearImage(object images)
@@ -722,9 +722,8 @@ namespace ClipOne.view
                 {
 
                     activeHwnd = WinAPIHelper.GetForegroundWindow();
-
-                    this.Topmost = true;
-                    this.Activate();
+                   // File.AppendAllText("C:/Users/xiecan/test.txt", activeHwnd + "--\n");
+                    
 
 
                     WinAPIHelper.POINT point = new WinAPIHelper.POINT();
@@ -754,7 +753,9 @@ namespace ClipOne.view
 
 
                     }
-
+                    this.Show();
+                    this.Topmost = true;
+                    this.Activate();
                     ShowWindowAndList();
 
 
@@ -876,7 +877,7 @@ namespace ClipOne.view
             ClipService.SetValueToClipboard(result);
 
             Thread.Sleep(100);
-
+            //File.AppendAllText("C:/Users/xiecan/test.txt", result.DisplayValue + "\n");
             System.Windows.Forms.SendKeys.SendWait("^v");
 
         }
@@ -894,10 +895,12 @@ namespace ClipOne.view
         /// </summary>
         private void WindowLostFocusHandle()
         {
- 
-            DiyHide();
 
-
+            this.Topmost = false;
+            if (this.Visibility == Visibility.Visible) {
+                this.Hide();
+            }
+            // this.Left = HideLeftValue;
 
         }
 
@@ -988,14 +991,16 @@ namespace ClipOne.view
         {
 
             this.Topmost = false;
-
+            this.Hide();
 
             if (activeHwnd != IntPtr.Zero)
             {
                 WinAPIHelper.SetForegroundWindow(activeHwnd);
+               // File.AppendAllText("C:/Users/xiecan/test.txt", activeHwnd+"\n");
             }
 
-            this.Left = HideLeftValue;
+          
+           
 
         }
 

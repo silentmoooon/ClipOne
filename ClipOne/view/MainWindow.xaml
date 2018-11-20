@@ -9,7 +9,7 @@
         xmlns:local="clr-namespace:ClipOne.view"
         xmlns:WPF="clr-namespace:Microsoft.Toolkit.Win32.UI.Controls.WPF;assembly=Microsoft.Toolkit.Win32.UI.Controls" 
         mc:Ignorable="d"
-        Title="MainWindow"    Height="100" Width="461"  Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None" Background="Transparent"   ResizeMode="NoResize" Topmost="True"   ShowInTaskbar="False"  Left="-10000" ShowActivated="False" MaxHeight="620" SourceInitialized="Window_SourceInitialized" >
+        Title="MainWindow"    Height="100" Width="461"  Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None" Background="Transparent"   ResizeMode="NoResize" Topmost="False"   ShowInTaskbar="False"  Left="-10000" ShowActivated="False" MaxHeight="620" SourceInitialized="Window_SourceInitialized" >
     <Border  Margin="10" Background="Transparent">
         <Border.Effect>
             <DropShadowEffect Color="gray" BlurRadius="15" Direction="-90" RenderingBias="Quality" ShadowDepth="2"/>
