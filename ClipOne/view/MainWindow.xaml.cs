@@ -3,7 +3,7 @@ using ClipOne.model;
 using ClipOne.service;
 using ClipOne.util;
 using Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT;
-using Microsoft.Toolkit.Win32.UI.Controls.WPF;
+ 
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -53,11 +53,7 @@ namespace ClipOne.view
         /// </summary>
         private IntPtr activeHwnd = IntPtr.Zero;
 
-        /// <summary>
-        /// 隐藏时将left设置为该值
-        /// </summary>
-        private int HideLeftValue = -10000;
-
+        
         /// <summary>
         /// 透明度转换比例
         /// </summary>
@@ -239,7 +235,7 @@ namespace ClipOne.view
 
             webView1.IsIndexedDBEnabled = true;
             webView1.ScriptNotify += WebView1_ScriptNotify;
-
+           //webView1.Navigate(defaultHtml);
             webView1.NavigateToLocal(defaultHtml);
 
 
