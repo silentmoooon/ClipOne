@@ -140,8 +140,9 @@ namespace ClipOne.view
         public MainWindow()
         {
             InitializeComponent();
-           
-          
+            System.Environment.CurrentDirectory = System.Windows.Forms.Application.StartupPath;
+
+
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -229,7 +230,7 @@ namespace ClipOne.view
         /// </summary>
         private void InitWebView()
         {
-
+            
             webView1.IsJavaScriptEnabled = true;
             webView1.IsScriptNotifyAllowed = true;
 
