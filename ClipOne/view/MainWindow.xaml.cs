@@ -663,12 +663,18 @@ namespace ClipOne.view
                     isSuccess=HandleClipImage(clip);
 
                 }
-                Console.WriteLine(isSuccess);
-                if (!isSuccess) { 
-                     
+                
+                if (!isSuccess) {
+
+                    //处理剪切板微信自定义格式
+                    if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(WECHAT_TYPE))
+                    {
+                        HandleClipWeChat(clip);
+
+                    }
 
                     //处理剪切板QQ自定义格式
-                     if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
+                  else  if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
                     {
                         HandleClipQQ(clip);
 
