@@ -98,13 +98,14 @@ namespace ClipOne.service
         public static void SetValueToClipboard(ClipModel result)
         {
              
-            if (result.Type == WECHAT_TYPE)
-            {
-                MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
-                IDataObject data = new DataObject(WECHAT_TYPE, ms);
-                Clipboard.SetDataObject(data, false);
-            }
-            else if (result.Type == IMAGE_TYPE)
+            //if (result.Type == WECHAT_TYPE)
+            //{
+            //    MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
+            //    IDataObject data = new DataObject(WECHAT_TYPE, ms);
+            //    Clipboard.SetDataObject(data, false);
+            //}
+            //else
+            if (result.Type == IMAGE_TYPE)
             {
                 try
                 {
@@ -326,8 +327,9 @@ namespace ClipOne.service
         /// 处理剪切板图片类型
         /// </summary>
         /// <param name="clip"></param>
-        public static void HandleClipImage(ClipModel clip)
+        public static Boolean HandleClipImage(ClipModel clip)
         {
+            Console.WriteLine("=====");
             for (int i = 0; i < 3; i++)
             {
                 try
@@ -342,7 +344,7 @@ namespace ClipOne.service
                     clip.ClipValue = path;
                     clip.DisplayValue = path;
 
-                    break;
+                    return true;
 
                 }
                 catch
@@ -351,6 +353,7 @@ namespace ClipOne.service
 
                 }
             }
+            return false;
         }
 
         /// <summary>
@@ -420,6 +423,7 @@ namespace ClipOne.service
         /// <param name="clip"></param>
         public static void HandleClipQQ(ClipModel clip)
         {
+            
             for (int i = 0; i < 3; i++)
             {
                 try
@@ -429,31 +433,57 @@ namespace ClipOne.service
                     byte[] b = stream.ToArray();
                     string xmlStr = System.Text.Encoding.UTF8.GetString(b);
                     xmlStr = xmlStr.Substring(0, xmlStr.IndexOf("</QQRichEditFormat>") + "</QQRichEditFormat>".Length);
-                   
 
                     string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();
 
-                    //qq的html内容会固定出现在第14行。
-                    htmlStr = htmlStr.Split("\r\n".ToCharArray())[14];
-                    if (htmlStr.Contains("\"file:///\""))
-                    {
-
-                        XmlDocument document = new XmlDocument();
-                        document.LoadXml(xmlStr);
-                        foreach (XmlNode node in document.DocumentElement.ChildNodes)
+              
+                    foreach(string str in htmlStr.Split("\r\n".ToCharArray())) { 
+                        if (str.Contains("file:///"))
                         {
-                            if (node.Name == "EditElement" && node.Attributes["type"].Value == "5") //图片类型
+
+                            XmlDocument document = new XmlDocument();
+                            document.LoadXml(xmlStr);
+                            foreach (XmlNode node in document.DocumentElement.ChildNodes)
                             {
-                                string filePath = node.Attributes["filepath"].Value;
-                                if (!htmlStr.Contains(Path.GetFileName(filePath)))
+                                if (node.Name == "EditElement" && (node.Attributes["type"].Value == "1"|| node.Attributes["type"].Value == "2")) //图片类型
                                 {
-                                    htmlStr = htmlStr.ReplaceFirst("\"file:///\"", "\"file:///" + filePath.Replace("\\", "/") + "\"");
+                                    string filePath = node.Attributes["filepath"].Value.Replace("file:///", "");
+                                    string toPath = MainWindow.cacheDir + "/" + Path.GetFileName(filePath);
+                                    try {
+                                        File.Copy(filePath, toPath);
+                                    }
+                                    catch
+                                    {
+
+                                    }
+                                    if (!str.Contains(Path.GetFileName(filePath)))
+                                    {
+                                        htmlStr = str.ReplaceFirst("file:///", "../"+toPath);
+                                    }
                                 }
                             }
-                        }
 
+                        }
                     }
 
+
+                    //XmlDocument document = new XmlDocument();
+                    //document.LoadXml(xmlStr);
+                    //foreach (XmlNode node in document.DocumentElement.ChildNodes)
+                    //{
+                    //    if (node.Name == "EditElement" && (node.Attributes["type"].Value == "5" || node.Attributes["type"].Value == "1")) //图片类型
+                    //    {
+                    //        string filePath = node.Attributes["filepath"].Value.Replace("file:///","");
+                    //        string toPath = MainWindow.cacheDir + "\\" + Path.GetFileName(filePath);
+                    //        File.Copy(filePath, toPath);
+                    //        htmlStr = "<img class='image' src='../" + toPath + "' />";
+                    //        break;
+                    //    }
+                    //}
+
+
+
+                    Console.WriteLine(xmlStr);
                     clip.Type = QQ_RICH_TYPE;
                     clip.ClipValue = xmlStr;
 
@@ -472,6 +502,9 @@ namespace ClipOne.service
                         }
                         htmlStr = doc.DocumentNode.OuterHtml;
                     }
+                    Console.WriteLine("=====");
+                    Console.WriteLine(htmlStr);
+
                     clip.DisplayValue = htmlStr;
 
                     break;
@@ -479,9 +512,9 @@ namespace ClipOne.service
 
 
                 }
-                catch
+                catch(Exception e)
                 {
-
+                    Console.WriteLine(e.Message);
 
                 }
             }

@@ -76,7 +76,7 @@ function clearImage() {
             images.push(clipObj[i].DisplayValue);
         }
     }
-    window.external.notify("clearImage:" + encodeURIComponent(JSON.stringify(images)));
+    window.external.notify("clearImage|" + encodeURIComponent(JSON.stringify(images)));
 
 
 }
@@ -85,7 +85,7 @@ function keyDown(event) {
 
     if (event.keyCode == 27) {
         scrollTop();
-        window.external.notify("esc:1");
+        window.external.notify("esc|1");
     } else if (event.keyCode == 13) { //回车直接粘贴当前选中项
         pasteValue(selectIndex);
     } else if (event.ctrlKey && event.keyCode == 70) { //ctrl+f
@@ -264,7 +264,7 @@ function displayData() {
 
                 trs = " <tr style='cursor: default' index='" + i + "' id='tr" + matchCount + "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' )'> <td  class='td_content' > <img class='image' src='../" + clipObj[i].DisplayValue + "' /> </td><td class='td_index'  >" + num + "</td> </tr>";
             } else {
-                trs = " <tr style='cursor: default' index='" + i + "' id='tr" + matchCount + "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' '> <td  class='td_content' > " + clipObj[i].DisplayValue + " </td><td class='td_index'  >" + num + "</td> </tr>";
+                trs = " <tr style='cursor: default' index='" + i + "' id='tr" + matchCount + "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' '> <td  class='td_content' >  " + clipObj[i].DisplayValue + " </td><td class='td_index'  >" + num + "</td> </tr>";
 
             }
         }
@@ -408,7 +408,7 @@ function pasteValue(index) {
     //$("body").off("keydown");
 
     obj = clipObj.splice(index, 1)[0];
-    window.external.notify("PasteValue:" + encodeURIComponent(JSON.stringify(obj)));
+    window.external.notify("PasteValue|" + encodeURIComponent(JSON.stringify(obj)));
     clipObj.splice(0, 0, obj);
 
     //setTimeout(function() { $("body").on("keydown", keyDown); }, 1000);
@@ -437,7 +437,7 @@ function pasteValueByRange(startIndex, endIndex) {
         return;
     }
     // $("body").off("keydown");
-    window.external.notify("PasteValueList:" + encodeURIComponent(JSON.stringify(clipList)));
+    window.external.notify("PasteValueList|" + encodeURIComponent(JSON.stringify(clipList)));
     //setTimeout(function() { $("body").on("keydown", keyDown); }, 1000);
     displayData();
 }
@@ -445,12 +445,12 @@ function pasteValueByRange(startIndex, endIndex) {
 //删除
 function deleteImage(path) {
 
-    window.external.notify("DeleteImage:" + path);
+    window.external.notify("DeleteImage|" + path);
 }
 //调整高度
 function changeWindowHeight(height) {
 
-    window.external.notify("ChangeWindowHeight:" + height);
+    window.external.notify("ChangeWindowHeight|" + height);
 }
 
 

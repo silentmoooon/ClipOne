@@ -245,7 +245,8 @@ namespace ClipOne.view
 
         private void WebView1_ScriptNotify(object sender, Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT.WebViewControlScriptNotifyEventArgs e)
         {
-            string[] args = e.Value.Split(':');
+
+            string[] args = e.Value.Split(new char[] { '|'},2);
 
             if (args[0] == "PasteValue")
             {
@@ -280,9 +281,9 @@ namespace ClipOne.view
             }
             //else if (args[0].StartsWith("test"))
             //{
-            //    File.AppendAllText("C:/Users/xiecan/test.txt", args[0] + " " + args[1] + "\n");
+            //    Console.WriteLine(args[1]);
             //}
-            
+
         }
 
         private void ClearImage(object images)
@@ -655,51 +656,53 @@ namespace ClipOne.view
 
                 ClipModel clip = new ClipModel();
 
-                if (Clipboard.ContainsData(WECHAT_TYPE))
-                {
-                    HandleClipWeChat(clip);
-                }
-
-                //处理剪切板QQ自定义格式
-                else if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
-                {
-                    HandleClipQQ(clip);
-
-                }
-                //处理剪切板文件
-                else if (Clipboard.ContainsText())
-                {
-
-                    HandClipText(clip);
-
-                }
-                //处理HTML类型
-                else if ((supportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
-                {
-                    HandleClipHtml(clip);
-
-                }
+                bool isSuccess = false;
                 //处理图片
-                else if ((supportFormat & ClipType.image) != 0 && (Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib)))
+                if ((supportFormat & ClipType.image) != 0 && (Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib)))
                 {
-                    HandleClipImage(clip);
+                    isSuccess=HandleClipImage(clip);
 
+                }
+                Console.WriteLine(isSuccess);
+                if (!isSuccess) { 
+                     
+
+                    //处理剪切板QQ自定义格式
+                     if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
+                    {
+                        HandleClipQQ(clip);
+
+                    }
+                    //处理剪切板文件
+                    else if (Clipboard.ContainsText())
+                    {
+
+                        HandClipText(clip);
+
+                    }
+                    //处理HTML类型
+                    else if ((supportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
+                    {
+                        HandleClipHtml(clip);
+
+                    }
+                    //处理剪切板文件
+                    else if ((supportFormat & ClipType.file) != 0 && Clipboard.ContainsFileDropList())
+                    {
+                        HandleClipFile(clip);
+
+                    }
+
+                    else
+                    {
+
+                        return IntPtr.Zero;
+                    }
                 }
 
 
 
-                //处理剪切板文件
-                else if ((supportFormat & ClipType.file) != 0 && Clipboard.ContainsFileDropList())
-                {
-                    HandleClipFile(clip);
-
-                }
-
-                else
-                {
-
-                    return IntPtr.Zero;
-                }
+               
                 if (string.IsNullOrWhiteSpace(clip.ClipValue))
                 {
                     return IntPtr.Zero;
