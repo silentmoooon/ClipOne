@@ -310,7 +310,7 @@ namespace ClipOne.service
 
                     clip.ClipValue = htmlStr;
                     //html内容会固定出现在第16行。
-                    clip.DisplayValue = htmlStr.Split("\r\n".ToCharArray())[16];
+                    clip.DisplayValue = htmlStr.Split("\r\n".ToCharArray())[16].ToLower().Replace("<html>","").Replace("</html>", "").Replace("<div>", "").Replace("</div>", "");
                     clip.Type = HTML_TYPE;
 
                     break;
