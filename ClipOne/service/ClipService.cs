@@ -258,11 +258,12 @@ namespace ClipOne.service
 
 
                     //组装显示内容，按文件名分行
-                    string displayStr = files.Length + " file";
+                    string displayStr = "<b>"+files.Length + " file";
                     if (files.Length > 1)
                     {
                         displayStr += "s";
                     }
+                    displayStr += "</b>";
                     int j = 0;
                     foreach (string str in files)
                     {
