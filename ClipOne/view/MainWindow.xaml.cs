@@ -609,7 +609,7 @@ namespace ClipOne.view
         /// <param name="e"></param>
         private void Clear_Click(object sender, EventArgs e)
         {
-            string[] list = Directory.GetFiles(cacheDir);
+            
             Directory.Delete(cacheDir, true);
             Directory.CreateDirectory(cacheDir);
 
@@ -722,10 +722,7 @@ namespace ClipOne.view
                 {
 
                     activeHwnd = WinAPIHelper.GetForegroundWindow();
-                   // File.AppendAllText("C:/Users/xiecan/test.txt", activeHwnd + "--\n");
-                    
-
-
+                  
                     WinAPIHelper.POINT point = new WinAPIHelper.POINT();
                     if (WinAPIHelper.GetCursorPos(out point))
                     {
