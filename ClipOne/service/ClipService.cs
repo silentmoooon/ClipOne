@@ -311,7 +311,8 @@ namespace ClipOne.service
 
                     clip.ClipValue = htmlStr;
                     //html内容会固定出现在第16行。
-                    clip.DisplayValue = htmlStr.Split("\r\n".ToCharArray())[16].ToLower().Replace("<html>","").Replace("</html>", "").Replace("<div>", "").Replace("</div>", "");
+                    clip.DisplayValue = htmlStr.Split("\r\n".ToCharArray())[16].ToLower().Replace("<html>", "").Replace("</html>", "").Replace("<div>", "").Replace("</div>", "");
+                  
                     clip.Type = HTML_TYPE;
 
                     break;
@@ -327,9 +328,9 @@ namespace ClipOne.service
         /// 处理剪切板图片类型
         /// </summary>
         /// <param name="clip"></param>
-        public static Boolean HandleClipImage(ClipModel clip)
+        public static void HandleClipImage(ClipModel clip)
         {
-            
+           
             for (int i = 0; i < 3; i++)
             {
                 try
@@ -344,7 +345,7 @@ namespace ClipOne.service
                     clip.ClipValue = path;
                     clip.DisplayValue = path;
 
-                    return true;
+                    return  ;
 
                 }
                 catch
@@ -353,7 +354,7 @@ namespace ClipOne.service
 
                 }
             }
-            return false;
+            
         }
 
         /// <summary>
@@ -362,7 +363,8 @@ namespace ClipOne.service
         /// <param name="clip"></param>
         public static void HandleClipWeChat(ClipModel clip)
         {
-            for (int i = 0; i < 3; i++)
+            
+            for (int i = 0; i < 1; i++)
             {
                 try
                 {
@@ -370,11 +372,10 @@ namespace ClipOne.service
                     MemoryStream stream = (MemoryStream)Clipboard.GetData(WECHAT_TYPE);
                     byte[] b = stream.ToArray();
                     string xmlStr = System.Text.Encoding.UTF8.GetString(b);
-                    // xmlStr = xmlStr.Substring(0, xmlStr.IndexOf("</QQRichEditFormat>") + "</QQRichEditFormat>".Length);
-
+                  
                     clip.Type = WECHAT_TYPE;
                    clip.ClipValue = xmlStr;
-                    Console.WriteLine(xmlStr);
+                    
                     XmlDocument document = new XmlDocument();
                     document.LoadXml(xmlStr);
                     String displayValue = string.Empty;
@@ -404,7 +405,7 @@ namespace ClipOne.service
                     clip.DisplayValue = displayValue;
                     
 
-                    break;
+                    return ;
 
 
 
@@ -415,6 +416,7 @@ namespace ClipOne.service
 
                 }
             }
+            
         }
 
         /// <summary>
