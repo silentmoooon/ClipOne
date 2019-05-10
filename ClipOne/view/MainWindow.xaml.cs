@@ -238,6 +238,7 @@ namespace ClipOne.view
             webView1.ScriptNotify += WebView1_ScriptNotify;
            //webView1.Navigate(defaultHtml);
             webView1.NavigateToLocal(defaultHtml);
+           
 
 
         }
@@ -653,59 +654,54 @@ namespace ClipOne.view
             if (msg == WM_CLIPBOARDUPDATE)
             {
 
-
                 ClipModel clip = new ClipModel();
-
-                bool isSuccess = false;
-                //处理图片
-                if ((supportFormat & ClipType.image) != 0 && (Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib)))
+                
+                //处理剪切板微信自定义格式
+                if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(WECHAT_TYPE))
                 {
-                    isSuccess=HandleClipImage(clip);
+                    HandleClipWeChat(clip);
 
+                }
+
+                //处理剪切板QQ自定义格式
+                else  if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
+                {
+                    HandleClipQQ(clip);
+
+                }
+                   
+                //处理HTML类型
+                else if ((supportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
+                {
+                    HandleClipHtml(clip);
+
+                }
+                //处理图片类型
+                else if ((supportFormat & ClipType.image) != 0 && (Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib) ))
+                {
+                    HandleClipImage(clip);
+
+                }
+                //处理剪切板文件
+                else if ((supportFormat & ClipType.file) != 0 && Clipboard.ContainsFileDropList())
+                {
+                    HandleClipFile(clip);
+
+                }
+                //处理剪切板文字
+                else if (Clipboard.ContainsText())
+                {
+
+                    HandClipText(clip);
+
+                }
+
+                else
+                {
+
+                    return IntPtr.Zero;
                 }
                 
-                if (!isSuccess) {
-
-                    //处理剪切板微信自定义格式
-                    if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(WECHAT_TYPE))
-                    {
-                        HandleClipWeChat(clip);
-
-                    }
-
-                    //处理剪切板QQ自定义格式
-                  else  if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
-                    {
-                        HandleClipQQ(clip);
-
-                    }
-                    //处理剪切板文件
-                    else if (Clipboard.ContainsText())
-                    {
-
-                        HandClipText(clip);
-
-                    }
-                    //处理HTML类型
-                    else if ((supportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
-                    {
-                        HandleClipHtml(clip);
-
-                    }
-                    //处理剪切板文件
-                    else if ((supportFormat & ClipType.file) != 0 && Clipboard.ContainsFileDropList())
-                    {
-                        HandleClipFile(clip);
-
-                    }
-
-                    else
-                    {
-
-                        return IntPtr.Zero;
-                    }
-                }
-
 
 
                
@@ -713,7 +709,7 @@ namespace ClipOne.view
                 {
                     return IntPtr.Zero;
                 }
-
+                
                 EnQueue(clip);
 
                 handled = true;
@@ -879,9 +875,7 @@ namespace ClipOne.view
 
 
             ClipService.SetValueToClipboard(result);
-
             Thread.Sleep(100);
-            //File.AppendAllText("C:/Users/xiecan/test.txt", result.DisplayValue + "\n");
             System.Windows.Forms.SendKeys.SendWait("^v");
 
         }
@@ -904,8 +898,7 @@ namespace ClipOne.view
             if (this.Visibility == Visibility.Visible) {
                 this.Hide();
             }
-            // this.Left = HideLeftValue;
-
+          
         }
 
 
@@ -919,8 +912,7 @@ namespace ClipOne.view
 
             List<ClipModel> clipList = JsonConvert.DeserializeObject<List<ClipModel>>(HttpUtility.UrlDecode(clipListStr));
             DiyHide();
-            //preview.Hide();
-            // new Thread(new ParameterizedThreadStart(BatchPaste)).Start(clipList);
+         
             BatchPaste(clipList);
         }
 
@@ -938,7 +930,7 @@ namespace ClipOne.view
 
         }
         /// <summary>
-        /// 批量粘贴，由于循环太快、发送粘贴按键消息太慢，故延时200ms
+        /// 批量粘贴，由于循环太快、发送粘贴按键消息太慢，故延时
         /// </summary>
         /// <param name="needPause"></param>
         private void BatchPaste(List<ClipModel> clipList)
