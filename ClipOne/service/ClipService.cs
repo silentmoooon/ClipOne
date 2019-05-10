@@ -45,7 +45,7 @@ namespace ClipOne.service
         /// </summary>
         public const string TEXT_TYPE = "text";
 
-       
+
 
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace ClipOne.service
             {
                 MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
                 IDataObject data = new DataObject(WECHAT_TYPE, ms);
-                Clipboard.SetDataObject(data, false);
+                Clipboard.SetDataObject(data,true);
             }
             else if (result.Type == IMAGE_TYPE)
             {
@@ -114,7 +114,7 @@ namespace ClipOne.service
                     bitImg.UriSource = new Uri(result.ClipValue, UriKind.Relative);
                     bitImg.EndInit();
                     IDataObject data = new DataObject(DataFormats.Bitmap, bitImg);
-                    Clipboard.SetDataObject(data, false);
+                    Clipboard.SetDataObject(data,true);
 
 
                 }
@@ -122,9 +122,12 @@ namespace ClipOne.service
             }
             else if (result.Type == HTML_TYPE)
             {
-
-                IDataObject data = new DataObject(DataFormats.Html, result.ClipValue);
-                Clipboard.SetDataObject(data, false);
+                var dataObject = new DataObject();
+                dataObject.SetData(DataFormats.Html, result.ClipValue);
+                //dataObject.SetData(DataFormats.Text, "aaa");
+                //dataObject.SetData(DataFormats.UnicodeText, "aaa");
+                // IDataObject data = new DataObject(DataFormats.Html, result.ClipValue);
+                Clipboard.SetDataObject(dataObject,true);
             }
             else if (result.Type == QQ_RICH_TYPE)
             {
@@ -132,12 +135,12 @@ namespace ClipOne.service
 
                 MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
                 IDataObject data = new DataObject(QQ_RICH_TYPE, ms);
-                Clipboard.SetDataObject(data, false);
+                Clipboard.SetDataObject(data,true);
             }
             else if (result.Type == FILE_TYPE)
             {
                 string[] tmp = result.ClipValue.Split(',');
-                 
+
                 try
                 {
                     IDataObject data = new DataObject(DataFormats.FileDrop, tmp);
@@ -145,7 +148,7 @@ namespace ClipOne.service
                     byte[] bytes = new byte[] { (byte)(5), 0, 0, 0 };
                     memo.Write(bytes, 0, bytes.Length);
                     data.SetData("PreferredDropEffect", memo);
-                    Clipboard.SetDataObject(data, false);
+                    Clipboard.SetDataObject(data,true);
                 }
                 catch { return; }
             }
@@ -153,14 +156,15 @@ namespace ClipOne.service
             {
                 try
                 {
-                    
+
                     IDataObject data = new DataObject(DataFormats.Text, result.ClipValue);
 
-                    System.Windows.Forms.Clipboard.SetDataObject(data, false);
+                    System.Windows.Forms.Clipboard.SetDataObject(data,true);
 
                 }
-                catch (Exception e){
-                    File.AppendAllText("C:/Users/xiecan/test.txt", e.Message + "\n");
+                catch (Exception e)
+                {
+                    
                 }
             }
         }
@@ -174,11 +178,11 @@ namespace ClipOne.service
         /// <param name="clip"></param>
         public static void HandClipText(ClipModel clip)
         {
+
             for (int i = 0; i < 3; i++)
             {
                 try
                 {
-
                     string textStr = Clipboard.GetText();
 
                     if ((MainWindow.supportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
@@ -228,16 +232,17 @@ namespace ClipOne.service
                     }
 
                     clip.DisplayValue = tempStr;
-
                     return;
-
                 }
-                catch
+                catch (Exception)
                 {
-
 
                 }
             }
+
+
+
+
         }
 
         /// <summary>
@@ -246,51 +251,39 @@ namespace ClipOne.service
         /// <param name="clip"></param>
         public static void HandleClipFile(ClipModel clip)
         {
-            for (int i = 0; i < 3; i++)
+
+            string[] files = (string[])Clipboard.GetData(DataFormats.FileDrop);
+
+            clip.Type = FILE_TYPE;
+            clip.ClipValue = string.Join(",", files);
+
+
+
+            //组装显示内容，按文件名分行
+            string displayStr = "<b>" + files.Length + " file";
+            if (files.Length > 1)
             {
-                try
+                displayStr += "s";
+            }
+            displayStr += "</b>";
+            int j = 0;
+            foreach (string str in files)
+            {
+                if (j < 5)
                 {
-                    string[] files = (string[])Clipboard.GetData(DataFormats.FileDrop);
-
-                    clip.Type = FILE_TYPE;
-                    clip.ClipValue = string.Join(",", files);
-
-
-
-                    //组装显示内容，按文件名分行
-                    string displayStr = "<b>"+files.Length + " file";
-                    if (files.Length > 1)
-                    {
-                        displayStr += "s";
-                    }
-                    displayStr += "</b>";
-                    int j = 0;
-                    foreach (string str in files)
-                    {
-                        if (j < 5)
-                        {
-                            displayStr += "<br>" + Path.GetFileName(str);
-                        }
-                        else if (j == 5)
-                        {
-                            displayStr += "<br>...";
-                            break;
-                        }
-                        j++;
-                    }
-
-
-                    clip.DisplayValue = displayStr;
-
-
+                    displayStr += "<br>" + Path.GetFileName(str);
+                }
+                else if (j == 5)
+                {
+                    displayStr += "<br>...";
                     break;
                 }
-                catch
-                {
-
-
-                }
+                j++;
             }
+
+
+            clip.DisplayValue = displayStr;
+
         }
 
 
@@ -300,28 +293,25 @@ namespace ClipOne.service
         /// <param name="clip"></param>
         public static void HandleClipHtml(ClipModel clip)
         {
-            for (int i = 0; i < 3; i++)
-            {
-                try
-                {
 
-                    string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();
-
-
-
-                    clip.ClipValue = htmlStr;
-                    //html内容会固定出现在第16行。
-                    clip.DisplayValue = htmlStr.Split("\r\n".ToCharArray())[16].ToLower().Replace("<html>", "").Replace("</html>", "").Replace("<div>", "").Replace("</div>", "");
-                  
-                    clip.Type = HTML_TYPE;
-
-                    break;
-                }
-                catch
-                {
-
-                }
+            string htmlStr = Clipboard.GetData(DataFormats.Html).ToString().ToLower();
+            Console.WriteLine(htmlStr);
+            clip.ClipValue = htmlStr;
+            string startTag = "<!--startfragment-->";
+            //QQ上的多了个空格
+            if (!htmlStr.Contains(startTag)){
+                startTag = "<!--startfragment -->";
             }
+            string endTag = "<!--endfragment-->";
+            htmlStr = htmlStr.Substring(htmlStr.IndexOf(startTag) + startTag.Length, htmlStr.IndexOf(endTag) - (htmlStr.IndexOf(startTag) + startTag.Length));
+
+            Console.WriteLine("--");
+            Console.WriteLine(htmlStr);
+            clip.DisplayValue = htmlStr;
+
+            clip.Type = HTML_TYPE;
+
+
         }
 
         /// <summary>
@@ -330,31 +320,15 @@ namespace ClipOne.service
         /// <param name="clip"></param>
         public static void HandleClipImage(ClipModel clip)
         {
-           
-            for (int i = 0; i < 3; i++)
-            {
-                try
-                {
+            BitmapSource bs = Clipboard.GetImage();
+
+            string path = SaveImage(bs);
+
+            clip.Type = IMAGE_TYPE;
+            clip.ClipValue = path;
+            clip.DisplayValue = path;
 
 
-                    BitmapSource bs = Clipboard.GetImage();
-
-                    string path = SaveImage(bs);
-
-                    clip.Type = IMAGE_TYPE;
-                    clip.ClipValue = path;
-                    clip.DisplayValue = path;
-
-                    return  ;
-
-                }
-                catch
-                {
-
-
-                }
-            }
-            
         }
 
         /// <summary>
@@ -363,60 +337,44 @@ namespace ClipOne.service
         /// <param name="clip"></param>
         public static void HandleClipWeChat(ClipModel clip)
         {
-            
-            for (int i = 0; i < 1; i++)
+
+            MemoryStream stream = (MemoryStream)Clipboard.GetData(WECHAT_TYPE);
+            byte[] b = stream.ToArray();
+            string xmlStr = System.Text.Encoding.UTF8.GetString(b);
+
+            clip.Type = WECHAT_TYPE;
+            clip.ClipValue = xmlStr;
+
+            XmlDocument document = new XmlDocument();
+            document.LoadXml(xmlStr);
+            String displayValue = string.Empty;
+            string value = string.Empty;
+            bool onlyText = true;
+            foreach (XmlNode node in document.DocumentElement.ChildNodes)
             {
-                try
+                if (node.Name == "EditElement" && node.Attributes["type"].Value == "0") //文字类型
                 {
-
-                    MemoryStream stream = (MemoryStream)Clipboard.GetData(WECHAT_TYPE);
-                    byte[] b = stream.ToArray();
-                    string xmlStr = System.Text.Encoding.UTF8.GetString(b);
-                  
-                    clip.Type = WECHAT_TYPE;
-                   clip.ClipValue = xmlStr;
-                    
-                    XmlDocument document = new XmlDocument();
-                    document.LoadXml(xmlStr);
-                    String displayValue = string.Empty;
-                    string value = string.Empty;
-                    bool onlyText = true;
-                    foreach (XmlNode node in document.DocumentElement.ChildNodes)
-                    {
-                        if (node.Name == "EditElement" && node.Attributes["type"].Value == "0") //文字类型
-                        {
-                            displayValue += node.InnerText;
-                            value += node.InnerText;
-
-                        }
-                        else
-                        {
-                            onlyText = false;
-                            displayValue += "[表情]";
-                            value +=" ";
-                        }
-                    }
-                    if (onlyText)
-                    {
-                        clip.Type = TEXT_TYPE;
-                        clip.ClipValue = value;
-                    }
-                     
-                    clip.DisplayValue = displayValue;
-                    
-
-                    return ;
-
-
+                    displayValue += node.InnerText;
+                    value += node.InnerText;
 
                 }
-                catch
+                else
                 {
-
-
+                    onlyText = false;
+                    displayValue += "[表情]";
+                    value += " ";
                 }
             }
-            
+            if (onlyText)
+            {
+                clip.Type = TEXT_TYPE;
+                clip.ClipValue = value;
+            }
+
+            clip.DisplayValue = displayValue;
+
+
+
         }
 
         /// <summary>
@@ -425,82 +383,64 @@ namespace ClipOne.service
         /// <param name="clip"></param>
         public static void HandleClipQQ(ClipModel clip)
         {
+
+            MemoryStream stream = (MemoryStream)Clipboard.GetData(QQ_RICH_TYPE);
+            byte[] b = stream.ToArray();
+            string xmlStr = System.Text.Encoding.UTF8.GetString(b);
+            xmlStr = xmlStr.Substring(0, xmlStr.IndexOf("</QQRichEditFormat>") + "</QQRichEditFormat>".Length);
+
+
+
+            XmlDocument document = new XmlDocument();
+            document.LoadXml(xmlStr);
+            XmlNodeList nodeList = document.SelectNodes("QQRichEditFormat/EditElement[@type='1']|QQRichEditFormat/EditElement[@type='2']|QQRichEditFormat/EditElement[@type='5']");
+
+            int ii = 0;
+            string htmlStr = Clipboard.GetData(DataFormats.Html).ToString().ToLower();
             
-            for (int i = 0; i < 3; i++)
+            string startTag = "<!--startfragment -->";
+            string endTag = "<!--endfragment-->";
+            htmlStr = htmlStr.Substring(htmlStr.IndexOf(startTag) + startTag.Length, htmlStr.IndexOf(endTag) - (htmlStr.IndexOf(startTag) + startTag.Length));
+
+
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(htmlStr);
+            foreach (HtmlNode node in doc.DocumentNode.SelectNodes("//img"))
             {
+                string filePath = string.Empty;
+                string src = node.GetAttributeValue("src", string.Empty);
+                if (src == "file:///")
+                {
+                    filePath = nodeList[ii].Attributes["filepath"].Value;
+                }
+                else
+                {
+                    filePath = src;
+                }
+                string toPath = MainWindow.cacheDir + "/" + Guid.NewGuid().ToString() + Path.GetExtension(filePath);
                 try
                 {
-
-                    MemoryStream stream = (MemoryStream)Clipboard.GetData(QQ_RICH_TYPE);
-                    byte[] b = stream.ToArray();
-                    string xmlStr = System.Text.Encoding.UTF8.GetString(b);
-                    xmlStr = xmlStr.Substring(0, xmlStr.IndexOf("</QQRichEditFormat>") + "</QQRichEditFormat>".Length);
-
-                   
-                     
-                    XmlDocument document = new XmlDocument();
-                    document.LoadXml(xmlStr);
-                    XmlNodeList nodeList = document.SelectNodes("QQRichEditFormat/EditElement[@type='1']|QQRichEditFormat/EditElement[@type='2']|QQRichEditFormat/EditElement[@type='5']");
-
-                    int ii = 0;
-                    string htmlStr = Clipboard.GetData(DataFormats.Html).ToString().ToLower();
-                   
-                    string startTag = "<div>";
-                    string endTag = "</div>";
-                    htmlStr= htmlStr.Substring(htmlStr.IndexOf(startTag) + startTag.Length, htmlStr.IndexOf(endTag)-(htmlStr.IndexOf(startTag)));
-                    HtmlDocument doc = new HtmlDocument();
-                    doc.LoadHtml(htmlStr);
-                    foreach (HtmlNode node in doc.DocumentNode.SelectNodes("//img"))
-                    {
-                        string filePath = string.Empty;
-                        string src = node.GetAttributeValue("src", string.Empty);
-                        if (src == "file:///") {
-                                filePath = nodeList[ii].Attributes["filepath"].Value;
-                        }
-                        else
-                        {
-                            filePath = src;
-                        }
-                        string toPath = MainWindow.cacheDir + "/" + Guid.NewGuid().ToString() + Path.GetExtension(filePath);
-                        try
-                        {
-                            File.Copy(filePath.Replace("file:///", ""), toPath);
-                        }
-                        catch
-                        {
-
-                        }
-                        src = "../" + toPath;
-                       
-                        node.SetAttributeValue("src", src);
-
-                        ii++;
-                    }
-                    htmlStr = doc.DocumentNode.OuterHtml;
-
- 
-
-
-                    
-                    clip.Type = QQ_RICH_TYPE;
-                    clip.ClipValue = xmlStr;
- 
-                    clip.DisplayValue = htmlStr;
-
-                    break;
-
-
-
+                    File.Copy(filePath.Replace("file:///", ""), toPath);
                 }
-                catch(Exception e)
+                catch
                 {
-                    Console.WriteLine(e.Message);
 
                 }
+                src = "../" + toPath;
+
+                node.SetAttributeValue("src", src);
+
+                ii++;
             }
+            htmlStr = doc.DocumentNode.OuterHtml;
+
+            clip.Type = QQ_RICH_TYPE;
+            clip.ClipValue = xmlStr;
+
+            clip.DisplayValue = htmlStr;
+
+
         }
-
-
 
     }
 }
