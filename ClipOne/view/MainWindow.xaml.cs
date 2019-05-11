@@ -679,9 +679,7 @@ namespace ClipOne.view
 
                     return IntPtr.Zero;
                 }
-                Console.WriteLine(clip.ClipValue);
-                Console.WriteLine("--");
-                Console.WriteLine(clip.DisplayValue);
+                
                 if (string.IsNullOrWhiteSpace(clip.ClipValue))
                 {
                     return IntPtr.Zero;
