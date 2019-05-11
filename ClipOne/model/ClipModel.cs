@@ -17,6 +17,12 @@
         /// </summary>
         public string DisplayValue { get; set; }
 
+
+        /// <summary>
+        /// 原始文字,供html、QQ、WECHAT类型使用
+        /// </summary>
+        public string PlainText { get; set; }
+
       
         
     }
