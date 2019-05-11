@@ -111,19 +111,15 @@ namespace ClipOne.service
             }
             else if (result.Type == IMAGE_TYPE)
             {
-                try
-                {
 
-                    BitmapImage bitImg = new BitmapImage();
-                    bitImg.BeginInit();
-                    bitImg.UriSource = new Uri(result.ClipValue, UriKind.Relative);
-                    bitImg.EndInit();
-                    IDataObject data = new DataObject(DataFormats.Bitmap, bitImg);
-                    Clipboard.SetDataObject(data, true);
+                BitmapImage bitImg = new BitmapImage();
+                bitImg.BeginInit();
+                bitImg.UriSource = new Uri(result.ClipValue, UriKind.Relative);
+                bitImg.EndInit();
+                IDataObject data = new DataObject(DataFormats.Bitmap, bitImg);
+                Clipboard.SetDataObject(data, true);
 
 
-                }
-                catch { return; }
             }
             else if (result.Type == HTML_TYPE)
             {
@@ -149,31 +145,22 @@ namespace ClipOne.service
             {
                 string[] tmp = result.ClipValue.Split(',');
 
-                try
-                {
-                    IDataObject data = new DataObject(DataFormats.FileDrop, tmp);
-                    MemoryStream memo = new MemoryStream(4);
-                    byte[] bytes = new byte[] { (byte)(5), 0, 0, 0 };
-                    memo.Write(bytes, 0, bytes.Length);
-                    data.SetData("PreferredDropEffect", memo);
-                    Clipboard.SetDataObject(data, true);
-                }
-                catch { return; }
+                IDataObject data = new DataObject(DataFormats.FileDrop, tmp);
+                MemoryStream memo = new MemoryStream(4);
+                byte[] bytes = new byte[] { (byte)(5), 0, 0, 0 };
+                memo.Write(bytes, 0, bytes.Length);
+                data.SetData("PreferredDropEffect", memo);
+                Clipboard.SetDataObject(data, true);
+
             }
             else
             {
-                try
-                {
 
-                    IDataObject data = new DataObject(DataFormats.Text, result.ClipValue);
+                IDataObject data = new DataObject(DataFormats.Text, result.ClipValue);
 
-                    System.Windows.Forms.Clipboard.SetDataObject(data, true);
+                System.Windows.Forms.Clipboard.SetDataObject(data, true);
 
-                }
-                catch
-                {
 
-                }
             }
         }
 
@@ -187,7 +174,7 @@ namespace ClipOne.service
         public static void HandClipText(ClipModel clip)
         {
 
-            string textStr=string.Empty;
+            string textStr = string.Empty;
 
             try
             {
@@ -196,7 +183,8 @@ namespace ClipOne.service
             }
             catch
             {
-                if (Clipboard.ContainsData(DataFormats.UnicodeText)) {
+                if (Clipboard.ContainsData(DataFormats.UnicodeText))
+                {
                     textStr = (string)Clipboard.GetData(DataFormats.UnicodeText);
                 }
             }
