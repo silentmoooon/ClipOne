@@ -650,7 +650,7 @@ namespace ClipOne.view
         public IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
 
-            //当为剪切板消息时，由于获取数据会有失败的情况，所以循环3次，尽量确保成功
+             
             if (msg == WM_CLIPBOARDUPDATE)
             {
 
@@ -669,7 +669,7 @@ namespace ClipOne.view
                     HandleClipQQ(clip);
 
                 }
-                   
+
                 //处理HTML类型
                 else if ((supportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
                 {
@@ -701,10 +701,7 @@ namespace ClipOne.view
 
                     return IntPtr.Zero;
                 }
-                
-
-
-               
+ 
                 if (string.IsNullOrWhiteSpace(clip.ClipValue))
                 {
                     return IntPtr.Zero;
