@@ -346,23 +346,13 @@ namespace ClipOne.view
 
             System.Windows.Forms.MenuItem record = new System.Windows.Forms.MenuItem("记录数");
             System.Windows.Forms.MenuItem separator2 = new System.Windows.Forms.MenuItem("-");
-            System.Windows.Forms.MenuItem opaSet = new System.Windows.Forms.MenuItem("透明度");
+           
             System.Windows.Forms.MenuItem skin = new System.Windows.Forms.MenuItem("皮肤");
             System.Windows.Forms.MenuItem reload = new System.Windows.Forms.MenuItem("刷新");
             System.Windows.Forms.MenuItem separator3 = new System.Windows.Forms.MenuItem("-");
             System.Windows.Forms.MenuItem format = new System.Windows.Forms.MenuItem("格式");
             System.Windows.Forms.MenuItem clear = new System.Windows.Forms.MenuItem("清空");
-
-            opaSet.Click += (sender, e) =>
-            {
-
-                OpacitySet os = new OpacitySet(this, (1 - opacityValue) / OpacityRatio);
-
-                os.Topmost = true;
-                os.ShowDialog();
-
-            };
-
+ 
             clear.Click += Clear_Click;
             reload.Click += new EventHandler(Reload);
             exit.Click += new EventHandler(Exit_Click);
@@ -431,7 +421,7 @@ namespace ClipOne.view
             }
 
             //关联菜单项至托盘
-            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { clear, format, separator3, reload, skin, opaSet, separator2, record, hotkey, separator1, startup, separator0, exit };
+            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { clear, format, separator3, reload, skin, separator2, record, hotkey, separator1, startup, separator0, exit };
             notifyIcon.ContextMenu = new System.Windows.Forms.ContextMenu(childen);
 
 
@@ -565,19 +555,7 @@ namespace ClipOne.view
             File.WriteAllText(settingsPath, json);
         }
 
-
-        /// <summary>
-        /// 修改透明度
-        /// </summary>
-        /// <param name="value"></param>
-        public void ChangeOpacity(double value)
-        {
-            opacityValue = 1 - value * OpacityRatio;
-            this.Opacity = opacityValue;
-            settingsMap["opacity"] = opacityValue.ToString();
-            SaveSettings();
-        }
-
+ 
         /// <summary>
         /// 设置保存记录数
         /// </summary>
@@ -701,7 +679,9 @@ namespace ClipOne.view
 
                     return IntPtr.Zero;
                 }
- 
+                Console.WriteLine(clip.ClipValue);
+                Console.WriteLine("--");
+                Console.WriteLine(clip.DisplayValue);
                 if (string.IsNullOrWhiteSpace(clip.ClipValue))
                 {
                     return IntPtr.Zero;
