@@ -51,14 +51,8 @@ namespace ClipOne.view
         /// <summary>
         /// 活动窗口句柄,在显示本窗口前,缓存当前活动窗口
         /// </summary>
-        private IntPtr activeHwnd = IntPtr.Zero;
-
-
-        /// <summary>
-        /// 透明度转换比例
-        /// </summary>
-        private double OpacityRatio = 0.06;
-
+        public static IntPtr activeHwnd = IntPtr.Zero;
+ 
 
         /// <summary>
         /// 剪切板事件
@@ -251,9 +245,9 @@ namespace ClipOne.view
 
             if (args[0] == "PasteValue")
             {
-
+                
                 PasteValue(args[1]);
-
+                
 
             }
             else if (args[0] == "PasteValueList")
@@ -293,7 +287,7 @@ namespace ClipOne.view
             string[] image = JsonConvert.DeserializeObject<string[]>(HttpUtility.UrlDecode(images.ToString()));
             foreach (var img in Directory.GetFiles(cacheDir))
             {
-                if (!image.Contains(img.Replace("\\", "/")))
+                if (!image.Contains(img))
                 {
                     DeleteFile(img);
                 }
@@ -681,6 +675,7 @@ namespace ClipOne.view
                         return IntPtr.Zero;
                     }
                 }
+                catch { }
 
                 
                

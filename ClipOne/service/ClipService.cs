@@ -6,6 +6,8 @@ using Microsoft.Win32;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 
@@ -82,7 +84,7 @@ namespace ClipOne.service
         /// <returns></returns>
         public static string SaveImage(BitmapSource bs)
         {
-            string path = MainWindow.cacheDir + "/" + Guid.NewGuid().ToString() + ".bmp";
+            string path = MainWindow.cacheDir +Path.DirectorySeparatorChar + Guid.NewGuid().ToString() + ".bmp";
             BitmapEncoder encoder = new BmpBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(bs));
 
@@ -111,13 +113,42 @@ namespace ClipOne.service
             }
             else if (result.Type == IMAGE_TYPE)
             {
+                bool isExplorer = false;
+                Process[] ps = Process.GetProcesses();
+                int pid = 0;
+                WinAPIHelper.GetWindowThreadProcessId(MainWindow.activeHwnd, out pid);
 
-                BitmapImage bitImg = new BitmapImage();
-                bitImg.BeginInit();
-                bitImg.UriSource = new Uri(result.ClipValue, UriKind.Relative);
-                bitImg.EndInit();
-                IDataObject data = new DataObject(DataFormats.Bitmap, bitImg);
-                Clipboard.SetDataObject(data, true);
+                foreach (Process p in ps)
+                {
+                    if (p.Id == pid && p.ProcessName.ToLower() == "explorer")
+                    {
+                        isExplorer = true;
+                        break;
+                    }
+                }
+                //如果是桌面或者资源管理器则直接粘贴为文件
+                if (isExplorer)
+                {
+                    
+                    string[] tmp = Path.GetFullPath(result.ClipValue).Split(',');
+                       
+                    IDataObject data = new DataObject(DataFormats.FileDrop, tmp);
+                    MemoryStream memo = new MemoryStream(4);
+                    byte[] bytes = new byte[] { (byte)(5), 0, 0, 0 };
+                    memo.Write(bytes, 0, bytes.Length);
+                    data.SetData("Preferred DropEffect", memo);
+
+                    Clipboard.SetDataObject(data, true);
+                }
+                else { 
+                    BitmapImage bitImg = new BitmapImage();
+                    bitImg.BeginInit();
+                    bitImg.UriSource = new Uri(result.ClipValue, UriKind.Relative);
+                    bitImg.EndInit();
+                    IDataObject data = new DataObject(DataFormats.Bitmap, bitImg);
+                    Clipboard.SetDataObject(data, true);
+
+                }
 
 
             }
@@ -143,8 +174,10 @@ namespace ClipOne.service
             }
             else if (result.Type == FILE_TYPE)
             {
+                
                 string[] tmp = result.ClipValue.Split(',');
 
+                 
                 try
                 {
                     IDataObject data = new DataObject(DataFormats.FileDrop, tmp);
@@ -404,7 +437,7 @@ namespace ClipOne.service
             string endTag = "<!--endfragment-->";
             htmlStr = htmlStr.Substring(htmlStr.IndexOf(startTag) + startTag.Length, htmlStr.IndexOf(endTag) - (htmlStr.IndexOf(startTag) + startTag.Length));
 
-
+            List<string> images = new List<string>();
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(htmlStr);
             foreach (HtmlNode node in doc.DocumentNode.SelectNodes("//img"))
@@ -419,7 +452,7 @@ namespace ClipOne.service
                 {
                     filePath = src;
                 }
-                string toPath = MainWindow.cacheDir + "/" + Guid.NewGuid().ToString() + Path.GetExtension(filePath);
+                string toPath = MainWindow.cacheDir + Path.DirectorySeparatorChar + Guid.NewGuid().ToString() + Path.GetExtension(filePath);
                 try
                 {
                     File.Copy(filePath.Replace("file:///", ""), toPath);
@@ -428,6 +461,7 @@ namespace ClipOne.service
                 {
 
                 }
+                images.Add(toPath);
                 src = "../" + toPath;
 
                 node.SetAttributeValue("src", src);
@@ -441,7 +475,9 @@ namespace ClipOne.service
 
             clip.DisplayValue = htmlStr;
 
-
+            clip.Images = string.Join(",", images);
+            Console.WriteLine(clip.Images);
+            Console.WriteLine("-");
         }
 
          
