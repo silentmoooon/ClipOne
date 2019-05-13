@@ -147,7 +147,8 @@ namespace ClipOne.service
                     MemoryStream memo = new MemoryStream(4);
                     byte[] bytes = new byte[] { (byte)(5), 0, 0, 0 };
                     memo.Write(bytes, 0, bytes.Length);
-                    data.SetData("PreferredDropEffect", memo);
+                    data.SetData("Preferred DropEffect", memo);
+                    
                     Clipboard.SetDataObject(data,true);
                 }
                 catch { return; }
@@ -253,6 +254,17 @@ namespace ClipOne.service
         {
 
             string[] files = (string[])Clipboard.GetData(DataFormats.FileDrop);
+            MemoryStream vMemoryStream = (MemoryStream)Clipboard.GetDataObject().GetData("Preferred DropEffect",true);
+
+            DragDropEffects vDragDropEffects =
+            (DragDropEffects)vMemoryStream.ReadByte();
+
+            //如果是剪切类型,不加入
+            if ((vDragDropEffects & DragDropEffects.Move) == DragDropEffects.Move) {
+                return;
+            }
+
+
 
             clip.Type = FILE_TYPE;
             clip.ClipValue = string.Join(",", files);
@@ -442,5 +454,6 @@ namespace ClipOne.service
 
         }
 
+         
     }
 }
