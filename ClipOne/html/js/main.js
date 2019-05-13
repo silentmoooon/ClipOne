@@ -62,6 +62,11 @@ function clearImage() {
     for (var i = 0; i < clipObj.length; i++) {
         if (clipObj[i].Type == "image") {
             images.push(clipObj[i].DisplayValue);
+        }else if (clipObj[i].Type == "QQ_Unicode_RichEdit_Format"&&clipObj[i].Images&&clipObj[i].Images.length>0) {
+			var strings=clipObj[i].Images.split(",");
+			for(var s in strings){
+				images.push(s);
+			}
         }
     }
     window.external.notify(
@@ -117,10 +122,13 @@ function keyDown(event) {
             pasteValue(0);
         } else if (event.keyCode == 8 || event.keyCode == 46) {
             //退格或者del键删除
-            // $("#tr" + selectIndex)
-            //     .parent()
-            //     .addClass("tr_hover");
-            clipObj.splice(selectIndex, 1);
+           
+            var clip=clipObj.splice(selectIndex, 1)[0];
+			 if (clip.Type == "image") {
+                deleteImage(clip.ClipValue);
+            }else if(clip.Type=="QQ_Unicode_RichEdit_Format"){
+				 deleteImage(clip.Images);
+			}
 
             displayData();
         }
@@ -324,7 +332,9 @@ function addData(data) {
             var clip = clipObj.splice(maxRecords, 1)[0];
             if (clip.Type == "image") {
                 deleteImage(clip.ClipValue);
-            }
+            }else if(clip.Type=="QQ_Unicode_RichEdit_Format"){
+				 deleteImage(clip.Images);
+			}
         }, 0);
     }
     displayData();
@@ -407,6 +417,8 @@ function pasteValueByRange(startIndex, endIndex) {
 function deleteImage(path) {
     window.external.notify("DeleteImage|" + path);
 }
+
+ 
 //调整高度
 function changeWindowHeight(height) {
     window.external.notify("ChangeWindowHeight|" + height);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text;
 using static ClipOne.view.MainWindow;
 
 namespace ClipOne.util
@@ -89,6 +90,19 @@ namespace ClipOne.util
            IntPtr hwnd,
            int wCmd
        );
-         
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+        //获取窗口标题
+        [DllImport("user32", SetLastError = true)]
+        public static extern int GetWindowText(
+        IntPtr hWnd, //窗口句柄
+        StringBuilder lpString, //标题
+        int nMaxCount  //最大值
+        );
+        [DllImport("User32.dll", CharSet = CharSet.Auto)]
+        public static extern int GetWindowThreadProcessId(IntPtr hwnd, out int ID);
+
     }
 }
