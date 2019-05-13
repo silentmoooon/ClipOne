@@ -17,6 +17,12 @@
         /// </summary>
         public string DisplayValue { get; set; }
 
+
+        /// <summary>
+        /// 涉及到的图片资源,方便清除图片,针对QQ类型
+        /// </summary>
+        public string Images;
+
       
         
     }

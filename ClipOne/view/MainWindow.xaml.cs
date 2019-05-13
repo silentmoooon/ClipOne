@@ -701,9 +701,8 @@ namespace ClipOne.view
 
                     return IntPtr.Zero;
                 }
+
                 
-
-
                
                 if (string.IsNullOrWhiteSpace(clip.ClipValue))
                 {

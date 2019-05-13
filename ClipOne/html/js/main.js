@@ -367,16 +367,13 @@ function showRecord() {
 
 //粘贴单条
 function pasteValue(index) {
-    //$("body").off("keydown");
-
+   
     obj = clipObj.splice(index, 1)[0];
     window.external.notify(
         "PasteValue|" + encodeURIComponent(JSON.stringify(obj))
     );
     clipObj.splice(0, 0, obj);
-
-    //setTimeout(function() { $("body").on("keydown", keyDown); }, 1000);
-
+ 
     displayData();
 }
 //粘贴多条
@@ -398,11 +395,11 @@ function pasteValueByRange(startIndex, endIndex) {
         pasteValue(startIndex);
         return;
     }
-    // $("body").off("keydown");
+   
     window.external.notify(
         "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
     );
-    //setTimeout(function() { $("body").on("keydown", keyDown); }, 1000);
+   
     displayData();
 }
 
@@ -415,9 +412,7 @@ function changeWindowHeight(height) {
     window.external.notify("ChangeWindowHeight|" + height);
 }
 
-function hideUi() {
-    //scrollTop();
-}
+ 
 //获取所有记录,用来持久化
 function getAllClip() {
     return encodeURIComponent(JSON.stringify(clipObj));
