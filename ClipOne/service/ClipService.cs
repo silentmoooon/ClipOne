@@ -84,13 +84,14 @@ namespace ClipOne.service
         /// <returns></returns>
         public static string SaveImage(BitmapSource bs)
         {
-            string path = MainWindow.cacheDir +Path.DirectorySeparatorChar + Guid.NewGuid().ToString() + ".bmp";
-            BitmapEncoder encoder = new BmpBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(bs));
-
-            FileStream fs = new FileStream(path, FileMode.Create);
-            encoder.Save(fs);
-            fs.Close();
+            string path = MainWindow.cacheDir +Path.DirectorySeparatorChar + Guid.NewGuid().ToString() + ".jpg";
+            JpegBitmapEncoder jpegEncoder = new JpegBitmapEncoder();
+            jpegEncoder.Frames.Add(BitmapFrame.Create(bs));
+            
+            using (FileStream fs = new FileStream(path, FileMode.Create)) { 
+                jpegEncoder.Save(fs);
+            }
+           
             return path;
         }
         /// <summary>
@@ -144,6 +145,7 @@ namespace ClipOne.service
                     BitmapImage bitImg = new BitmapImage();
                     bitImg.BeginInit();
                     bitImg.UriSource = new Uri(result.ClipValue, UriKind.Relative);
+                    
                     bitImg.EndInit();
                     IDataObject data = new DataObject(DataFormats.Bitmap, bitImg);
                     Clipboard.SetDataObject(data, true);
@@ -476,8 +478,7 @@ namespace ClipOne.service
             clip.DisplayValue = htmlStr;
 
             clip.Images = string.Join(",", images);
-            Console.WriteLine(clip.Images);
-            Console.WriteLine("-");
+            
         }
 
          

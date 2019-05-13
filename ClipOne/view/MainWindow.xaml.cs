@@ -245,7 +245,7 @@ namespace ClipOne.view
 
             if (args[0] == "PasteValue")
             {
-                
+                Console.WriteLine(HttpUtility.UrlDecode(args[1]));
                 PasteValue(args[1]);
                 
 
@@ -259,6 +259,7 @@ namespace ClipOne.view
             }
             else if (args[0] == "DeleteImage")
             {
+
                 new Thread(new ParameterizedThreadStart(DeleteFile)).Start(args[1]);
             }
             else if (args[0] == "ChangeWindowHeight")
@@ -302,13 +303,14 @@ namespace ClipOne.view
                 Thread.Sleep(i * 500);
                 try
                 {
-                    File.Delete(path.ToString());
+                    string[] paths = path.ToString().Split(',');
+                    foreach (string p in paths)
+                    {
+                        File.Delete(p);
+                    }
                     return;
                 }
-                catch
-                {
-
-                }
+                catch { }
 
             }
         }
@@ -796,8 +798,11 @@ namespace ClipOne.view
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            webView1?.InvokeScript("saveData");
-
+            try
+            {
+                webView1?.InvokeScript("saveData");
+            }
+            catch { }
 
             if (notifyIcon != null)
             {
