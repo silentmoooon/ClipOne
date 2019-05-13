@@ -1,4 +1,4 @@
-﻿namespace ClipOne.model
+namespace ClipOne.model
 {
     public class ClipModel
     {
@@ -17,6 +17,11 @@
         /// </summary>
         public string DisplayValue { get; set; }
 
+
+        /// <summary>
+        /// 原始文字,供html、QQ、WECHAT类型使用
+        /// </summary>
+        public string PlainText { get; set; }
 
         /// <summary>
         /// 涉及到的图片资源,方便清除图片,针对QQ类型
