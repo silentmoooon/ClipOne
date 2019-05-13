@@ -107,14 +107,13 @@ td{
 }
 
 /*图片*/
-.td_content > img,.image {
-    max-height: 150px;
-    max-width: 390px;
+img, .image {
+    max-height: 250px !important;
+    max-width: 390px !important;
     vertical-align: middle;
     text-align: left;
     margin: 0px !important;
     padding: 0px !important;
-	
 }
  
 

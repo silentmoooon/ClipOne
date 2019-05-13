@@ -3,7 +3,7 @@ using ClipOne.model;
 using ClipOne.service;
 using ClipOne.util;
 using Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT;
- 
+
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -53,7 +53,7 @@ namespace ClipOne.view
         /// </summary>
         private IntPtr activeHwnd = IntPtr.Zero;
 
-        
+
         /// <summary>
         /// 透明度转换比例
         /// </summary>
@@ -133,7 +133,7 @@ namespace ClipOne.view
         /// </summary>
         private IntPtr wpfHwnd;
 
- 
+
 
 
 
@@ -148,7 +148,7 @@ namespace ClipOne.view
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
 
-           
+
             if (!Directory.Exists(cacheDir))
             {
                 Directory.CreateDirectory(cacheDir);
@@ -176,10 +176,10 @@ namespace ClipOne.view
             {
                 Hotkey_Click(null, null);
             }
- 
+
 
         }
-         
+
 
         /// <summary>
         /// /加载设置项
@@ -230,15 +230,15 @@ namespace ClipOne.view
         /// </summary>
         private void InitWebView()
         {
-            
+
             webView1.IsJavaScriptEnabled = true;
             webView1.IsScriptNotifyAllowed = true;
 
             webView1.IsIndexedDBEnabled = true;
             webView1.ScriptNotify += WebView1_ScriptNotify;
-           //webView1.Navigate(defaultHtml);
+            //webView1.Navigate(defaultHtml);
             webView1.NavigateToLocal(defaultHtml);
-           
+
 
 
         }
@@ -247,13 +247,13 @@ namespace ClipOne.view
         private void WebView1_ScriptNotify(object sender, Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT.WebViewControlScriptNotifyEventArgs e)
         {
 
-            string[] args = e.Value.Split(new char[] { '|'},2);
+            string[] args = e.Value.Split(new char[] { '|' }, 2);
 
             if (args[0] == "PasteValue")
             {
-                
+
                 PasteValue(args[1]);
-              
+
 
             }
             else if (args[0] == "PasteValueList")
@@ -271,7 +271,7 @@ namespace ClipOne.view
             {
                 ChangeWindowHeight(double.Parse(args[1]));
             }
-            
+
             else if (args[0] == "clearImage")
             {
                 new Thread(new ParameterizedThreadStart(ClearImage)).Start(args[1]);
@@ -346,22 +346,12 @@ namespace ClipOne.view
 
             System.Windows.Forms.MenuItem record = new System.Windows.Forms.MenuItem("记录数");
             System.Windows.Forms.MenuItem separator2 = new System.Windows.Forms.MenuItem("-");
-            System.Windows.Forms.MenuItem opaSet = new System.Windows.Forms.MenuItem("透明度");
+
             System.Windows.Forms.MenuItem skin = new System.Windows.Forms.MenuItem("皮肤");
             System.Windows.Forms.MenuItem reload = new System.Windows.Forms.MenuItem("刷新");
             System.Windows.Forms.MenuItem separator3 = new System.Windows.Forms.MenuItem("-");
             System.Windows.Forms.MenuItem format = new System.Windows.Forms.MenuItem("格式");
             System.Windows.Forms.MenuItem clear = new System.Windows.Forms.MenuItem("清空");
-
-            opaSet.Click += (sender, e) =>
-            {
-
-                OpacitySet os = new OpacitySet(this, (1 - opacityValue) / OpacityRatio);
-
-                os.Topmost = true;
-                os.ShowDialog();
-
-            };
 
             clear.Click += Clear_Click;
             reload.Click += new EventHandler(Reload);
@@ -431,7 +421,7 @@ namespace ClipOne.view
             }
 
             //关联菜单项至托盘
-            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { clear, format, separator3, reload, skin, opaSet, separator2, record, hotkey, separator1, startup, separator0, exit };
+            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { clear, format, separator3, reload, skin, separator2, record, hotkey, separator1, startup, separator0, exit };
             notifyIcon.ContextMenu = new System.Windows.Forms.ContextMenu(childen);
 
 
@@ -567,18 +557,6 @@ namespace ClipOne.view
 
 
         /// <summary>
-        /// 修改透明度
-        /// </summary>
-        /// <param name="value"></param>
-        public void ChangeOpacity(double value)
-        {
-            opacityValue = 1 - value * OpacityRatio;
-            this.Opacity = opacityValue;
-            settingsMap["opacity"] = opacityValue.ToString();
-            SaveSettings();
-        }
-
-        /// <summary>
         /// 设置保存记录数
         /// </summary>
         /// <param name="sender"></param>
@@ -609,7 +587,7 @@ namespace ClipOne.view
         /// <param name="e"></param>
         private void Clear_Click(object sender, EventArgs e)
         {
-            
+
             Directory.Delete(cacheDir, true);
             Directory.CreateDirectory(cacheDir);
 
@@ -650,56 +628,58 @@ namespace ClipOne.view
         public IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
 
-            //当为剪切板消息时，由于获取数据会有失败的情况，所以循环3次，尽量确保成功
+
             if (msg == WM_CLIPBOARDUPDATE)
             {
 
                 ClipModel clip = new ClipModel();
-                
-                //处理剪切板微信自定义格式
-                if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(WECHAT_TYPE))
+                try
                 {
-                    HandleClipWeChat(clip);
+                    //处理剪切板微信自定义格式
+                    if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(WECHAT_TYPE))
+                    {
+                        HandleClipWeChat(clip);
 
-                }
+                    }
 
-                //处理剪切板QQ自定义格式
-                else  if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
-                {
-                    HandleClipQQ(clip);
+                    //处理剪切板QQ自定义格式
+                    else if ((supportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
+                    {
+                        HandleClipQQ(clip);
 
-                }
-                   
-                //处理HTML类型
-                else if ((supportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
-                {
-                    HandleClipHtml(clip);
+                    }
 
-                }
-                //处理图片类型
-                else if ((supportFormat & ClipType.image) != 0 && (Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib) ))
-                {
-                    HandleClipImage(clip);
+                    //处理HTML类型
+                    else if ((supportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
+                    {
+                        HandleClipHtml(clip);
 
-                }
-                //处理剪切板文件
-                else if ((supportFormat & ClipType.file) != 0 && Clipboard.ContainsFileDropList())
-                {
-                    HandleClipFile(clip);
+                    }
+                    //处理图片类型
+                    else if ((supportFormat & ClipType.image) != 0 && (Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib)))
+                    {
+                        HandleClipImage(clip);
 
-                }
-                //处理剪切板文字
-                else if (Clipboard.ContainsText())
-                {
+                    }
+                    //处理剪切板文件
+                    else if ((supportFormat & ClipType.file) != 0 && Clipboard.ContainsFileDropList())
+                    {
+                        HandleClipFile(clip);
 
-                    HandClipText(clip);
+                    }
+                    //处理剪切板文字
+                    else if (Clipboard.ContainsText())
+                    {
 
-                }
+                        HandClipText(clip);
 
-                else
-                {
+                    }
 
-                    return IntPtr.Zero;
+                    else
+                    {
+
+                        return IntPtr.Zero;
+                    }
                 }
 
                 
@@ -708,7 +688,7 @@ namespace ClipOne.view
                 {
                     return IntPtr.Zero;
                 }
-                
+
                 EnQueue(clip);
 
                 handled = true;
@@ -721,7 +701,7 @@ namespace ClipOne.view
                 {
 
                     activeHwnd = WinAPIHelper.GetForegroundWindow();
-                  
+
                     WinAPIHelper.POINT point = new WinAPIHelper.POINT();
                     if (WinAPIHelper.GetCursorPos(out point))
                     {
@@ -860,7 +840,7 @@ namespace ClipOne.view
 
 
         }
- 
+
         /// <summary>
         /// 粘贴条目到活动窗口 
         /// </summary>
@@ -869,8 +849,11 @@ namespace ClipOne.view
         private void SetValueToClip(ClipModel result)
         {
 
-
-            ClipService.SetValueToClipboard(result);
+            try
+            {
+                ClipService.SetValueToClipboard(result);
+            }
+            catch { }
             Thread.Sleep(100);
             System.Windows.Forms.SendKeys.SendWait("^v");
 
@@ -891,10 +874,11 @@ namespace ClipOne.view
         {
 
             this.Topmost = false;
-            if (this.Visibility == Visibility.Visible) {
+            if (this.Visibility == Visibility.Visible)
+            {
                 this.Hide();
             }
-          
+
         }
 
 
@@ -908,7 +892,7 @@ namespace ClipOne.view
 
             List<ClipModel> clipList = JsonConvert.DeserializeObject<List<ClipModel>>(HttpUtility.UrlDecode(clipListStr));
             DiyHide();
-         
+
             BatchPaste(clipList);
         }
 
@@ -988,11 +972,11 @@ namespace ClipOne.view
             if (activeHwnd != IntPtr.Zero)
             {
                 WinAPIHelper.SetForegroundWindow(activeHwnd);
-               
+
             }
 
-          
-           
+
+
 
         }
 

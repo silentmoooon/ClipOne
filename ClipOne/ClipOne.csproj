@@ -154,12 +154,6 @@
     <Compile Include="util\LimitPropsContractResolver.cs" />
     <Compile Include="util\MyStreamUriResolver.cs" />
     <Compile Include="util\StringUtil.cs" />
-    <Compile Include="view\OpacitySet.xaml.cs">
-      <DependentUpon>OpacitySet.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="view\PreviewForm.xaml.cs">
-      <DependentUpon>PreviewForm.xaml</DependentUpon>
-    </Compile>
     <Compile Include="view\SetHotKeyForm.xaml.cs">
       <DependentUpon>SetHotKeyForm.xaml</DependentUpon>
     </Compile>
@@ -179,14 +173,6 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="view\OpacitySet.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="view\PreviewForm.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="view\SetHotKeyForm.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

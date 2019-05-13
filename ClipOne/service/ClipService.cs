@@ -101,41 +101,45 @@ namespace ClipOne.service
             if (result.Type == WECHAT_TYPE)
             {
                 MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
-                IDataObject data = new DataObject(WECHAT_TYPE, ms);
-                Clipboard.SetDataObject(data,true);
+                var dataObject = new DataObject();
+                dataObject.SetData(WECHAT_TYPE, ms);
+                dataObject.SetData(DataFormats.Text, result.PlainText);
+                dataObject.SetData(DataFormats.UnicodeText, result.PlainText);
+
+                Clipboard.SetDataObject(dataObject, true);
+
             }
             else if (result.Type == IMAGE_TYPE)
             {
-                try
-                {
 
-                    BitmapImage bitImg = new BitmapImage();
-                    bitImg.BeginInit();
-                    bitImg.UriSource = new Uri(result.ClipValue, UriKind.Relative);
-                    bitImg.EndInit();
-                    IDataObject data = new DataObject(DataFormats.Bitmap, bitImg);
-                    Clipboard.SetDataObject(data,true);
+                BitmapImage bitImg = new BitmapImage();
+                bitImg.BeginInit();
+                bitImg.UriSource = new Uri(result.ClipValue, UriKind.Relative);
+                bitImg.EndInit();
+                IDataObject data = new DataObject(DataFormats.Bitmap, bitImg);
+                Clipboard.SetDataObject(data, true);
 
 
-                }
-                catch { return; }
             }
             else if (result.Type == HTML_TYPE)
             {
                 var dataObject = new DataObject();
                 dataObject.SetData(DataFormats.Html, result.ClipValue);
-                //dataObject.SetData(DataFormats.Text, "aaa");
-                //dataObject.SetData(DataFormats.UnicodeText, "aaa");
-                // IDataObject data = new DataObject(DataFormats.Html, result.ClipValue);
-                Clipboard.SetDataObject(dataObject,true);
+                dataObject.SetData(DataFormats.Text, result.PlainText);
+                dataObject.SetData(DataFormats.UnicodeText, result.PlainText);
+                Clipboard.SetDataObject(dataObject, true);
             }
             else if (result.Type == QQ_RICH_TYPE)
             {
 
 
                 MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
-                IDataObject data = new DataObject(QQ_RICH_TYPE, ms);
-                Clipboard.SetDataObject(data,true);
+                var dataObject = new DataObject();
+                dataObject.SetData(QQ_RICH_TYPE, ms);
+                dataObject.SetData(DataFormats.Text, result.PlainText);
+                dataObject.SetData(DataFormats.UnicodeText, result.PlainText);
+
+                Clipboard.SetDataObject(dataObject, true);
             }
             else if (result.Type == FILE_TYPE)
             {
@@ -155,18 +159,12 @@ namespace ClipOne.service
             }
             else
             {
-                try
-                {
 
-                    IDataObject data = new DataObject(DataFormats.Text, result.ClipValue);
+                IDataObject data = new DataObject(DataFormats.Text, result.ClipValue);
 
-                    System.Windows.Forms.Clipboard.SetDataObject(data,true);
+                System.Windows.Forms.Clipboard.SetDataObject(data, true);
 
-                }
-                catch (Exception e)
-                {
-                    
-                }
+
             }
         }
 
@@ -180,66 +178,50 @@ namespace ClipOne.service
         public static void HandClipText(ClipModel clip)
         {
 
-            for (int i = 0; i < 3; i++)
+            string textStr = string.Empty;
+
+            try
             {
-                try
+                textStr = Clipboard.GetText();
+
+            }
+            catch
+            {
+                if (Clipboard.ContainsData(DataFormats.UnicodeText))
                 {
-                    string textStr = Clipboard.GetText();
-
-                    if ((MainWindow.supportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
-                    {
-
-                        try
-                        {
-                            string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();
-                            //文字类型和html类型中"img"出现的次数一样则说明可以以text类型来解析
-                            if (!string.IsNullOrEmpty(htmlStr) && textStr.GetOccurTimes("img") < htmlStr.Split("\r\n".ToCharArray())[16].GetOccurTimes("img"))
-                            {
-
-                                clip.ClipValue = htmlStr;
-                                //html内容会固定出现在第16行。
-                                clip.DisplayValue = htmlStr.Split("\r\n".ToCharArray())[16];
-                                clip.Type = HTML_TYPE;
-
-                                return;
-                            }
-
-
-                        }
-                        catch { }
-                    }
-
-                    clip.ClipValue = textStr;
-                    clip.DisplayValue = textStr.Replace("<", "&lt;").Replace(">", "&gt;");
-                    clip.Type = TEXT_TYPE;
-
-                    string[] array = clip.DisplayValue.Split('\n');
-
-                    string tempStr = array[0];
-                    if (array.Length > 0)
-                    {
-                        for (int j = 1; j < array.Length; j++)
-                        {
-                            if (j < 5)
-                            {
-                                tempStr += "<br>" + array[j];
-                            }
-                            else if (j == 5 && j < array.Length - 1)
-                            {
-                                tempStr += "<br>...";
-                                break;
-                            }
-                        }
-                    }
-
-                    clip.DisplayValue = tempStr;
-                    return;
-                }
-                catch (Exception)
-                {
-
+                    textStr = (string)Clipboard.GetData(DataFormats.UnicodeText);
                 }
             }
+            if (textStr == string.Empty)
+            {
+                return;
+            }
+            clip.ClipValue = textStr;
+            clip.DisplayValue = textStr.Replace("<", "&lt;").Replace(">", "&gt;");
+            clip.Type = TEXT_TYPE;
+
+            string[] array = clip.DisplayValue.Split('\n');
+
+            string tempStr = array[0];
+            if (array.Length > 0)
+            {
+                for (int j = 1; j < array.Length; j++)
+                {
+                    if (j < 5)
+                    {
+                        tempStr += "<br>" + array[j];
+                    }
+                    else if (j == 5 && j < array.Length - 1)
+                    {
+                        tempStr += "<br>...";
+                        break;
+                    }
+                }
+            }
+
+            clip.DisplayValue = tempStr;
+            return;
+
 
 
 
@@ -306,20 +288,24 @@ namespace ClipOne.service
         public static void HandleClipHtml(ClipModel clip)
         {
 
-            string htmlStr = Clipboard.GetData(DataFormats.Html).ToString().ToLower();
-            Console.WriteLine(htmlStr);
+            string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();
+
+            string plainText = Clipboard.GetText();
+
             clip.ClipValue = htmlStr;
+            htmlStr = htmlStr.ToLower();
             string startTag = "<!--startfragment-->";
             //QQ上的多了个空格
-            if (!htmlStr.Contains(startTag)){
+            if (!htmlStr.Contains(startTag))
+            {
                 startTag = "<!--startfragment -->";
             }
             string endTag = "<!--endfragment-->";
             htmlStr = htmlStr.Substring(htmlStr.IndexOf(startTag) + startTag.Length, htmlStr.IndexOf(endTag) - (htmlStr.IndexOf(startTag) + startTag.Length));
 
-            Console.WriteLine("--");
-            Console.WriteLine(htmlStr);
+
             clip.DisplayValue = htmlStr;
+            clip.PlainText = plainText;
 
             clip.Type = HTML_TYPE;
 
@@ -351,6 +337,8 @@ namespace ClipOne.service
         {
 
             MemoryStream stream = (MemoryStream)Clipboard.GetData(WECHAT_TYPE);
+            string plainText = Clipboard.GetText();
+            clip.PlainText = plainText;
             byte[] b = stream.ToArray();
             string xmlStr = System.Text.Encoding.UTF8.GetString(b);
 
@@ -397,6 +385,8 @@ namespace ClipOne.service
         {
 
             MemoryStream stream = (MemoryStream)Clipboard.GetData(QQ_RICH_TYPE);
+            string plainText = Clipboard.GetText();
+            clip.PlainText = plainText;
             byte[] b = stream.ToArray();
             string xmlStr = System.Text.Encoding.UTF8.GetString(b);
             xmlStr = xmlStr.Substring(0, xmlStr.IndexOf("</QQRichEditFormat>") + "</QQRichEditFormat>".Length);
@@ -409,7 +399,7 @@ namespace ClipOne.service
 
             int ii = 0;
             string htmlStr = Clipboard.GetData(DataFormats.Html).ToString().ToLower();
-            
+
             string startTag = "<!--startfragment -->";
             string endTag = "<!--endfragment-->";
             htmlStr = htmlStr.Substring(htmlStr.IndexOf(startTag) + startTag.Length, htmlStr.IndexOf(endTag) - (htmlStr.IndexOf(startTag) + startTag.Length));
