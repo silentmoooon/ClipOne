@@ -324,12 +324,11 @@ function addData(data) {
         }
     }
     
-
     clipObj.splice(0, 0, obj);
 
     if (clipObj.length > maxRecords) {
+		var clip = clipObj.splice(clipObj.length-1, 1)[0];
         setTimeout(function() {
-            var clip = clipObj.splice(maxRecords, 1)[0];
             if (clip.Type == "image") {
                 deleteImage(clip.ClipValue);
             }else if(clip.Type=="QQ_Unicode_RichEdit_Format"){
@@ -434,10 +433,7 @@ function saveData() {
     window.localStorage.setItem("data", JSON.stringify(clipObj));
 }
 
-function saveRecordCount() {
-    window.localStorage.setItem("recordCount", maxRecords);
-}
-
+ 
 function clear() {
     clipObj = [];
     window.localStorage.clear();
