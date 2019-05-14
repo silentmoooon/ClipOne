@@ -499,7 +499,7 @@ namespace ClipOne.view
             {
 
                 ClipModel clip = clipService.HandClip();
-                          
+                
                 if (string.IsNullOrWhiteSpace(clip.ClipValue))
                 {
                     handled = true;
@@ -577,7 +577,7 @@ namespace ClipOne.view
         /// <param name="height">页面高度</param>
         public void ChangeWindowHeight(double height)
         {
-           
+            
             Height = height + 21;
           
             double y = SystemParameters.WorkArea.Height;//得到屏幕工作区域高度

@@ -358,15 +358,27 @@ namespace ClipOne.service
             clip.ClipValue = htmlStr;
             htmlStr = htmlStr.ToLower();
             string startTag = "<!--startfragment-->";
+            string endTag;
             //QQ上的多了个空格
             if (!htmlStr.Contains(startTag))
             {
                 startTag = "<!--startfragment -->";
             }
-            string endTag = "<!--endfragment-->";
-            htmlStr = htmlStr.Substring(htmlStr.IndexOf(startTag) + startTag.Length, htmlStr.IndexOf(endTag) - (htmlStr.IndexOf(startTag) + startTag.Length));
-
-
+            //idea等部分软件没有startfragment
+            if (!htmlStr.Contains(startTag))
+            {
+                startTag = "<body>";
+                endTag = "</body>";
+            }
+            else { 
+                 endTag = "<!--endfragment-->";
+               
+            }
+            
+            try { 
+                htmlStr = htmlStr.Substring(htmlStr.IndexOf(startTag) + startTag.Length, htmlStr.IndexOf(endTag) - (htmlStr.IndexOf(startTag) + startTag.Length));
+            }
+            catch { }
             clip.DisplayValue = htmlStr;
             clip.PlainText = plainText;
 
