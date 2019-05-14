@@ -3,15 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:sys="clr-namespace:System;assembly=mscorlib"
-        
-        xmlns:Microsoft_Windows_Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero"
-        xmlns:local="clr-namespace:ClipOne.view"
-      
-        xmlns:Controls="clr-namespace:Microsoft.Toolkit.Wpf.UI.Controls;assembly=Microsoft.Toolkit.Wpf.UI.Controls.WebView" x:Class="ClipOne.view.MainWindow"
-      
+   
+    xmlns:Controls="clr-namespace:Microsoft.Toolkit.Wpf.UI.Controls;assembly=Microsoft.Toolkit.Wpf.UI.Controls.WebView" x:Class="ClipOne.view.MainWindow"
         mc:Ignorable="d"
-        Title="MainWindow"    Height="100" Width="461"   Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None" Background="Transparent"   ResizeMode="NoResize" Topmost="False"   ShowInTaskbar="False"  Left="-10000" ShowActivated="False" MaxHeight="620" SourceInitialized="Window_SourceInitialized" >
+        Title="MainWindow"    Height="100" Width="461"  Left="-10000"  Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None" Background="Transparent"   ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False"   MaxHeight="620" SourceInitialized="Window_SourceInitialized" >
+    
     <Border  Margin="10" Background="Transparent">
         <Border.Effect>
             <DropShadowEffect Color="gray" BlurRadius="15" Direction="-90" RenderingBias="Quality" ShadowDepth="2"/>

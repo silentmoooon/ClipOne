@@ -20,6 +20,11 @@ namespace ClipOne.service
 {
     class ClipService
     {
+        private readonly Config config;
+        public ClipService(Config config)
+        {
+            this.config = config;
+        }
         /// <summary>
         /// 图片类型，通过在内容前面增加前缀来标识
         /// </summary>
@@ -40,41 +45,15 @@ namespace ClipOne.service
         /// </summary>
         public const string QQ_RICH_TYPE = "QQ_Unicode_RichEdit_Format";
 
+        /// <summary>
+        /// 微信富文本类型
+        /// </summary>
         public const string WECHAT_TYPE = "WeChat_RichEdit_Format";
 
         /// <summary>
-        /// Q文本类型
+        /// 文本类型
         /// </summary>
         public const string TEXT_TYPE = "text";
-
-
-
-
-        /// <summary>
-        /// 设置开机启动
-        /// </summary>
-        public static void SetStartup(bool isAutoStartup)
-        {
-
-            RegistryKey reg = Registry.CurrentUser.CreateSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
-            string exePath = System.Windows.Forms.Application.ExecutablePath;
-            string exeName = System.Windows.Forms.Application.ProductName;
-            if (!isAutoStartup)
-            {
-                if (reg.GetValue(exeName) != null)
-                {
-
-                    reg.DeleteValue(exeName);
-                }
-            }
-            else
-            {
-
-                reg.SetValue(exeName, exePath);
-            }
-
-        }
-
 
 
         /// <summary>
@@ -82,7 +61,7 @@ namespace ClipOne.service
         /// </summary>
         /// <param name="bs"></param>
         /// <returns></returns>
-        public static string SaveImage(BitmapSource bs)
+        public  string SaveImage(BitmapSource bs)
         {
             string path = MainWindow.cacheDir +Path.DirectorySeparatorChar + Guid.NewGuid().ToString() + ".jpg";
             JpegBitmapEncoder jpegEncoder = new JpegBitmapEncoder();
@@ -98,7 +77,7 @@ namespace ClipOne.service
         /// 设置条目到剪切板
         /// </summary>
         /// <param name="result"></param>
-        public static void SetValueToClipboard(ClipModel result)
+        public  void SetValueToClipboard(ClipModel result)
         {
 
             if (result.Type == WECHAT_TYPE)
@@ -116,8 +95,7 @@ namespace ClipOne.service
             {
                 bool isExplorer = false;
                 Process[] ps = Process.GetProcesses();
-                int pid = 0;
-                WinAPIHelper.GetWindowThreadProcessId(MainWindow.activeHwnd, out pid);
+                WinAPIHelper.GetWindowThreadProcessId(WinAPIHelper.GetForegroundWindow(), out int pid);
 
                 foreach (Process p in ps)
                 {
@@ -205,12 +183,62 @@ namespace ClipOne.service
 
 
 
+        public ClipModel HandClip()
+        {
+            ClipModel clip = new ClipModel();
+            try
+            {
+                //处理剪切板微信自定义格式
+                if ((config.SupportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(WECHAT_TYPE))
+                {
+                    HandleWeChat(clip);
+
+                }
+
+                //处理剪切板QQ自定义格式
+                else if ((config.SupportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
+                {
+                    HandleQQ(clip);
+
+                }
+
+                //处理HTML类型
+                else if ((config.SupportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
+                {
+                    HandleHtml(clip);
+
+                }
+                //处理图片类型
+                else if ((config.SupportFormat & ClipType.image) != 0 && (Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib)))
+                {
+                    HandleImage(clip);
+
+                }
+                //处理剪切板文件
+                else if ((config.SupportFormat & ClipType.file) != 0 && Clipboard.ContainsFileDropList())
+                {
+                    HandleFile(clip);
+
+                }
+                //处理剪切板文字
+                else if (Clipboard.ContainsText())
+                {
+
+                    HandText(clip);
+
+                }
+ 
+            }
+            catch { }
+            return clip;
+        }
+
 
         /// <summary>
         /// 处理剪切板文字类型
         /// </summary>
         /// <param name="clip"></param>
-        public static void HandClipText(ClipModel clip)
+        public  void HandText(ClipModel clip)
         {
 
             string textStr = string.Empty;
@@ -267,7 +295,7 @@ namespace ClipOne.service
         /// 处理剪切板文件类型
         /// </summary>
         /// <param name="clip"></param>
-        public static void HandleClipFile(ClipModel clip)
+        public  void HandleFile(ClipModel clip)
         {
 
             string[] files = (string[])Clipboard.GetData(DataFormats.FileDrop);
@@ -320,7 +348,7 @@ namespace ClipOne.service
         /// 处理剪切板HTML类型
         /// </summary>
         /// <param name="clip"></param>
-        public static void HandleClipHtml(ClipModel clip)
+        public  void HandleHtml(ClipModel clip)
         {
 
             string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();
@@ -351,7 +379,7 @@ namespace ClipOne.service
         /// 处理剪切板图片类型
         /// </summary>
         /// <param name="clip"></param>
-        public static void HandleClipImage(ClipModel clip)
+        public  void HandleImage(ClipModel clip)
         {
             BitmapSource bs = Clipboard.GetImage();
 
@@ -368,7 +396,7 @@ namespace ClipOne.service
         /// 处理剪切板微信类型
         /// </summary>
         /// <param name="clip"></param>
-        public static void HandleClipWeChat(ClipModel clip)
+        public  void HandleWeChat(ClipModel clip)
         {
 
             MemoryStream stream = (MemoryStream)Clipboard.GetData(WECHAT_TYPE);
@@ -382,7 +410,7 @@ namespace ClipOne.service
 
             XmlDocument document = new XmlDocument();
             document.LoadXml(xmlStr);
-            String displayValue = string.Empty;
+            string displayValue = string.Empty;
             string value = string.Empty;
             bool onlyText = true;
             foreach (XmlNode node in document.DocumentElement.ChildNodes)
@@ -416,7 +444,7 @@ namespace ClipOne.service
         /// 处理剪切板QQ类型
         /// </summary>
         /// <param name="clip"></param>
-        public static void HandleClipQQ(ClipModel clip)
+        public  void HandleQQ(ClipModel clip)
         {
 
             MemoryStream stream = (MemoryStream)Clipboard.GetData(QQ_RICH_TYPE);

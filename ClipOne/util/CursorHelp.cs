@@ -38,7 +38,7 @@ namespace ClipOne.util
 
                     HandleRef desktopDC = new HandleRef(null, GetDC(desktopHwnd));
 
-                    _dpi = GetDeviceCaps(desktopDC, 88 /*LOGPIXELSX*/);
+                    _dpi = GetDeviceCaps(desktopDC, 88 );
 
                     ReleaseDC(desktopHwnd, desktopDC);
 
