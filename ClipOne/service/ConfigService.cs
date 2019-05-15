@@ -5,9 +5,9 @@ using System.IO;
 
 namespace ClipOne.service
 {
-    class ConfigUtil
+    class ConfigService
     {
-        public ConfigUtil(Config config)
+        public ConfigService(Config config)
         {
             this.config = config;
         }
@@ -27,6 +27,7 @@ namespace ClipOne.service
         {
             if (!File.Exists(settingsPath))
             {
+                Directory.CreateDirectory(Path.GetDirectoryName(settingsPath));
                 return;
             }
             string json = File.ReadAllText(settingsPath);

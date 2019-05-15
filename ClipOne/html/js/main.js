@@ -8,7 +8,7 @@ var isShiftPressed = false;
 var lastSelectedIndex = -1;
 var storeInterval;
 var clearImageInterval;
-var maxRecords = 100;
+var maxRecords = 0;
 var searchValue = "";
 
 //屏蔽鼠标选择操作
@@ -45,17 +45,15 @@ $(document).ready(function() {
     if (str != null) {
         clipObj = JSON.parse(str);
     }
-
-    maxRecords = window.localStorage.getItem("recordCount");
-    if (maxRecords == null) {
-        maxRecords = 100;
-    }
+	displayData();
+    
     storeInterval = setInterval(saveData, 120000);
 
     clearImageInterval = setInterval(clearImage, 2 * 3600 * 1000);
 
-    displayData();
+    
 });
+
 
 function clearImage() {
     var images = [];
@@ -304,8 +302,13 @@ function mouseup(e) {
 
 //设置保存最大记录数
 function setMaxRecords(records) {
+	if(records<=0) return;
     maxRecords = records;
-    window.localStorage.setItem("recordCount", maxRecords);
+	if(clipObj.length>maxRecords){
+		clipObj=clipObj.slice(0,maxRecords);
+		displayData();
+	}
+	
 }
 //增加条目
 function addData(data) {
@@ -326,7 +329,7 @@ function addData(data) {
     
     clipObj.splice(0, 0, obj);
 
-    if (clipObj.length > maxRecords) {
+    if (maxRecords>0&&clipObj.length > maxRecords) {
 		var clip = clipObj.splice(clipObj.length-1, 1)[0];
         setTimeout(function() {
             if (clip.Type == "image") {
@@ -362,10 +365,6 @@ function showRecord() {
         $(".tr_hover").removeClass("tr_hover");
         $("#tr" + selectIndex).addClass("tr_hover");
 
-        //$("#tr" + selectIndex).one("mouseout", function () {
-        //	$("#tr" + selectIndex).removeClass("tr_hover");
-
-        //});
     }
     $("#searchText").show();
     $("#searchText")[0].focus();
@@ -423,11 +422,7 @@ function changeWindowHeight(height) {
     window.external.notify("ChangeWindowHeight|" + height);
 }
 
- 
-//获取所有记录,用来持久化
-function getAllClip() {
-    return encodeURIComponent(JSON.stringify(clipObj));
-}
+
 
 function saveData() {
     window.localStorage.setItem("data", JSON.stringify(clipObj));
