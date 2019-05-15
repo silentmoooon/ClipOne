@@ -22,8 +22,10 @@ namespace ClipOne.view
     public partial class MainWindow : Window
     {
         private readonly Config config = new Config();
-        private ConfigUtil configUtil;
+        private ConfigService configService;
         private ClipService clipService;
+
+        private bool init = false;
 
         /// <summary>
         /// 缓存目录
@@ -85,8 +87,8 @@ namespace ClipOne.view
                 Directory.CreateDirectory(cacheDir);
             }
             //读取配置文件
-            configUtil = new ConfigUtil(config);
-            configUtil.InitConfig();
+            configService = new ConfigService(config);
+            configService.InitConfig();
 
             clipService = new ClipService(config);
 
@@ -140,7 +142,12 @@ namespace ClipOne.view
           
             webView1.NavigateToLocal(defaultHtml);
 
+            webView1.NavigationCompleted += (x, y) => { webView1.InvokeScript("setMaxRecords",config.RecordCount.ToString()); };
+
+
         }
+
+        
 
         private void WebView1_ScriptNotify(object sender, WebViewControlScriptNotifyEventArgs e)
         {
@@ -361,7 +368,7 @@ namespace ClipOne.view
                 item.Checked = true;
                 config.SupportFormat |= ((ClipType)item.Tag);
             }          
-            configUtil.SaveSettings();
+            configService.SaveSettings();
         }
 
 
@@ -375,7 +382,7 @@ namespace ClipOne.view
             }
             item.Checked = true;
             config.SkinName = item.Text;
-            configUtil.SaveSettings();
+            configService.SaveSettings();
 
             webView1.InvokeScript("saveData");
             string css = item.Tag.ToString();
@@ -429,9 +436,9 @@ namespace ClipOne.view
             System.Windows.Forms.MenuItem item = (System.Windows.Forms.MenuItem)sender;
             item.Checked = !item.Checked;
 
-            configUtil.SetStartup(item.Checked);
+            configService.SetStartup(item.Checked);
             config.AutoStartup = item.Checked;
-            configUtil.SaveSettings();
+            configService.SaveSettings();
         }
 
         /// <summary>
@@ -454,7 +461,7 @@ namespace ClipOne.view
                 config.HotkeyKey = sethk.HotkeyKey;
                 config.HotkeyModifier = sethk.HotkeyModifier;
  
-                configUtil.SaveSettings();
+                configService.SaveSettings();
             }
         }
 
@@ -476,7 +483,7 @@ namespace ClipOne.view
             }
             item.Checked = true;
             config.RecordCount = int.Parse(item.Text);
-            configUtil.SaveSettings();
+            configService.SaveSettings();
             webView1.InvokeScript("setMaxRecords", item.Text);
 
 
@@ -505,6 +512,7 @@ namespace ClipOne.view
                     handled = true;
                     return IntPtr.Zero;
                 }
+                
                 EnQueue(clip);
                 handled = true;
             }
@@ -556,6 +564,7 @@ namespace ClipOne.view
         /// <param name="str"></param>
         private async void EnQueue(ClipModel clip)
         {
+           
             string json = JsonConvert.SerializeObject(clip);
             json = HttpUtility.UrlEncode(json);
             await webView1.InvokeScriptAsync("addData", json);
@@ -647,7 +656,17 @@ namespace ClipOne.view
 
         private void Window_Deactivated(object sender, EventArgs e)
         {
-
+            
+            //if (!init)
+            //{
+            //    try {
+            //        webView1.InvokeScript("setMaxRecords", config.RecordCount.ToString());
+            //        init = true;
+            //    }
+            //    catch { }
+               
+            //}
+            
             if (Visibility == Visibility.Visible)
             {
                 Hide();

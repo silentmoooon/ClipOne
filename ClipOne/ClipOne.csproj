@@ -137,7 +137,7 @@
     <Compile Include="model\ClipType.cs" />
     <Compile Include="model\Config.cs" />
     <Compile Include="service\ClipService.cs" />
-    <Compile Include="service\ConfigUtil.cs" />
+    <Compile Include="service\ConfigService.cs" />
     <Compile Include="view\SetHotKeyForm.xaml.cs">
       <DependentUpon>SetHotKeyForm.xaml</DependentUpon>
     </Compile>
