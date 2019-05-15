@@ -198,6 +198,7 @@ namespace ClipOne.service
                 //处理剪切板QQ自定义格式
                 else if ((config.SupportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
                 {
+                   
                     HandleQQ(clip);
 
                 }
@@ -205,6 +206,7 @@ namespace ClipOne.service
                 //处理HTML类型
                 else if ((config.SupportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
                 {
+                    
                     HandleHtml(clip);
 
                 }
@@ -354,35 +356,40 @@ namespace ClipOne.service
             string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();
 
             string plainText = Clipboard.GetText();
-
-            clip.ClipValue = htmlStr;
-            htmlStr = htmlStr.ToLower();
-            string startTag = "<!--startfragment-->";
-            string endTag;
-            //QQ上的多了个空格
-            if (!htmlStr.Contains(startTag))
+ 
+            //只有当html内容中有图片才当作html格式处理,否则做文本处理
+            if (GetOccurTimes(htmlStr.ToLower(), "<img") > GetOccurTimes(plainText.ToLower(), "<img"))
             {
-                startTag = "<!--startfragment -->";
-            }
-            //idea等部分软件没有startfragment
-            if (!htmlStr.Contains(startTag))
-            {
-                startTag = "<body>";
-                endTag = "</body>";
-            }
-            else { 
-                 endTag = "<!--endfragment-->";
                
-            }
-            
-            try { 
-                htmlStr = htmlStr.Substring(htmlStr.IndexOf(startTag) + startTag.Length, htmlStr.IndexOf(endTag) - (htmlStr.IndexOf(startTag) + startTag.Length));
-            }
-            catch { }
-            clip.DisplayValue = htmlStr;
-            clip.PlainText = plainText;
+                clip.ClipValue = htmlStr;
+                htmlStr = htmlStr.ToLower();
+                string startTag = "<!--startfragment-->";
+                string endTag = "<!--endfragment-->";
+                //QQ上的多了个空格
+                if (!htmlStr.Contains(startTag))
+                {
+                    startTag = "<!--startfragment -->";
+                }
 
-            clip.Type = HTML_TYPE;
+                try
+                {
+                    htmlStr = htmlStr.Substring(htmlStr.IndexOf(startTag) + startTag.Length, htmlStr.IndexOf(endTag) - (htmlStr.IndexOf(startTag) + startTag.Length));
+                }
+                catch { }
+                clip.DisplayValue = htmlStr;
+                clip.PlainText = plainText;
+
+                clip.Type = HTML_TYPE;
+            }
+            else
+            {
+                
+                clip.DisplayValue = plainText;
+                clip.ClipValue = plainText;
+                clip.Type = TEXT_TYPE;
+            }
+
+            
 
 
         }
@@ -520,7 +527,16 @@ namespace ClipOne.service
             clip.Images = string.Join(",", images);
             
         }
+        /// <summary>
+        /// 得到字符串B在当前字符串内出现的次数
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        private  int GetOccurTimes( string str, string value)
+        {
+            return (str.Length - str.Replace(value, "").Length) / value.Length;
+        }
 
-         
     }
 }
