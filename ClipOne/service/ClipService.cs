@@ -225,8 +225,8 @@ namespace ClipOne.service
                 //处理剪切板文字
                 else if (Clipboard.ContainsText())
                 {
-
-                    HandText(clip);
+                  
+                    HandleText(clip);
 
                 }
  
@@ -240,7 +240,7 @@ namespace ClipOne.service
         /// 处理剪切板文字类型
         /// </summary>
         /// <param name="clip"></param>
-        public  void HandText(ClipModel clip)
+        public  void HandleText(ClipModel clip)
         {
 
             string textStr = string.Empty;
@@ -383,10 +383,8 @@ namespace ClipOne.service
             }
             else
             {
-                
-                clip.DisplayValue = plainText;
-                clip.ClipValue = plainText;
-                clip.Type = TEXT_TYPE;
+                HandleText(clip);
+               
             }
 
             
