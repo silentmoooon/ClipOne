@@ -381,7 +381,8 @@ function pasteValue(index) {
         "PasteValue|" + encodeURIComponent(JSON.stringify(obj))
     );
     clipObj.splice(0, 0, obj);
- 
+	 $("#searchInput").val("");
+     searchValue = "";
     displayData();
 }
 //粘贴多条
@@ -407,7 +408,8 @@ function pasteValueByRange(startIndex, endIndex) {
     window.external.notify(
         "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
     );
-   
+   $("#searchInput").val("");
+     searchValue = "";
     displayData();
 }
 
