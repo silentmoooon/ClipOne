@@ -49,8 +49,7 @@ $(document).ready(function() {
     
     storeInterval = setInterval(saveData, 120000);
 
-    clearImageInterval = setInterval(clearImage, 2 * 3600 * 1000);
-
+  clearImageInterval = setInterval(clearImage,  3600 * 1000);
     
 });
 
@@ -61,8 +60,11 @@ function clearImage() {
         if (clipObj[i].Type == "image") {
             images.push(clipObj[i].DisplayValue);
         }else if (clipObj[i].Type == "QQ_Unicode_RichEdit_Format"&&clipObj[i].Images&&clipObj[i].Images.length>0) {
-			var strings=clipObj[i].Images.split(",");
-			for(var s in strings){
+		 
+			var strings=clipObj[i].Images.split(',');
+			 
+			for(let s of strings){
+			 
 				images.push(s);
 			}
         }
