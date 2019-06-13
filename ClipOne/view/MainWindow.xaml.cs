@@ -24,9 +24,7 @@ namespace ClipOne.view
         private readonly Config config = new Config();
         private ConfigService configService;
         private ClipService clipService;
-
-        private bool init = false;
-
+ 
         /// <summary>
         /// 缓存目录
         /// </summary>
@@ -197,10 +195,17 @@ namespace ClipOne.view
         {
 
             string[] image = JsonConvert.DeserializeObject<string[]>(HttpUtility.UrlDecode(images.ToString()));
+            //Console.WriteLine("--");
+            //Console.WriteLine(string.Join(",", image));
+            //Console.WriteLine("--");
+           
             foreach (var img in Directory.GetFiles(cacheDir))
             {
+               
                 if (!image.Contains(img))
                 {
+                    //Console.WriteLine(img);
+                    //Console.WriteLine("==");
                     DeleteFile(img);
                 }
 

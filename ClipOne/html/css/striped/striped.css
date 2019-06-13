@@ -1,24 +1,26 @@
-
 /*全局字体*/
+
 * {
-    font-family: "Microsoft Yahei","微软雅黑";
+    font-family: "Microsoft Yahei", "微软雅黑";
     font-size: 12px;
-	 
 }
 
+
 /* 滚动条*/
-::-webkit-scrollbar { 
+
+::-webkit-scrollbar {
     width: 4px;
     opacity: 0.9;
     height: 10px;
     background-color: transparent;
-   
 }
 
 ::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.3);
-    border-radius: 10px; /*滚动条的背景区域的圆角*/
-    background-color: red; /*滚动条的背景颜色*/
+    border-radius: 10px;
+    /*滚动条的背景区域的圆角*/
+    background-color: red;
+    /*滚动条的背景颜色*/
 }
 
 ::-webkit-scrollbar-track-piece {
@@ -34,21 +36,22 @@
     border-radius: 10px;
 }
 
- 
-  /*body*/
-body{
+
+/*body*/
+
+body {
     border: 1px solid #A9CBEE;
-	overflow: hidden;
-	margin-left: 0px;
-	margin-top:0px;
-	margin-right: 0px;
+    overflow: hidden;
+    margin-left: 0px;
+    margin-top: 0px;
+    margin-right: 0px;
     margin-bottom: 0px;
     width: 441px;
     max-height: 599px;
-	background-color: #EbF1Fb;
+    background-color: #EbF1Fb;
 }
 
-.content{
+.content {
     overflow-x: hidden;
     overflow-y: auto;
     margin: 0px;
@@ -57,71 +60,77 @@ body{
     max-height: 599px;
 }
 
- /*table*/
+
+/*table*/
+
 .table_main {
     width: 440px;
     cursor: default;
-	
-   border-collapse:collapse;
+    border-collapse: collapse;
     table-layout: fixed;
-	border-spacing: 0;
-   
-}
-.table_main th,
-.table_main td {
-  padding: 4px 5px;
-}
-.table_main tbody > tr:nth-child(odd) > td,
-.table_main tbody > tr:nth-child(odd) > th {
-  background-color: #f9f9f9;
+    border-spacing: 0;
 }
 
- 
 .table_main th,
 .table_main td {
-  
-  line-height: 20px;
-  text-align: left;
-  vertical-align: top;
-   
+    padding: 4px 5px;
 }
+
+.table_main tbody>tr:nth-child(odd)>td,
+.table_main tbody>tr:nth-child(odd)>th {
+    background-color: #f9f9f9;
+}
+
+.table_main th,
+.table_main td {
+    line-height: 20px;
+    text-align: left;
+    vertical-align: top;
+}
+
 
 /*表格边框*/
-td{
-	border-bottom: 1px solid #ddd; 
-	min-height: 25px;
-	overflow: hidden; 
-	text-overflow: ellipsis; 
-	white-space: nowrap;
 
+td {
+    border-bottom: 1px solid #ddd;
+    min-height: 25px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
+
 /*内容表格*/
+
 .td_content {
     cursor: default;
     width: 398px;
-	
     margin-left: 0px !important;
     margin-right: 0px !important;
     padding-left: 3px !important;
     padding-right: 5px !important;
     padding-top: 8px;
-	padding-bottom: 8px;
-	
+    padding-bottom: 8px;
 }
 
+
 /*索引表格*/
+
 .td_index {
     width: 25px !important;
     vertical-align: middle !important;
     text-align: center !important;
     margin: 0px !important;
     padding: 0px !important;
- 
 }
 
+
 /*图片*/
-img, .image {
+
+img,
+.image {
+    width: auto;
+    height: auto;
     max-height: 250px !important;
     max-width: 390px !important;
     vertical-align: middle;
@@ -129,18 +138,17 @@ img, .image {
     margin: 0px !important;
     padding: 0px !important;
 }
- 
 
- /*鼠标悬浮*/
-.tr_hover,tr:hover {
-    
-	 
-}
- 
-  .tr_hover > td ,tr:hover >td{
+
+/*鼠标悬浮*/
+
+.tr_hover,
+tr:hover {}
+
+.tr_hover>td,
+tr:hover>td {
     background-color: #ACBAD4 !important;
- }
- 
+}
 
 .dropdown-menu {
     position: absolute;
@@ -150,7 +158,7 @@ img, .image {
     display: none;
     float: left;
     width: 100px;
-	height: 40px;
+    height: 40px;
     padding: 5px 0;
     margin: 2px 0 0;
     list-style: none;
@@ -169,22 +177,23 @@ img, .image {
     -moz-background-clip: padding;
     background-clip: padding-box;
 }
-.dropdown-menu >ul{
-	padding-left: 5px;
-	margin-left: 5px;
-	width: 80px;
+
+.dropdown-menu>ul {
+    padding-left: 5px;
+    margin-left: 5px;
+    width: 80px;
 }
+
 .dropdown-menu.pull-right {
     right: 0;
     left: auto;
 }
 
-
-.dropdown-menu>ul>li{
-	list-style:none
+.dropdown-menu>ul>li {
+    list-style: none
 }
-.dropdown-menu >ul > li > a {
 
+.dropdown-menu>ul>li>a {
     display: block;
     padding: 3px 20px;
     clear: both;
@@ -194,20 +203,24 @@ img, .image {
     white-space: nowrap;
 }
 
-.dropdown-menu >ul> li > a:hover, .dropdown-menu>ul > li > a:focus{
+.dropdown-menu>ul>li>a:hover,
+.dropdown-menu>ul>li>a:focus {
     text-decoration: none;
     color: #ffffff;
     background-color: #0078d7;
-   
 }
-a { text-decoration:none} 
 
-#searchDiv{
-	height:35px;
-	border-bottom: 1px solid #ddd;
+a {
+    text-decoration: none
 }
-#searchInput{
-    margin-top:3px;
+
+#searchDiv {
+    height: 35px;
+    border-bottom: 1px solid #ddd;
+}
+
+#searchInput {
+    margin-top: 3px;
     margin-left: 3px;
     width: 200px;
     height: 25px;
@@ -215,6 +228,6 @@ a { text-decoration:none}
     border-top-width: 0px;
     border-left-width: 0px;
     border-right-width: 0px;
-    outline:none;
+    outline: none;
     background-color: transparent;
 }

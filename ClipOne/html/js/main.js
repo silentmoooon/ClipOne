@@ -49,7 +49,7 @@ $(document).ready(function() {
     
     storeInterval = setInterval(saveData, 120000);
 
-  clearImageInterval = setInterval(clearImage,  3600 * 1000);
+  clearImageInterval = setInterval(clearImage,  10 * 60 * 1000);
     
 });
 
