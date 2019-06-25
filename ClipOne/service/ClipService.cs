@@ -67,8 +67,9 @@ namespace ClipOne.service
             JpegBitmapEncoder jpegEncoder = new JpegBitmapEncoder();
             jpegEncoder.Frames.Add(BitmapFrame.Create(bs));
             
-            using (FileStream fs = new FileStream(path, FileMode.Create)) { 
+            using (FileStream fs = File.OpenWrite(path)) { 
                 jpegEncoder.Save(fs);
+                 
             }
            
             return path;
@@ -353,9 +354,13 @@ namespace ClipOne.service
         public  void HandleHtml(ClipModel clip)
         {
 
-            string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();
+            string htmlStr = Clipboard.GetData(DataFormats.Html).ToString().Replace("&amp;","&");
 
             string plainText = Clipboard.GetText();
+
+           // Console.WriteLine(htmlStr);
+           
+           // Console.WriteLine("==");
  
             //只有当html内容中有图片才当作html格式处理,否则做文本处理
             if (GetOccurTimes(htmlStr.ToLower(), "<img") > GetOccurTimes(plainText.ToLower(), "<img"))

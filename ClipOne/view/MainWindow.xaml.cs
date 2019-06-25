@@ -198,22 +198,28 @@ namespace ClipOne.view
             //Console.WriteLine("--");
             //Console.WriteLine(string.Join(",", image));
             //Console.WriteLine("--");
-           
+           // File.AppendAllText("C:/test/log.txt", "--");
+            //File.AppendAllText("C:/test/log.txt", string.Join(",", image));
             foreach (var img in Directory.GetFiles(cacheDir))
             {
                
                 if (!image.Contains(img))
                 {
+                   // File.AppendAllText("C:/test/log.txt", img);
                     //Console.WriteLine(img);
                     //Console.WriteLine("==");
                     DeleteFile(img);
                 }
 
             }
+            //File.AppendAllText("C:/test/log.txt", "--\n");
 
         }
         private void DeleteFile(object path)
         {
+           // File.AppendAllText("C:/test/log.txt", "==");
+           // File.AppendAllText("C:/test/log.txt", path.ToString());
+           // File.AppendAllText("C:/test/log.txt", "==\n");
             for (int i = 0; i < 3; i++)
             {
                 Thread.Sleep(i * 500);
