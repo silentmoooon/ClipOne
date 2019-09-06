@@ -360,23 +360,20 @@ namespace ClipOne.service
             string htmlStr = Clipboard.GetData(DataFormats.Html).ToString().Replace("&amp;", "&");
 
             string plainText = Clipboard.GetText();
-
-            // Console.WriteLine(htmlStr);
-
-            // Console.WriteLine("==");
+ 
 
             //只有当html内容中有图片才当作html格式处理,否则做文本处理
             if (GetOccurTimes(htmlStr.ToLower(), "<img") > GetOccurTimes(plainText.ToLower(), "<img"))
             {
 
                 clip.ClipValue = htmlStr;
-                htmlStr = htmlStr.ToLower();
-                string startTag = "<!--startfragment-->";
-                string endTag = "<!--endfragment-->";
+               
+                string startTag = "<!--StartFragment-->";
+                string endTag = "<!--EndFragment-->";
                 //QQ上的多了个空格
                 if (!htmlStr.Contains(startTag))
                 {
-                    startTag = "<!--startfragment -->";
+                    startTag = "<!--StartFragment -->";
                 }
 
                 try
@@ -486,22 +483,22 @@ namespace ClipOne.service
             XmlNodeList nodeList = document.SelectNodes("QQRichEditFormat/EditElement[@type='1']|QQRichEditFormat/EditElement[@type='2']|QQRichEditFormat/EditElement[@type='5']");
 
             int ii = 0;
-            string htmlStr = Clipboard.GetData(DataFormats.Html).ToString().ToLower();
+            string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();
            
             string startTag;
-            if (htmlStr.IndexOf("<!--startfragment-->") > 0)
+            if (htmlStr.IndexOf("<!--StartFragment-->") > 0)
             {
-                startTag = "<!--startfragment-->";
+                startTag = "<!--StartFragment-->";
             }
             else
             {
-                startTag = "<!--startfragment -->";
+                startTag = "<!--StartFragment -->";
             }
-            string endTag = "<!--endfragment-->";
+            string endTag = "<!--EndFragment-->";
             htmlStr = htmlStr.Substring(htmlStr.IndexOf(startTag) + startTag.Length, htmlStr.IndexOf(endTag) - (htmlStr.IndexOf(startTag) + startTag.Length));
 
             //如果有img标签
-            if (htmlStr.IndexOf("<img") >= 0)
+            if (htmlStr.ToLower().IndexOf("<img") >= 0)
             {
                 List<string> images = new List<string>();
                 HtmlDocument doc = new HtmlDocument();
