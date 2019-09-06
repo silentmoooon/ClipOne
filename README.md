@@ -17,5 +17,5 @@
 - 普通文本
 
 # 截图
-![截图](https://github.com/silentmoooon/ClipOne/blob/master/image.jpg)
+![截图](https://raw.githubusercontent.com/silentmoooon/ClipOne/master/image.jpg)
 
