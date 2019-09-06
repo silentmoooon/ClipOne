@@ -16,4 +16,6 @@
 - 文件
 - 普通文本
 
+# 截图
+![截图](https://github.com/silentmoooon/ClipOne/blob/master/image.jpg)
 
