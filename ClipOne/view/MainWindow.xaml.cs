@@ -140,7 +140,12 @@ namespace ClipOne.view
           
             webView1.NavigateToLocal(defaultHtml);
 
-            webView1.NavigationCompleted += (x, y) => { webView1.InvokeScript("setMaxRecords",config.RecordCount.ToString()); };
+            webView1.NavigationCompleted += (x, y) => {
+                try {
+                    webView1.InvokeScript("setMaxRecords", config.RecordCount.ToString());
+                }
+                catch { }
+            };
 
 
         }
@@ -182,6 +187,7 @@ namespace ClipOne.view
             }
             else if (args[0] == "esc")
             {
+                
                 Hide();
             }
             //else if (args[0].StartsWith("test"))
@@ -515,6 +521,7 @@ namespace ClipOne.view
 
             if (msg == WM_CLIPBOARDUPDATE)
             {
+               
 
                 ClipModel clip = clipService.HandClip();
                 
@@ -668,22 +675,15 @@ namespace ClipOne.view
         private void Window_Deactivated(object sender, EventArgs e)
         {
             
-            //if (!init)
-            //{
-            //    try {
-            //        webView1.InvokeScript("setMaxRecords", config.RecordCount.ToString());
-            //        init = true;
-            //    }
-            //    catch { }
-               
-            //}
+            
             
             if (Visibility == Visibility.Visible)
             {
+ 
                 Hide();
             }
         }
-
+ 
         /// <summary>
         /// 批量粘贴
         /// </summary>

@@ -76,6 +76,9 @@ function clearImage() {
 
 function keyDown(event) {
     if (event.keyCode == 27) {
+	 if (searchMode ) {
+            hideSearch();
+        } 
         scrollTop();
         window.external.notify("esc|1");
     } else if (event.keyCode == 13) {
@@ -348,8 +351,10 @@ function addData(data) {
 function showRecord() {
     lastSelectedIndex = -1;
     isShiftPressed = false;
-    searchMode = false;
-
+   
+	 if (searchMode ) {
+            hideSearch();
+        } 
     scrollTop();
 
     $("#searchDiv").css("display", "none");
@@ -372,6 +377,12 @@ function showRecord() {
     $("#searchText")[0].focus();
     $("#searchText").hide();
 }
+
+function hide(){
+	 searchValue = "";
+    displayData();
+}
+
 
 // 回调本地代码
 
