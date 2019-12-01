@@ -1,13 +1,9 @@
 ﻿using ClipOne.util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace ClipOne.model
 {
-    class Config
+   public class Config
     {
         /// <summary>
         /// 快捷键修饰键
@@ -16,7 +12,7 @@ namespace ClipOne.model
         /// <summary>
         /// 快捷键按键
         /// </summary>
-        public int HotkeyKey { get; set; } = (int)System.Windows.Forms.Keys.V;
+        public int HotkeyKey { get; set; } = (int)Key.V;
 
 
         /// <summary>

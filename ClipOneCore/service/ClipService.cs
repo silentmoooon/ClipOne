@@ -177,8 +177,9 @@ namespace ClipOne.service
             {
 
                 IDataObject data = new DataObject(DataFormats.Text, result.ClipValue);
-
-                System.Windows.Forms.Clipboard.SetDataObject(data, true);
+                
+                Clipboard.SetDataObject(data, true);
+                //System.Windows.Forms.Clipboard.SetDataObject(data, true);
 
 
             }
