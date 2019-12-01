@@ -1,18 +1,16 @@
 ﻿using ClipOne.model;
 using Microsoft.Win32;
 using Newtonsoft.Json;
+using System.Diagnostics;
 using System.IO;
 
 namespace ClipOne.service
 {
-    class ConfigService
+   public class ConfigService
     {
-        public ConfigService(Config config)
-        {
-            this.config = config;
-        }
+     
 
-        private readonly Config config;
+        private readonly Config config=new Config();
         /// <summary>
         /// 配置文件路径
         /// </summary>
@@ -23,12 +21,12 @@ namespace ClipOne.service
         /// <summary>
         /// /加载设置项
         /// </summary>
-        public   void InitConfig()
+        public   Config GetConfig()
         {
             if (!File.Exists(settingsPath))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(settingsPath));
-                return;
+                return config;
             }
             string json = File.ReadAllText(settingsPath);
             Config tmpConfig = JsonConvert.DeserializeObject<Config>(json);
@@ -43,7 +41,7 @@ namespace ClipOne.service
             {
                 SetStartup(true);
             }
-           
+            return config;
         }
  
 
@@ -54,8 +52,9 @@ namespace ClipOne.service
         {
 
             RegistryKey reg = Registry.CurrentUser.CreateSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
-            string exePath = System.Windows.Forms.Application.ExecutablePath;
-            string exeName = System.Windows.Forms.Application.ProductName;
+            
+            string exePath = Process.GetCurrentProcess().MainModule.FileName;
+            string exeName = Process.GetCurrentProcess().MainModule.ModuleName;
             if (!isAutoStartup)
             {
                 if (reg.GetValue(exeName) != null)

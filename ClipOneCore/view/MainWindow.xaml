@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-   
+        
     xmlns:Controls="clr-namespace:Microsoft.Toolkit.Wpf.UI.Controls;assembly=Microsoft.Toolkit.Wpf.UI.Controls.WebView" x:Class="ClipOne.view.MainWindow"
         mc:Ignorable="d"
         Title="MainWindow"    Height="100" Width="461"  Left="-10000"  Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None" Background="Transparent"   ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False"   MaxHeight="620" SourceInitialized="Window_SourceInitialized" >
@@ -16,5 +16,6 @@
         <Controls:WebView Name="webView1"  />
  
     </Border>
+    
 
 </Window>

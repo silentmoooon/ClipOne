@@ -2,6 +2,7 @@
 using ClipOne.model;
 using ClipOne.service;
 using ClipOne.util;
+ 
 using Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT;
 using Newtonsoft.Json;
 using System;
@@ -11,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Resources;
 
@@ -21,10 +23,18 @@ namespace ClipOne.view
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly Config config = new Config();
-        private ConfigService configService;
+        private readonly Config config ;
+        
         private ClipService clipService;
  
+        public MainWindow(Config config)
+        {
+            InitializeComponent();
+
+            Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            this.config = config;
+            
+        }
         /// <summary>
         /// 缓存目录
         /// </summary>
@@ -64,7 +74,7 @@ namespace ClipOne.view
         /// <summary>
         /// 托盘图标
         /// </summary>
-        private System.Windows.Forms.NotifyIcon notifyIcon = null;
+       // private System.Windows.Forms.NotifyIcon notifyIcon = null;
 
         /// <summary>
         /// 当前应用句柄
@@ -74,7 +84,8 @@ namespace ClipOne.view
         public MainWindow()
         {
             InitializeComponent();
-            Environment.CurrentDirectory = System.Windows.Forms.Application.StartupPath;
+            
+            Environment.CurrentDirectory =AppDomain.CurrentDomain.BaseDirectory;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -84,9 +95,7 @@ namespace ClipOne.view
             {
                 Directory.CreateDirectory(cacheDir);
             }
-            //读取配置文件
-            configService = new ConfigService(config);
-            configService.InitConfig();
+           
 
             clipService = new ClipService(config);
 
@@ -137,7 +146,7 @@ namespace ClipOne.view
 
             webView1.IsIndexedDBEnabled = true;
             webView1.ScriptNotify += WebView1_ScriptNotify;
-          
+            
             webView1.NavigateToLocal(defaultHtml);
 
             webView1.NavigationCompleted += (x, y) => {
@@ -243,125 +252,139 @@ namespace ClipOne.view
             }
         }
 
+        public void clear()
+        {
+            Directory.Delete(cacheDir, true);
+                Directory.CreateDirectory(cacheDir);
+                webView1.InvokeScript("clear");
+        }
+
+        public void refresh()
+        {
+            webView1.InvokeScript("saveData");
+              webView1.Refresh();
+        }
         /// <summary>
         /// 初始化托盘图标及菜单
         /// </summary>
         private void InitialTray()
         {
-            string productName = System.Windows.Forms.Application.ProductName;
-            //设置托盘图标
-            notifyIcon = new System.Windows.Forms.NotifyIcon
-            {
-                Text = productName
-            };
 
-            StreamResourceInfo info = Application.GetResourceStream(new Uri("/" + productName + ".ico", UriKind.Relative));
-            notifyIcon.Icon = new System.Drawing.Icon(info.Stream);
-            notifyIcon.Visible = true;
+            //string productName = System.Windows.Forms.Application.ProductName;
+            ////设置托盘图标
+            //notifyIcon = new System.Windows.Forms.NotifyIcon
+            //{
+            //    Text = productName
+            //};
 
-            //设置菜单项
-            System.Windows.Forms.MenuItem exit = new System.Windows.Forms.MenuItem("退出");
+            //StreamResourceInfo info = Application.GetResourceStream(new Uri("/" + productName + ".ico", UriKind.Relative));
+            //notifyIcon.Icon = new System.Drawing.Icon(info.Stream);
+            //notifyIcon.Visible = true;
 
-            System.Windows.Forms.MenuItem separator0 = new System.Windows.Forms.MenuItem("-");
-            System.Windows.Forms.MenuItem startup = new System.Windows.Forms.MenuItem("开机自启");
-            System.Windows.Forms.MenuItem hotkey = new System.Windows.Forms.MenuItem("热键");
+            ////设置菜单项
+            //System.Windows.Forms.MenuItem exit = new System.Windows.Forms.MenuItem("退出");
 
-            System.Windows.Forms.MenuItem separator1 = new System.Windows.Forms.MenuItem("-");
-            System.Windows.Forms.MenuItem record = new System.Windows.Forms.MenuItem("记录数");
-            System.Windows.Forms.MenuItem skin = new System.Windows.Forms.MenuItem("皮肤");
-            System.Windows.Forms.MenuItem format = new System.Windows.Forms.MenuItem("格式");
+            //System.Windows.Forms.MenuItem separator0 = new System.Windows.Forms.MenuItem("-");
+            //System.Windows.Forms.MenuItem startup = new System.Windows.Forms.MenuItem("开机自启");
+            //System.Windows.Forms.MenuItem hotkey = new System.Windows.Forms.MenuItem("热键");
+
+            //System.Windows.Forms.MenuItem separator1 = new System.Windows.Forms.MenuItem("-");
+            //System.Windows.Forms.MenuItem record = new System.Windows.Forms.MenuItem("记录数");
+            //System.Windows.Forms.MenuItem skin = new System.Windows.Forms.MenuItem("皮肤");
+            //System.Windows.Forms.MenuItem format = new System.Windows.Forms.MenuItem("格式");
             
-            System.Windows.Forms.MenuItem separator2 = new System.Windows.Forms.MenuItem("-");
-            System.Windows.Forms.MenuItem reload = new System.Windows.Forms.MenuItem("刷新");
-            System.Windows.Forms.MenuItem clear = new System.Windows.Forms.MenuItem("清空");
+            //System.Windows.Forms.MenuItem separator2 = new System.Windows.Forms.MenuItem("-");
+            //System.Windows.Forms.MenuItem reload = new System.Windows.Forms.MenuItem("刷新");
+            //System.Windows.Forms.MenuItem clear = new System.Windows.Forms.MenuItem("清空");
 
-            //清空记录
-            clear.Click += (x, y) =>
-            {
-                Directory.Delete(cacheDir, true);
-                Directory.CreateDirectory(cacheDir);
-                webView1.InvokeScript("clear");
-            };
+            ////清空记录
+            //clear.Click += (x, y) =>
+            //{
+            //    Directory.Delete(cacheDir, true);
+            //    Directory.CreateDirectory(cacheDir);
+            //    webView1.InvokeScript("clear");
+            //};
+            
 
-            //刷新页面,一般用于自定义html css js时
-            reload.Click += (x, y) =>
-            {
-                webView1.InvokeScript("saveData");
-                webView1.Refresh();
-            };
-            //退出
-            exit.Click += (x, y) => { Application.Current.Shutdown(); };
+            ////刷新页面,一般用于自定义html css js时
+            //reload.Click += (x, y) =>
+            //{
+            //    webView1.InvokeScript("saveData");
+            //    webView1.Refresh();
+            //};
+            ////退出
+            //exit.Click += (x, y) => { Application.Current.Shutdown(); };
            
-            hotkey.Click += Hotkey_Click;
-            startup.Click += Startup_Click;
-            startup.Checked = config.AutoStartup;
+            //hotkey.Click += Hotkey_Click;
+            //startup.Click += Startup_Click;
+            //startup.Checked = config.AutoStartup;
 
 
-            //增加记录数设置子菜单项
-            for (int i = 100; i <= config.MaxRecordCount; i += 100)
-            {
+            ////增加记录数设置子菜单项
+            //for (int i = 100; i <= config.MaxRecordCount; i += 100)
+            //{
 
-                string recordsNum = i.ToString();
-                System.Windows.Forms.MenuItem subRecord = new System.Windows.Forms.MenuItem(recordsNum);
-                if (int.Parse(recordsNum) == config.RecordCount)
-                {
-                    subRecord.Checked = true;
-                }
-                subRecord.Click += RecordSet_Click;
-                record.MenuItems.Add(subRecord);
+            //    string recordsNum = i.ToString();
+            //    System.Windows.Forms.MenuItem subRecord = new System.Windows.Forms.MenuItem(recordsNum);
+            //    if (int.Parse(recordsNum) == config.RecordCount)
+            //    {
+            //        subRecord.Checked = true;
+            //    }
+            //    subRecord.Click += RecordSet_Click;
+            //    record.MenuItems.Add(subRecord);
 
-            }
+            //}
 
-            //增加格式选择子菜单项
-            foreach (ClipType type in Enum.GetValues(typeof(ClipType)))
-            {
+            ////增加格式选择子菜单项
+            //foreach (ClipType type in Enum.GetValues(typeof(ClipType)))
+            //{
 
-                System.Windows.Forms.MenuItem subFormat = new System.Windows.Forms.MenuItem(Enum.GetName(typeof(ClipType), type))
-                {
-                    Tag = type
-                };
-                if ((config.SupportFormat & type) != 0)
-                {
-                    subFormat.Checked = true;
+            //    System.Windows.Forms.MenuItem subFormat = new System.Windows.Forms.MenuItem(Enum.GetName(typeof(ClipType), type))
+            //    {
+            //        Tag = type
+            //    };
+            //    if ((config.SupportFormat & type) != 0)
+            //    {
+            //        subFormat.Checked = true;
 
-                }
-                if (type == ClipType.text)
-                {
-                    subFormat.Enabled = false;
-                }
-                else
-                {
-                    subFormat.Click += SubFormat_Click;
-                }
-                format.MenuItems.Add(subFormat);
-            }
+            //    }
+            //    if (type == ClipType.text)
+            //    {
+            //        subFormat.Enabled = false;
+            //    }
+            //    else
+            //    {
+            //        subFormat.Click += SubFormat_Click;
+            //    }
+            //    format.MenuItems.Add(subFormat);
+            //}
 
-            //根据css文件创建皮肤菜单项
-            if (Directory.Exists(cssDir))
-            {
-                string[] fileList = Directory.GetDirectories(cssDir);
+            ////根据css文件创建皮肤菜单项
+            //if (Directory.Exists(cssDir))
+            //{
+            //    string[] fileList = Directory.GetDirectories(cssDir);
 
-                foreach (string file in fileList)
-                {
+            //    foreach (string file in fileList)
+            //    {
 
-                    string fileName = Path.GetFileName(file);
-                    System.Windows.Forms.MenuItem subRecord = new System.Windows.Forms.MenuItem(fileName);
-                    if (config.SkinName.Equals(fileName.ToLower()))
-                    {
-                        subRecord.Checked = true;
+            //        string fileName = Path.GetFileName(file);
+            //        System.Windows.Forms.MenuItem subRecord = new System.Windows.Forms.MenuItem(fileName);
+            //        if (config.SkinName.Equals(fileName.ToLower()))
+            //        {
+            //            subRecord.Checked = true;
 
 
-                    }
-                    subRecord.Tag = file;
-                    skin.MenuItems.Add(subRecord);
-                    subRecord.Click += SkinItem_Click;
+            //        }
+            //        subRecord.Tag = file;
+            //        skin.MenuItems.Add(subRecord);
+            //        subRecord.Click += SkinItem_Click;
                    
-                }
-            }
+            //    }
+            //}
 
-            //关联菜单项至托盘
-            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { clear, reload,  separator2, format, skin, record, separator1, hotkey, startup, separator0, exit };
-            notifyIcon.ContextMenu = new System.Windows.Forms.ContextMenu(childen);
+            ////关联菜单项至托盘
+            //System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { clear, reload,  separator2, format, skin, record, separator1, hotkey, startup, separator0, exit };
+            //notifyIcon.ContextMenu = new System.Windows.Forms.ContextMenu(childen);
 
 
         }
@@ -371,41 +394,41 @@ namespace ClipOne.view
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void SubFormat_Click(object sender, EventArgs e)
-        {
+        //private void SubFormat_Click(object sender, EventArgs e)
+        //{
             
-            System.Windows.Forms.MenuItem item = (System.Windows.Forms.MenuItem)sender;
-            if (item.Checked)
-            {
-                item.Checked = false;
-                config.SupportFormat &= ~((ClipType)item.Tag);
-            }
-            else
-            {
-                item.Checked = true;
-                config.SupportFormat |= ((ClipType)item.Tag);
-            }          
-            configService.SaveSettings();
-        }
+        //    System.Windows.Forms.MenuItem item = (System.Windows.Forms.MenuItem)sender;
+        //    if (item.Checked)
+        //    {
+        //        item.Checked = false;
+        //        config.SupportFormat &= ~((ClipType)item.Tag);
+        //    }
+        //    else
+        //    {
+        //        item.Checked = true;
+        //        config.SupportFormat |= ((ClipType)item.Tag);
+        //    }          
+        //    configService.SaveSettings();
+        //}
 
 
 
-        private void SkinItem_Click(object sender, EventArgs e)
-        {
-            System.Windows.Forms.MenuItem item = (System.Windows.Forms.MenuItem)sender;
-            foreach (System.Windows.Forms.MenuItem i in item.Parent.MenuItems)
-            {
-                i.Checked = false;
-            }
-            item.Checked = true;
-            config.SkinName = item.Text;
-            configService.SaveSettings();
+        //private void SkinItem_Click(object sender, EventArgs e)
+        //{
+        //    System.Windows.Forms.MenuItem item = (System.Windows.Forms.MenuItem)sender;
+        //    foreach (System.Windows.Forms.MenuItem i in item.Parent.MenuItems)
+        //    {
+        //        i.Checked = false;
+        //    }
+        //    item.Checked = true;
+        //    config.SkinName = item.Text;
+        //    configService.SaveSettings();
 
-            webView1.InvokeScript("saveData");
-            string css = item.Tag.ToString();
-            ChangeSkin(css);
+        //    webView1.InvokeScript("saveData");
+        //    string css = item.Tag.ToString();
+        //    ChangeSkin(css);
 
-        }
+        //}
 
 
         /// <summary>
@@ -448,15 +471,15 @@ namespace ClipOne.view
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Startup_Click(object sender, EventArgs e)
-        {
-            System.Windows.Forms.MenuItem item = (System.Windows.Forms.MenuItem)sender;
-            item.Checked = !item.Checked;
+        //private void Startup_Click(object sender, EventArgs e)
+        //{
+        //    System.Windows.Forms.MenuItem item = (System.Windows.Forms.MenuItem)sender;
+        //    item.Checked = !item.Checked;
 
-            configService.SetStartup(item.Checked);
-            config.AutoStartup = item.Checked;
-            configService.SaveSettings();
-        }
+        //    configService.SetStartup(item.Checked);
+        //    config.AutoStartup = item.Checked;
+        //    configService.SaveSettings();
+        //}
 
         /// <summary>
         /// 设置热键
@@ -478,7 +501,7 @@ namespace ClipOne.view
                 config.HotkeyKey = sethk.HotkeyKey;
                 config.HotkeyModifier = sethk.HotkeyModifier;
  
-                configService.SaveSettings();
+               // configService.SaveSettings();
             }
         }
 
@@ -490,21 +513,21 @@ namespace ClipOne.view
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void RecordSet_Click(object sender, EventArgs e)
-        {
+        //private void RecordSet_Click(object sender, EventArgs e)
+        //{
 
-            System.Windows.Forms.MenuItem item = ((System.Windows.Forms.MenuItem)sender);
-            foreach (System.Windows.Forms.MenuItem i in item.Parent.MenuItems)
-            {
-                i.Checked = false;
-            }
-            item.Checked = true;
-            config.RecordCount = int.Parse(item.Text);
-            configService.SaveSettings();
-            webView1.InvokeScript("setMaxRecords", item.Text);
+        //    System.Windows.Forms.MenuItem item = ((System.Windows.Forms.MenuItem)sender);
+        //    foreach (System.Windows.Forms.MenuItem i in item.Parent.MenuItems)
+        //    {
+        //        i.Checked = false;
+        //    }
+        //    item.Checked = true;
+        //    config.RecordCount = int.Parse(item.Text);
+        //    configService.SaveSettings();
+        //    webView1.InvokeScript("setMaxRecords", item.Text);
 
 
-        }
+        //}
  
 
         /// <summary>
@@ -626,7 +649,7 @@ namespace ClipOne.view
             catch { }
 
             webView1?.Dispose();
-            notifyIcon?.Dispose();
+            //notifyIcon?.Dispose();
 
             if (wpfHwnd != null)
             {
@@ -667,10 +690,18 @@ namespace ClipOne.view
                 clipService.SetValueToClipboard(result);
             }
             catch { }
-            Thread.Sleep(100);
-            System.Windows.Forms.SendKeys.SendWait("^v");
+            Thread.Sleep(50);
+
+            
+            KeyboardKit.Keyboard.Press(Key.LeftCtrl);
+            KeyboardKit.Keyboard.Press(  Key.V);
+
+            KeyboardKit.Keyboard.Release(Key.LeftCtrl);
+            KeyboardKit.Keyboard.Release(Key.V);
+            //System.Windows.Forms.SendKeys.SendWait("^v");
 
         }
+
 
         private void Window_Deactivated(object sender, EventArgs e)
         {
@@ -735,6 +766,11 @@ namespace ClipOne.view
             WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
         }
 
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+           
+            //e.Key
+        }
     }
 
 }
