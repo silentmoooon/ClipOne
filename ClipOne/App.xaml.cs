@@ -1,6 +1,5 @@
 ﻿using ClipOne.util;
 using ClipOne.view;
-using Hardcodet.Wpf.TaskbarNotification;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -19,8 +18,7 @@ namespace ClipOne
     /// </summary>
     public partial class App : Application
     {
-        private TaskbarIcon _taskbar;
-
+         
         void Application_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
              
@@ -30,7 +28,7 @@ namespace ClipOne
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            _taskbar = (TaskbarIcon)FindResource("Taskbar");
+
             Process[] pro = Process.GetProcesses();
             int n = pro.Where(p => p.ProcessName.ToLower().Equals(System.Windows.Forms.Application.ProductName.ToLower())).Count();
             if (n > 1)
