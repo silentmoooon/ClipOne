@@ -5,7 +5,8 @@
 # 使用
 默认通过alt+v呼出界面，可在托盘图标处自定义
 
-# 依赖
+# 环境
+- windows 10
 - .NET Core Runtime 3.0
 - .NET Core Desktop Runtime 3.0
 
