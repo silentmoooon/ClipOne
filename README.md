@@ -6,8 +6,8 @@
 默认通过alt+v呼出界面，可在托盘图标处自定义
 
 # 依赖
-- win10
-- .net4.6.2
+- .NET Core Runtime 3.0
+- .NET Core Desktop Runtime 3.0
 
 # 支持格式
 - QQ富文本
