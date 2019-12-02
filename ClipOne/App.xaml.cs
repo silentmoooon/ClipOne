@@ -34,8 +34,8 @@ namespace ClipOne
         {
               base.OnStartup(e);
             Process[] pro = Process.GetProcesses();
-
-            int n = pro.Where(p => p.ProcessName.ToLower().Equals(Process.GetCurrentProcess().MainModule.ModuleName.ToLower())).Count();
+           
+            int n = pro.Where(p => (p.ProcessName.ToLower()+".exe").Equals(Process.GetCurrentProcess().MainModule.ModuleName.ToLower())).Count();
             if (n > 1)
             {
 
