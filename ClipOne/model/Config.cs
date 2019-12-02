@@ -10,9 +10,9 @@ namespace ClipOne.model
         /// </summary>
         public int HotkeyModifier { get; set; } = (int)HotKeyManager.KeyModifiers.Alt;
         /// <summary>
-        /// 快捷键按键
+        /// 快捷键按键,默认为v
         /// </summary>
-        public int HotkeyKey { get; set; } = (int)Key.V;
+        public int HotkeyKey { get; set; } = KeyInterop.VirtualKeyFromKey(Key.V);
 
 
         /// <summary>
