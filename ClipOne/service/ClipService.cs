@@ -97,10 +97,12 @@ namespace ClipOne.service
             {
                 bool isExplorer = false;
                 Process[] ps = Process.GetProcesses();
-                WinAPIHelper.GetWindowThreadProcessId(WinAPIHelper.GetForegroundWindow(), out int pid);
 
+                WinAPIHelper.GetWindowThreadProcessId(WinAPIHelper.GetForegroundWindow(), out int pid);
+       
                 foreach (Process p in ps)
                 {
+                    
                     if (p.Id == pid && p.ProcessName.ToLower() == "explorer")
                     {
                         isExplorer = true;
@@ -110,7 +112,7 @@ namespace ClipOne.service
                 //如果是桌面或者资源管理器则直接粘贴为文件
                 if (isExplorer)
                 {
-
+                   
                     string[] tmp = Path.GetFullPath(result.ClipValue).Split(',');
 
                     IDataObject data = new DataObject(DataFormats.FileDrop, tmp);

@@ -7,6 +7,7 @@ using Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -689,13 +690,17 @@ namespace ClipOne.view
             catch { }
             Thread.Sleep(50);
 
-            
+            //WinAPIHelper.keybd_event((byte)KeyInterop.VirtualKeyFromKey(Key.LeftCtrl),0,0,0);//按下
+            //WinAPIHelper.keybd_event((byte)KeyInterop.VirtualKeyFromKey(Key.V),0,0,0);//按下
+            //WinAPIHelper.keybd_event((byte)KeyInterop.VirtualKeyFromKey(Key.V),0,2,0);//弹起
+            //WinAPIHelper.keybd_event((byte)KeyInterop.VirtualKeyFromKey(Key.LeftCtrl), 0,2,0);//弹起
+
             KeyboardKit.Keyboard.Press(Key.LeftCtrl);
-            KeyboardKit.Keyboard.Press(  Key.V);
+            KeyboardKit.Keyboard.Press(Key.V);
 
             KeyboardKit.Keyboard.Release(Key.LeftCtrl);
             KeyboardKit.Keyboard.Release(Key.V);
-            
+
 
         }
 
