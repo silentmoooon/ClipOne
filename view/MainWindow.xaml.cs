@@ -681,14 +681,24 @@ namespace ClipOne.view
         /// /// <param name="neadPause">是否需要延时，单条需要，批量不需要</param>
         private void SetValueToClip(ClipModel result)
         {
-
+            
+            
             try
             {
                 clipService.SetValueToClipboard(result);
+                 
             }
-            catch { }
+            catch (Exception e){
+                //Console.WriteLine(e.StackTrace);
+                //IntPtr hwnd = WinAPIHelper.GetOpenClipboardWindow();
+                //StringBuilder sb = new StringBuilder(501);
+                //WinAPIHelper.GetWindowText(hwnd, sb, 500);
+                //Console.WriteLine("==");
+                //Console.WriteLine(sb.ToString());
+                //Console.WriteLine("==");
+            }
             Thread.Sleep(50);
-
+           
             //WinAPIHelper.keybd_event((byte)KeyInterop.VirtualKeyFromKey(Key.LeftCtrl),0,0,0);//按下
             //WinAPIHelper.keybd_event((byte)KeyInterop.VirtualKeyFromKey(Key.V),0,0,0);//按下
             //WinAPIHelper.keybd_event((byte)KeyInterop.VirtualKeyFromKey(Key.V),0,2,0);//弹起
@@ -699,6 +709,7 @@ namespace ClipOne.view
 
             KeyboardKit.Keyboard.Release(Key.LeftCtrl);
             KeyboardKit.Keyboard.Release(Key.V);
+           
 
 
         }
