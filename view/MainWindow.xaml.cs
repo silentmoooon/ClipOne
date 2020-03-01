@@ -191,10 +191,10 @@ namespace ClipOne.view
                 
                 Hide();
             }
-            //else if (args[0].StartsWith("test"))
-            //{
-            //    Console.WriteLine(args[1]);
-            //}
+            else if (args[0].StartsWith("test"))
+            {
+                Console.WriteLine(args[1]);
+            }
 
         }
 
@@ -655,6 +655,7 @@ namespace ClipOne.view
                 HotKeyManager.GlobalDeleteAtom(hotkeyAtomStr);
 
             }
+           
 
         }
 

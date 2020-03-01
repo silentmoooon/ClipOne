@@ -95,11 +95,12 @@ img,
 
 /*鼠标悬浮*/
 
-.tr_hover,
-tr:hover {}
-
-.tr_hover>td,
 tr:hover>td {
+    background-color: #0078d7;
+    color: #FFFFFF;
+}
+
+.tr_selected>td {
     background-color: #0078d7;
     color: #FFFFFF;
 }

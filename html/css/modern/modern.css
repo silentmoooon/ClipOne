@@ -96,17 +96,18 @@ img,
 
 /*鼠标悬浮*/
 
-.tr_hover,
-tr:hover {
-    /*-webkit-box-shadow: 0 0 0 2px #0078d7 ;
-     border-radius: 2px;*/
-}
+/*鼠标悬浮*/
 
-.tr_hover>td,
 tr:hover>td {
     background-color: #0078d7;
     color: #FFFFFF;
 }
+
+.tr_selected>td {
+    background-color: #0078d7;
+    color: #FFFFFF;
+}
+
 
 .dropdown-menu {
     position: absolute;
