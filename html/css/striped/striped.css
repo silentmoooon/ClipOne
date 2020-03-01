@@ -142,13 +142,14 @@ img,
 
 /*鼠标悬浮*/
 
-.tr_hover,
-tr:hover {}
-
-.tr_hover>td,
 tr:hover>td {
     background-color: #ACBAD4 !important;
 }
+
+.tr_selected>td {
+    background-color: #ACBAD4 !important;
+}
+
 
 .dropdown-menu {
     position: absolute;

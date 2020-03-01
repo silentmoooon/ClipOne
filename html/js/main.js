@@ -1,26 +1,42 @@
-var previewTimeout = "";
-var deleteId = -1;
-var deleteNode = "";
+//所有记录
 var clipObj = [];
-var selectIndex = 0;
+
+//是否处于搜索模式
 var searchMode = false;
+
+//单记录粘贴index
+var selectIndex = 0;
+
+//shift是否按下,用来处理范围粘贴
 var isShiftPressed = false;
-var lastSelectedIndex = -1;
+var rangeStartIndex = -1;
+
+//alt是否按下,用来处理多记录粘贴
+var isCtrlPressed = false;
+//多记录粘贴列表
+var multiIndexList = []
+//多记录粘贴时是否将粘贴记录发送到顶部,默认为true
+var multiSendToTop = true;
+
+//存储到localStorage间隔
 var storeInterval;
+//当含图片记录被删除清除图片间隔
 var clearImageInterval;
+//最大记录数
 var maxRecords = 0;
+//搜索值
 var searchValue = "";
 
 //屏蔽鼠标选择操作
-document.onselectstart = function() {
+document.onselectstart = function () {
     event.returnValue = false;
 };
 //屏蔽右键菜单
-document.oncontextmenu = function(e) {
+document.oncontextmenu = function (e) {
     e.preventDefault();
 };
 
-$(document).ready(function() {
+$(document).ready(function () {
     $(".content").niceScroll(".table_main", {
         cursorborder: "",
         cursoropacitymin: 0,
@@ -30,7 +46,7 @@ $(document).ready(function() {
     });
 
     //查找
-    $("#searchInput").on("input", function(event) {
+    $("#searchInput").on("input", function (event) {
         var value = $("#searchInput")
             .val()
             .toLowerCase();
@@ -45,12 +61,12 @@ $(document).ready(function() {
     if (str != null) {
         clipObj = JSON.parse(str);
     }
-	displayData();
-    
+    displayData();
+
     storeInterval = setInterval(saveData, 120000);
 
-  clearImageInterval = setInterval(clearImage,  10 * 60 * 1000);
-    
+    clearImageInterval = setInterval(clearImage, 10 * 60 * 1000);
+
 });
 
 
@@ -59,14 +75,14 @@ function clearImage() {
     for (var i = 0; i < clipObj.length; i++) {
         if (clipObj[i].Type == "image") {
             images.push(clipObj[i].DisplayValue);
-        }else if (clipObj[i].Type == "QQ_Unicode_RichEdit_Format"&&clipObj[i].Images&&clipObj[i].Images.length>0) {
-		 
-			var strings=clipObj[i].Images.split(',');
-			 
-			for(let s of strings){
-			 
-				images.push(s);
-			}
+        } else if (clipObj[i].Type == "QQ_Unicode_RichEdit_Format" && clipObj[i].Images && clipObj[i].Images.length > 0) {
+
+            var strings = clipObj[i].Images.split(',');
+
+            for (let s of strings) {
+
+                images.push(s);
+            }
         }
     }
     window.external.notify(
@@ -76,14 +92,15 @@ function clearImage() {
 
 function keyDown(event) {
     if (event.keyCode == 27) {
-	 if (searchMode ) {
+        //esc
+        if (searchMode) {
             hideSearch();
-        } 
+        }
         scrollTop();
         window.external.notify("esc|1");
     } else if (event.keyCode == 13) {
         //回车直接粘贴当前选中项
-        pasteValue(selectIndex);
+        pasteValue(selectIndex, true);
     } else if (event.ctrlKey && event.keyCode == 70) {
         //ctrl+f
         if (!searchMode && clipObj.length > 0) {
@@ -94,44 +111,75 @@ function keyDown(event) {
         return;
     } else if (!searchMode) {
         if (event.shiftKey) {
-            //多条操作
-            isShiftPressed = true;
-            var key = -1;
-            if (event.keyCode >= 49 && event.keyCode <= 57) {
-                //数字键
-                key = event.keyCode - 49;
-            } else if (event.keyCode >= 65 && event.keyCode <= 90) {
-                //字母键
-                key = event.keyCode - 56;
-            } else {
-                return;
+            //范围操作
+            if (!isShiftPressed) {
+                isShiftPressed = true;
+                $(".tr_selected").removeClass("tr_selected");
             }
+            // var key = -1;
+            // if (event.keyCode >= 49 && event.keyCode <= 57) {
+            //     //数字键
+            //     key = event.keyCode - 49;
+            // } else if (event.keyCode >= 65 && event.keyCode <= 90) {
+            //     //字母键
+            //     key = event.keyCode - 56;
+            // } else {
+            //     return;
+            // }
 
-            if (lastSelectedIndex == -1) {
-                lastSelectedIndex = key;
-            } else {
-                pasteValueByRange(lastSelectedIndex, key);
+            // if (rangeStartIndex == -1) {
+            //     rangeStartIndex = key;
+            //     $(".tr_selected").removeClass("tr_selected");
+            //     $("#tr" + key).addClass("tr_selected");
+            // } else {
+            //     pasteValueByRange(rangeStartIndex, key, true);
+            // }
+        } else if (event.ctrlKey) {
+            //多条操作
+            if (!isCtrlPressed) {
+                isCtrlPressed = true;
+                $(".tr_selected").removeClass("tr_selected");
             }
+            // var key = -1;
+            // if (event.keyCode >= 49 && event.keyCode <= 57) {
+            //     //数字键
+            //     key = event.keyCode - 49;
+            // } else if (event.keyCode >= 65 && event.keyCode <= 90) {
+            //     //字母键
+            //     key = event.keyCode - 56;
+            // } else {
+            //     return;
+            // }
+            // multiSendToTop = true;
+            // var keyIndex = multiIndexList.indexOf(key);
+            // if (keyIndex == -1) {
+            //     multiIndexList.push(key);
+            //     $("#tr" + key).addClass("tr_selected");
+            // } else {
+            //     multiIndexList.splice(keyIndex, 1)
+            //     $("#tr" + key).removeClass("tr_selected");
+            // }
+
         } else if (event.keyCode >= 49 && event.keyCode <= 57) {
             //数字键
-            pasteValue(event.keyCode - 49);
+            pasteValue(event.keyCode - 49, true);
         } else if (event.keyCode >= 65 && event.keyCode <= 90) {
             //字母键
 
-            pasteValue(event.keyCode - 56);
+            pasteValue(event.keyCode - 56, true);
         } else if (event.keyCode == 32) {
             //空格直接粘贴第0项
             event.preventDefault();
-            pasteValue(0);
+            pasteValue(0, true);
         } else if (event.keyCode == 8 || event.keyCode == 46) {
             //退格或者del键删除
-           
-            var clip=clipObj.splice(selectIndex, 1)[0];
-			 if (clip.Type == "image") {
+
+            var clip = clipObj.splice(selectIndex, 1)[0];
+            if (clip.Type == "image") {
                 deleteImage(clip.ClipValue);
-            }else if(clip.Type=="QQ_Unicode_RichEdit_Format"){
-				 deleteImage(clip.Images);
-			}
+            } else if (clip.Type == "QQ_Unicode_RichEdit_Format") {
+                deleteImage(clip.Images);
+            }
 
             displayData();
         }
@@ -139,10 +187,20 @@ function keyDown(event) {
 }
 
 function keyUp(event) {
-    if (event.key == "Shift") {
-        lastSelectedIndex = -1;
+    // window.external.notify(
+    //     "test|" +event.key);
+    if (event.key=="Shift") {
+        rangeStartIndex = -1;
         isShiftPressed = false;
-        $(".tr_hover").removeClass("tr_hover");
+        $(".tr_selected").removeClass("tr_selected");
+    }
+    else if (event.key=="Control") {
+        if (multiIndexList.length > 0) {
+            pasteMultiValue();
+        }
+        multiIndexList = []
+        isCtrlPressed = false;
+        $(".tr_selected").removeClass("tr_selected");
     }
 }
 
@@ -169,18 +227,9 @@ function trSelect(event) {
     var index = event.getAttribute("index") / 1;
     selectIndex = index;
 
-    if (!isShiftPressed) {
-        $(".tr_hover").removeClass("tr_hover");
-        $("#tr" + index).addClass("tr_hover");
-    }
-}
-
-//反选
-function trUnselect(event) {
-    if (previewTimeout) {
-        clearTimeout(previewTimeout);
-        previewTimeout = undefined;
-        hidePreview();
+    if (!isShiftPressed && !isCtrlPressed) {
+        $(".tr_selected").removeClass("tr_selected");
+     
     }
 }
 
@@ -279,41 +328,59 @@ function displayData() {
 //粘贴选择项
 function mouseup(e) {
     var event = window.event;
-    if (event.button == 0) {
+    if (event.button == 0 || event.button == 2) {
+
         if (isShiftPressed) {
-            //多条
-            if (lastSelectedIndex == -1) {
-                $("#tr1").removeClass("tr_hover");
-                $("#" + e.id).addClass("tr_hover");
-                lastSelectedIndex = e.getAttribute("index") / 1;
-            } else {
-                pasteValueByRange(lastSelectedIndex, e.getAttribute("index") / 1);
+            var sendToTop = true;
+            if (event.button == 2) {
+                sendToTop = false;
             }
-        } else {
+            //范围
+            if (rangeStartIndex == -1) {
+                //$("#tr1").removeClass("tr_hover");
+                //$(".tr_selected").removeClass("tr_selected");
+                $("#" + e.id).addClass("tr_selected");
+                rangeStartIndex = e.getAttribute("index") / 1;
+            } else {
+                pasteValueByRange(rangeStartIndex, e.getAttribute("index") / 1, sendToTop);
+            }
+        } else if (isCtrlPressed) {
+            multiSendToTop = event.button == 0
+
+            var key = e.getAttribute("index") / 1;
+            var keyIndex = multiIndexList.indexOf(key);
+            if (keyIndex == -1) {
+                multiIndexList.push(key);
+                $("#" + e.id).addClass("tr_selected");
+            } else {
+                multiIndexList.splice(keyIndex, 1)
+                $("#" + e.id).removeClass("tr_selected");
+                // $("#" + e.id).removeClass("tr_selected");
+            }
+        }
+        else {
             //单条
 
-            $("#tr1").removeClass("tr_hover");
-            $("#" + e.id).addClass("tr_hover");
-
-            pasteValue(e.getAttribute("index") / 1);
-        }
-    } else if (event.button == 2) {
-        //弹出右键菜单
-        if (isShiftPressed) {
-            pasteValueByRange(0, e.getAttribute("index") / 1);
+        
+            var sendToTop = true;
+            if (event.button == 2) {
+                sendToTop = false;
+            }
+            pasteValue(e.getAttribute("index") / 1, sendToTop);
         }
     }
+ 
 }
 
 //设置保存最大记录数
 function setMaxRecords(records) {
-	if(records<=0) return;
+    if (records <= 0) return;
     maxRecords = records;
-	if(clipObj.length>maxRecords){
-		clipObj=clipObj.slice(0,maxRecords);
-		displayData();
-	}
-	
+    if (clipObj.length > maxRecords) {
+        clipObj = clipObj.slice(0, maxRecords);
+        displayData();
+    }
+
 }
 //增加条目
 function addData(data) {
@@ -324,24 +391,24 @@ function addData(data) {
         return;
     }
 
- 
+
     for (var i = 0; i < clipObj.length; i++) {
         if (clipObj[i].ClipValue == obj.ClipValue) {
             clipObj.splice(i, 1);
             break;
         }
     }
-    
+
     clipObj.splice(0, 0, obj);
 
-    if (maxRecords>0&&clipObj.length > maxRecords) {
-		var clip = clipObj.splice(clipObj.length-1, 1)[0];
-        setTimeout(function() {
+    if (maxRecords > 0 && clipObj.length > maxRecords) {
+        var clip = clipObj.splice(clipObj.length - 1, 1)[0];
+        setTimeout(function () {
             if (clip.Type == "image") {
                 deleteImage(clip.ClipValue);
-            }else if(clip.Type=="QQ_Unicode_RichEdit_Format"){
-				 deleteImage(clip.Images);
-			}
+            } else if (clip.Type == "QQ_Unicode_RichEdit_Format") {
+                deleteImage(clip.Images);
+            }
         }, 0);
     }
     displayData();
@@ -349,12 +416,12 @@ function addData(data) {
 
 //显示记录
 function showRecord() {
-    lastSelectedIndex = -1;
+    rangeStartIndex = -1;
     isShiftPressed = false;
-   
-	 if (searchMode ) {
-            hideSearch();
-        } 
+
+    if (searchMode) {
+        hideSearch();
+    }
     scrollTop();
 
     $("#searchDiv").css("display", "none");
@@ -369,8 +436,8 @@ function showRecord() {
         } else {
             selectIndex = 1;
         }
-        $(".tr_hover").removeClass("tr_hover");
-        $("#tr" + selectIndex).addClass("tr_hover");
+        $(".tr_selected").removeClass("tr_selected");
+        $("#tr" + selectIndex).addClass("tr_selected");
 
     }
     $("#searchText").show();
@@ -378,8 +445,8 @@ function showRecord() {
     $("#searchText").hide();
 }
 
-function hide(){
-	 searchValue = "";
+function hide() {
+    searchValue = "";
     displayData();
 }
 
@@ -387,43 +454,89 @@ function hide(){
 // 回调本地代码
 
 //粘贴单条
-function pasteValue(index) {
-   
-    obj = clipObj.splice(index, 1)[0];
+function pasteValue(index, sendToTop) {
+    var obj = clipObj[index];
+    if (sendToTop) {
+        clipObj.splice(index, 1)[0];
+        clipObj.splice(0, 0, obj);
+    }
     window.external.notify(
         "PasteValue|" + encodeURIComponent(JSON.stringify(obj))
     );
-    clipObj.splice(0, 0, obj);
-	 $("#searchInput").val("");
-     searchValue = "";
+
+    $("#searchInput").val("");
+    searchValue = "";
     displayData();
 }
 //粘贴多条
-function pasteValueByRange(startIndex, endIndex) {
+function pasteMultiValue() {
+    var clipList = [];
+    var lastIndex=-1;
+    var diffLenth=0;
+    multiIndexList.forEach(index => {
+    
+        var result = clipObj[index];
+        if (multiSendToTop) {
+         
+            if(lastIndex>=0&&lastIndex>index){
+                diffLenth++;
+                index=index+diffLenth;
+                result=clipObj[index];
+            }
+            clipObj.splice(index, 1)[0];
+            clipObj.splice(0, 0, result);
+        }
+        clipList.push(result);
+        lastIndex=index;
+    });
+    window.external.notify(
+        "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
+    );
+    $("#searchInput").val("");
+    searchValue = "";
+    if (multiSendToTop) {
+        displayData();
+    }
+}
+//粘贴范围
+function pasteValueByRange(startIndex, endIndex, sendToTop) {
     var clipList = [];
     if (endIndex > startIndex) {
         for (var i = startIndex; i <= endIndex; i++) {
-            var result = clipObj.splice(i, 1)[0];
-            clipObj.splice(0, 0, result);
+            var result = clipObj[i];
+            if (sendToTop) {
+                clipObj.splice(i, 1)[0];
+                clipObj.splice(0, 0, result);
+            }
             clipList.push(result);
         }
     } else if (endIndex < startIndex) {
         for (var i = startIndex; i >= endIndex; i--) {
-            var result = clipObj.splice(i, 1)[0];
-            clipObj.splice(0, 0, result);
+            var result = clipObj[i];
+            if (sendToTop) {
+                clipObj.splice(i, 1)[0];
+                //clipObj.splice(0, 0, result);
+            }
             clipList.push(result);
         }
+        if(sendToTop){
+            clipList.forEach(value=>{
+                clipObj.splice(0, 0, value);
+            });
+        }
     } else {
-        pasteValue(startIndex);
+        pasteValue(startIndex, sendToTop);
         return;
     }
-   
+
     window.external.notify(
         "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
     );
-   $("#searchInput").val("");
-     searchValue = "";
-    displayData();
+    $("#searchInput").val("");
+    searchValue = "";
+    if (multiSendToTop) {
+        displayData();
+    }
 }
 
 //删除
@@ -431,7 +544,7 @@ function deleteImage(path) {
     window.external.notify("DeleteImage|" + path);
 }
 
- 
+
 //调整高度
 function changeWindowHeight(height) {
     window.external.notify("ChangeWindowHeight|" + height);
@@ -443,7 +556,7 @@ function saveData() {
     window.localStorage.setItem("data", JSON.stringify(clipObj));
 }
 
- 
+
 function clear() {
     clipObj = [];
     window.localStorage.clear();
