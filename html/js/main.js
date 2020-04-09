@@ -332,6 +332,8 @@ function mouseup(e) {
             }
             pasteValue(e.getAttribute("index") / 1, sendToTop);
         }
+    }else if (event.button==1){
+        setToClipBoard(e.getAttribute("index") / 1);
     }
 
 }
@@ -415,6 +417,19 @@ function pasteValue(index, sendToTop) {
     }
     window.external.notify(
         "PasteValue|" + encodeURIComponent(JSON.stringify(obj))
+    );
+
+    displayData();
+}
+
+//设置到剪切板但不粘贴
+function setToClipBoard(index,) {
+    var obj = clipObj[index];
+    clipObj.splice(index, 1)[0];
+    clipObj.splice(0, 0, obj);
+
+    window.external.notify(
+        "SetToClipBoard|" + encodeURIComponent(JSON.stringify(obj))
     );
 
     displayData();
