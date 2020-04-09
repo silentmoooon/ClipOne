@@ -172,6 +172,9 @@ namespace ClipOne.view
                 PasteValueList(args[1]);
 
             }
+            else if (args[0]== "SetToClipBoard"){
+                SetToClipboard(args[1]);
+            }
             else if (args[0] == "DeleteImage")
             {
 
@@ -659,6 +662,21 @@ namespace ClipOne.view
 
         }
 
+        /// <summary>
+        /// 将粘贴条目设置到剪切板
+        /// </summary>
+        /// <param name="id">索引</param>
+        public void SetToClipboard(string clipStr)
+        {
+            Hide();
+
+            ClipModel clip = JsonConvert.DeserializeObject<ClipModel>(HttpUtility.UrlDecode(clipStr));
+
+           
+            clipService.SetValueToClipboard(clip);
+
+
+        }
         /// <summary>
         /// 根据索引粘贴条目到活动窗口
         /// </summary>
