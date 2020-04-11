@@ -2,14 +2,8 @@
 using ClipOne.util;
 using ClipOne.view;
 using HtmlAgilityPack;
-using Microsoft.Win32;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
 using System.IO;
-using System.Linq;
 
 using System.Text;
 using System.Windows;
@@ -56,32 +50,14 @@ namespace ClipOne.service
         public const string TEXT_TYPE = "text";
 
 
-        /// <summary>
-        /// 保存图片到缓存目录
-        /// </summary>
-        /// <param name="bs"></param>
-        /// <returns></returns>
-        public string SaveImage(BitmapSource bs)
-        {
-            string path = MainWindow.cacheDir + Path.DirectorySeparatorChar + Guid.NewGuid().ToString() + ".jpg";
-            JpegBitmapEncoder jpegEncoder = new JpegBitmapEncoder();
-            jpegEncoder.Frames.Add(BitmapFrame.Create(bs));
-
-            using (FileStream fs = File.OpenWrite(path))
-            {
-                jpegEncoder.Save(fs);
-
-            }
-
-            return path;
-        }
+        
         /// <summary>
         /// 设置条目到剪切板
         /// </summary>
         /// <param name="result"></param>
         public void SetValueToClipboard(ClipModel result)
         {
-          
+
             if (result.Type == WECHAT_TYPE)
             {
                 MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
@@ -95,45 +71,46 @@ namespace ClipOne.service
             }
             else if (result.Type == IMAGE_TYPE)
             {
-                bool isExplorer = false;
-                Process[] ps = Process.GetProcesses();
 
-                WinAPIHelper.GetWindowThreadProcessId(WinAPIHelper.GetForegroundWindow(), out int pid);
+                byte[] fileBytes = Convert.FromBase64String(result.ClipValue);
+                MemoryStream ms = new MemoryStream(fileBytes);
+                BitmapImage bitImg = new BitmapImage();
+                bitImg.BeginInit();
+                bitImg.StreamSource = ms;
+                bitImg.EndInit();
 
-                foreach (Process p in ps)
+                if (File.Exists(result.DisplayValue))
                 {
-
-                    if (p.Id == pid && p.ProcessName.ToLower() == "explorer")
-                    {
-                        isExplorer = true;
-                        break;
-                    }
-                }
-                //如果是桌面或者资源管理器则直接粘贴为文件
-                if (isExplorer)
-                {
-
-                    string[] tmp = Path.GetFullPath(result.ClipValue).Split(',');
-
-                    IDataObject data = new DataObject(DataFormats.FileDrop, tmp);
+                    var dataObject = new DataObject();
+                    dataObject.SetData(DataFormats.Bitmap, bitImg);
                     MemoryStream memo = new MemoryStream(4);
                     byte[] bytes = new byte[] { (byte)(5), 0, 0, 0 };
                     memo.Write(bytes, 0, bytes.Length);
-                    data.SetData("Preferred DropEffect", memo);
-
-                    Clipboard.SetDataObject(data, true);
+                    dataObject.SetData(DataFormats.FileDrop, new string[] { result.DisplayValue });
+                    Clipboard.SetDataObject(dataObject, true);
                 }
                 else
                 {
-                    BitmapImage bitImg = new BitmapImage();
-                    bitImg.BeginInit();
-                    bitImg.UriSource = new Uri(result.ClipValue, UriKind.Relative);
+                    string ext = Path.GetExtension(result.DisplayValue).ToLower();
 
-                    bitImg.EndInit();
-                    IDataObject data = new DataObject(DataFormats.Bitmap, bitImg);
-                    Clipboard.SetDataObject(data, true);
+                    string savePath = Path.GetTempPath() + Guid.NewGuid().ToString() + ext;
+                    //savePath= @"C:\users\xiecan\desktop\" + Guid.NewGuid().ToString() + ext;
+                    File.WriteAllBytes(savePath, fileBytes);
 
+
+                    var dataObject = new DataObject();
+                    dataObject.SetData(DataFormats.Bitmap, bitImg);
+                    dataObject.SetData(DataFormats.FileDrop, new string[] { savePath });
+                    MemoryStream memo = new MemoryStream(4);
+                    byte[] bytes = new byte[] { (byte)(5), 0, 0, 0 };
+                    memo.Write(bytes, 0, bytes.Length);
+
+                    dataObject.SetData("Preferred DropEffect", memo);
+                    Clipboard.SetDataObject(dataObject, true);
                 }
+
+
+
 
 
             }
@@ -180,8 +157,8 @@ namespace ClipOne.service
 
                 IDataObject data = new DataObject(DataFormats.Text, result.ClipValue);
 
-               // Clipboard.SetDataObject(data, true);
- 
+                // Clipboard.SetDataObject(data, true);
+
                 //当有其他进程占用剪切板时,WPF的Clipboard会有BUG,winform的没有,所以暂时用winform的
                 System.Windows.Forms.Clipboard.SetDataObject(data, true);
 
@@ -239,7 +216,7 @@ namespace ClipOne.service
                 }
 
             }
-            catch { }
+            catch  {  }
             return clip;
         }
 
@@ -311,8 +288,7 @@ namespace ClipOne.service
             string[] files = (string[])Clipboard.GetData(DataFormats.FileDrop);
             MemoryStream vMemoryStream = (MemoryStream)Clipboard.GetDataObject().GetData("Preferred DropEffect", true);
 
-            DragDropEffects vDragDropEffects =
-            (DragDropEffects)vMemoryStream.ReadByte();
+            DragDropEffects vDragDropEffects = (DragDropEffects)vMemoryStream.ReadByte();
 
             //如果是剪切类型,不加入
             if ((vDragDropEffects & DragDropEffects.Move) == DragDropEffects.Move)
@@ -365,14 +341,14 @@ namespace ClipOne.service
             string htmlStr = Clipboard.GetData(DataFormats.Html).ToString().Replace("&amp;", "&");
 
             string plainText = Clipboard.GetText();
- 
+
 
             //只有当html内容中有图片才当作html格式处理,否则做文本处理
             if (GetOccurTimes(htmlStr.ToLower(), "<img") > GetOccurTimes(plainText.ToLower(), "<img"))
             {
 
                 clip.ClipValue = htmlStr;
-               
+
                 string startTag = "<!--StartFragment-->";
                 string endTag = "<!--EndFragment-->";
                 //QQ上的多了个空格
@@ -408,13 +384,27 @@ namespace ClipOne.service
         /// <param name="clip"></param>
         public void HandleImage(ClipModel clip)
         {
-            BitmapSource bs = Clipboard.GetImage();
 
-            string path = SaveImage(bs);
-
+            string[] files = (string[])Clipboard.GetData(DataFormats.FileDrop);
+            string base64;
+            if (files != null && files.Length > 0 && File.Exists(files[0]))
+            {
+                base64 = Convert.ToBase64String(File.ReadAllBytes(files[0]));
+                clip.DisplayValue = files[0];
+            }
+            else
+            {
+                BitmapSource bs = Clipboard.GetImage();
+                JpegBitmapEncoder jpegEncoder = new JpegBitmapEncoder();
+                jpegEncoder.Frames.Add(BitmapFrame.Create(bs));
+                MemoryStream ms = new MemoryStream();
+                jpegEncoder.Save(ms);
+                base64 = Convert.ToBase64String(ms.GetBuffer());
+            }
             clip.Type = IMAGE_TYPE;
-            clip.ClipValue = path;
-            clip.DisplayValue = path;
+
+            clip.ClipValue = base64;
+
 
 
         }
@@ -430,7 +420,7 @@ namespace ClipOne.service
             string plainText = Clipboard.GetText();
             clip.PlainText = plainText;
             byte[] b = stream.ToArray();
-            string xmlStr = System.Text.Encoding.UTF8.GetString(b);
+            string xmlStr = Encoding.UTF8.GetString(b);
 
             clip.Type = WECHAT_TYPE;
             clip.ClipValue = xmlStr;
@@ -481,36 +471,28 @@ namespace ClipOne.service
             string xmlStr = Encoding.UTF8.GetString(b);
             xmlStr = xmlStr.Substring(0, xmlStr.IndexOf("</QQRichEditFormat>") + "</QQRichEditFormat>".Length);
 
-          
+
 
 
             XmlDocument document = new XmlDocument();
             document.LoadXml(xmlStr);
             XmlNodeList nodeList = document.SelectNodes("QQRichEditFormat/EditElement[@type='1']|QQRichEditFormat/EditElement[@type='2']|QQRichEditFormat/EditElement[@type='5']");
-           
+
             //如果只有一个图片且没有文字,则按图片处理
             if (GetOccurTimes(xmlStr, "filepath") == 1 && xmlStr.IndexOf("<![CDATA[") < 0)
             {
                 string filePath = nodeList[0].Attributes["filepath"].Value;
-                string toPath = MainWindow.cacheDir + Path.DirectorySeparatorChar + Guid.NewGuid().ToString() + Path.GetExtension(filePath);
-                try
-                {
-                    File.Copy(filePath.Replace("file:///", ""), toPath);
-                }
-                catch
-                {
 
-                }
                 clip.Type = IMAGE_TYPE;
-                clip.DisplayValue = toPath;
-                clip.ClipValue = toPath;
+                clip.DisplayValue = string.Empty;
+                clip.ClipValue = Convert.ToBase64String(File.ReadAllBytes(filePath.Replace("file:///", "")));
                 clip.PlainText = string.Empty;
                 return;
             }
 
             int ii = 0;
             string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();
-           
+
             string startTag;
             if (htmlStr.IndexOf("<!--StartFragment-->") > 0)
             {
@@ -526,10 +508,10 @@ namespace ClipOne.service
             //如果有img标签
             if (htmlStr.ToLower().IndexOf("<img") >= 0)
             {
-                List<string> images = new List<string>();
+               
                 HtmlDocument doc = new HtmlDocument();
                 doc.LoadHtml(htmlStr);
-                 
+
                 var nodes = doc.DocumentNode.SelectNodes("//img");
                 if (nodes != null)
                 {
@@ -545,17 +527,9 @@ namespace ClipOne.service
                         {
                             filePath = src;
                         }
-                        string toPath = MainWindow.cacheDir + Path.DirectorySeparatorChar + Guid.NewGuid().ToString() + Path.GetExtension(filePath);
-                        try
-                        {
-                            File.Copy(filePath.Replace("file:///", ""), toPath);
-                        }
-                        catch
-                        {
 
-                        }
-                        images.Add(toPath);
-                        src = "../" + toPath;
+                        Console.WriteLine(filePath);
+                        src = "data:image/png;base64," + Convert.ToBase64String(File.ReadAllBytes(filePath.Replace("file:///", "")));
 
                         node.SetAttributeValue("src", src);
 
@@ -563,7 +537,7 @@ namespace ClipOne.service
                     }
 
                     htmlStr = doc.DocumentNode.OuterHtml;
-                    clip.Images = string.Join(",", images);
+                     
                 }
             }
             clip.Type = QQ_RICH_TYPE;
