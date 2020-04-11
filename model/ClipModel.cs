@@ -8,12 +8,12 @@ namespace ClipOne.model
         public string Type { get; set; }
 
         /// <summary>
-        /// 值
+        /// 值,当为图片类型时,保存文件格式
         /// </summary>
         public string ClipValue { get; set; }
 
         /// <summary>
-        ///  显示的值
+        ///  显示的值,当为图片类型时,保存base64
         /// </summary>
         public string DisplayValue { get; set; }
 
@@ -23,12 +23,7 @@ namespace ClipOne.model
         /// </summary>
         public string PlainText { get; set; }
 
-        /// <summary>
-        /// 涉及到的图片资源,方便清除图片,针对QQ类型
-        /// </summary>
-        public string Images;
-
-      
+       
         
     }
 }

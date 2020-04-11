@@ -20,8 +20,7 @@ var multiSendToTop = true;
 
 //存储到localStorage间隔
 var storeInterval;
-//当含图片记录被删除清除图片间隔
-var clearImageInterval;
+
 //最大记录数
 var maxRecords = 0;
 //搜索值
@@ -66,30 +65,8 @@ $(document).ready(function () {
 
     storeInterval = setInterval(saveData, 120000);
 
-    clearImageInterval = setInterval(clearImage, 10 * 60 * 1000);
-
 });
 
-
-function clearImage() {
-    var images = [];
-    for (var i = 0; i < clipObj.length; i++) {
-        if (clipObj[i].Type == "image") {
-            images.push(clipObj[i].DisplayValue);
-        } else if (clipObj[i].Type == "QQ_Unicode_RichEdit_Format" && clipObj[i].Images && clipObj[i].Images.length > 0) {
-
-            var strings = clipObj[i].Images.split(',');
-
-            for (let s of strings) {
-
-                images.push(s);
-            }
-        }
-    }
-    window.external.notify(
-        "clearImage|" + encodeURIComponent(JSON.stringify(images))
-    );
-}
 
 function keyDown(event) {
     if (event.keyCode == 27) {
@@ -120,14 +97,14 @@ function keyDown(event) {
                 isShiftPressed = true;
                 $(".tr_selected").removeClass("tr_selected");
             }
-         
+
         } else if (event.ctrlKey) {
             //多条操作
             if (!isCtrlPressed) {
                 isCtrlPressed = true;
                 $(".tr_selected").removeClass("tr_selected");
             }
-         
+
         } else if (event.keyCode >= 49 && event.keyCode <= 57) {
             //数字键
             pasteValue(event.keyCode - 49, true);
@@ -142,18 +119,13 @@ function keyDown(event) {
         } else if (event.keyCode == 8 || event.keyCode == 46) {
             //退格或者del键删除
 
-            var clip = clipObj.splice(selectIndex, 1)[0];
-            if (clip.Type == "image") {
-                deleteImage(clip.ClipValue);
-            } else if (clip.Type == "QQ_Unicode_RichEdit_Format") {
-                deleteImage(clip.Images);
-            }
+            clipObj.splice(selectIndex, 1)[0];
 
             displayData();
-        } 
+        }
     }
 }
- 
+
 
 function keyUp(event) {
     // window.external.notify(
@@ -254,16 +226,18 @@ function displayData() {
                 num = "" + (matchCount + 1);
             }
             if (clipObj[i].Type == "image") {
+
                 trs =
                     " <tr style='cursor: default' index='" +
                     i +
                     "' id='tr" +
                     matchCount +
-                    "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' )'> <td  class='td_content' > <img class='image' src='../" +
-                    clipObj[i].DisplayValue +
+                    "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' )'> <td  class='td_content' > <img class='image' src='data:image/png;base64," +
+                    clipObj[i].ClipValue +
                     "' /> </td><td class='td_index'  >" +
                     num +
                     "</td> </tr>";
+
             } else {
                 trs =
                     " <tr style='cursor: default' index='" +
@@ -282,15 +256,13 @@ function displayData() {
 
     $(".myTable").html(tbody);
     if (matchCount == -1) {
-        tbody =
-            " <tr style='cursor: default'> <td  class='td_content' style='cursor: default' > 无记录 </td> </tr>";
+        tbody = " <tr style='cursor: default'> <td  class='td_content' style='cursor: default' > 无记录 </td> </tr>";
         $(".myTable").html(tbody);
     }
 
-    $(".content")
-        .getNiceScroll()
-        .resize();
-    changeWindowHeight($("body").height());
+    $(".content").getNiceScroll().resize();
+    setTimeout(function () { changeWindowHeight($("body").height()); }, 50);
+
 }
 
 //粘贴选择项
@@ -332,7 +304,7 @@ function mouseup(e) {
             }
             pasteValue(e.getAttribute("index") / 1, sendToTop);
         }
-    }else if (event.button==1){
+    } else if (event.button == 1) {
         setToClipBoard(e.getAttribute("index") / 1);
     }
 
@@ -368,14 +340,7 @@ function addData(data) {
     clipObj.splice(0, 0, obj);
 
     if (maxRecords > 0 && clipObj.length > maxRecords) {
-        var clip = clipObj.splice(clipObj.length - 1, 1)[0];
-        setTimeout(function () {
-            if (clip.Type == "image") {
-                deleteImage(clip.ClipValue);
-            } else if (clip.Type == "QQ_Unicode_RichEdit_Format") {
-                deleteImage(clip.Images);
-            }
-        }, 0);
+        clipObj.splice(clipObj.length - 1, 1)[0];
     }
     displayData();
 }
@@ -423,7 +388,7 @@ function pasteValue(index, sendToTop) {
 }
 
 //设置到剪切板但不粘贴
-function setToClipBoard(index,) {
+function setToClipBoard(index, ) {
     var obj = clipObj[index];
     clipObj.splice(index, 1)[0];
     clipObj.splice(0, 0, obj);
@@ -500,11 +465,6 @@ function pasteValueByRange(startIndex, endIndex, sendToTop) {
         displayData();
     }
 
-}
-
-//删除
-function deleteImage(path) {
-    window.external.notify("DeleteImage|" + path);
 }
 
 

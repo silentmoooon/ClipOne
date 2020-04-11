@@ -32,12 +32,7 @@ namespace ClipOne.view
         
         private ClipService clipService;
  
-      
-        /// <summary>
-        /// 缓存目录
-        /// </summary>
-        public static string cacheDir = "cache";
-
+       
         /// <summary>
         /// css目录
         /// </summary>
@@ -81,10 +76,7 @@ namespace ClipOne.view
         {
             taskbar = (TaskbarIcon)FindResource("Taskbar");
             
-            if (!Directory.Exists(cacheDir))
-            {
-                Directory.CreateDirectory(cacheDir);
-            }
+          
             configService = new ConfigService();
             config = configService.GetConfig();
 
@@ -175,20 +167,13 @@ namespace ClipOne.view
             else if (args[0]== "SetToClipBoard"){
                 SetToClipboard(args[1]);
             }
-            else if (args[0] == "DeleteImage")
-            {
-
-                new Thread(new ParameterizedThreadStart(DeleteFile)).Start(args[1]);
-            }
+            
             else if (args[0] == "ChangeWindowHeight")
             {
                 ChangeWindowHeight(double.Parse(args[1]));
             }
 
-            else if (args[0] == "clearImage")
-            {
-                new Thread(new ParameterizedThreadStart(ClearImage)).Start(args[1]);
-            }
+             
             else if (args[0] == "esc")
             {
                 
@@ -201,56 +186,7 @@ namespace ClipOne.view
 
         }
 
-        private void ClearImage(object images)
-        {
-
-            string[] image = JsonConvert.DeserializeObject<string[]>(HttpUtility.UrlDecode(images.ToString()));
-           
-            foreach (var img in Directory.GetFiles(cacheDir))
-            {
-               
-                if (!image.Contains(img))
-                {
-                  
-                    DeleteFile(img);
-                }
-
-            }
-          
-
-        }
-        private void DeleteFile(object path)
-        {
-           
-            for (int i = 0; i < 3; i++)
-            {
-                Thread.Sleep(i * 500);
-                try
-                {
-                    string[] paths = path.ToString().Split(',');
-                    foreach (string p in paths)
-                    {
-                        File.Delete(p);
-                    }
-                    return;
-                }
-                catch { }
-
-            }
-        }
-
-        public void clear()
-        {
-            Directory.Delete(cacheDir, true);
-                Directory.CreateDirectory(cacheDir);
-                webView1.InvokeScript("clear");
-        }
-
-        public void refresh()
-        {
-            webView1.InvokeScript("saveData");
-              webView1.Refresh();
-        }
+     
         /// <summary>
         /// 初始化托盘图标及菜单
         /// </summary>
@@ -285,8 +221,7 @@ namespace ClipOne.view
             //清空记录
             clear.Click += (x, y) =>
             {
-                Directory.Delete(cacheDir, true);
-                Directory.CreateDirectory(cacheDir);
+               
                 webView1.InvokeScript("clear");
             };
 
