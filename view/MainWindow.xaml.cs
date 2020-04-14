@@ -642,22 +642,9 @@ namespace ClipOne.view
                 clipService.SetValueToClipboard(result);
                  
             }
-            catch (Exception e){
-                //Console.WriteLine(e.StackTrace);
-                //IntPtr hwnd = WinAPIHelper.GetOpenClipboardWindow();
-                //StringBuilder sb = new StringBuilder(501);
-                //WinAPIHelper.GetWindowText(hwnd, sb, 500);
-                //Console.WriteLine("==");
-                //Console.WriteLine(sb.ToString());
-                //Console.WriteLine("==");
-            }
+            catch { }
             Thread.Sleep(50);
-           
-            //WinAPIHelper.keybd_event((byte)KeyInterop.VirtualKeyFromKey(Key.LeftCtrl),0,0,0);//按下
-            //WinAPIHelper.keybd_event((byte)KeyInterop.VirtualKeyFromKey(Key.V),0,0,0);//按下
-            //WinAPIHelper.keybd_event((byte)KeyInterop.VirtualKeyFromKey(Key.V),0,2,0);//弹起
-            //WinAPIHelper.keybd_event((byte)KeyInterop.VirtualKeyFromKey(Key.LeftCtrl), 0,2,0);//弹起
-
+         
             KeyboardKit.Keyboard.Press(Key.LeftCtrl);
             KeyboardKit.Keyboard.Press(Key.V);
 
