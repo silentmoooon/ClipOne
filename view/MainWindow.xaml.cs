@@ -74,6 +74,7 @@ namespace ClipOne.view
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            
             taskbar = (TaskbarIcon)FindResource("Taskbar");
             
           
@@ -152,7 +153,7 @@ namespace ClipOne.view
 
             if (args[0] == "PasteValue")
             {
-               
+           
                 PasteValue(args[1]);
                 
 

@@ -91,7 +91,14 @@ namespace ClipOne.service
                 }
                 else
                 {
-                    string ext = Path.GetExtension(result.DisplayValue).ToLower();
+                    string ext;
+                    if (result.DisplayValue == null || result.DisplayValue == string.Empty)
+                    {
+                        ext = ".jpg";
+                    }
+                    else { 
+                      ext = Path.GetExtension(result.DisplayValue).ToLower();
+                    }
 
                     string savePath = Path.GetTempPath() + Guid.NewGuid().ToString() + ext;
                     //savePath= @"C:\users\xiecan\desktop\" + Guid.NewGuid().ToString() + ext;
@@ -402,7 +409,7 @@ namespace ClipOne.service
                 base64 = Convert.ToBase64String(ms.GetBuffer());
             }
             clip.Type = IMAGE_TYPE;
-
+            clip.DisplayValue = "image.jpg";
             clip.ClipValue = base64;
 
 
