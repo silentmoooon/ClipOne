@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
     xmlns:Controls="clr-namespace:Microsoft.Toolkit.Wpf.UI.Controls;assembly=Microsoft.Toolkit.Wpf.UI.Controls.WebView" x:Class="ClipOne.view.MainWindow"
         mc:Ignorable="d"
         Title="MainWindow"    Height="100" Width="461"  Left="-10000"  Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None" Background="Transparent"   ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False"   MaxHeight="620" SourceInitialized="Window_SourceInitialized" >
@@ -13,8 +13,9 @@
             <DropShadowEffect Color="gray" BlurRadius="15" Direction="-90" RenderingBias="Quality" ShadowDepth="2"/>
         </Border.Effect>
  
-        <Controls:WebView Name="webView1"  />
- 
+        <!--<Controls:WebView Name="webView1"  />-->
+        <wv2:WebView2 Name="webView2" Source="https://www.baidu.com" />
+
     </Border>
     
 
