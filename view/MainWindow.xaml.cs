@@ -70,6 +70,55 @@ namespace ClipOne.view
             InitializeComponent();
             
             Environment.CurrentDirectory =AppDomain.CurrentDomain.BaseDirectory;
+           // InitializeAsync();
+        }
+        async void InitializeAsync()
+        {
+          
+          //  await webView2.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.chrome.webview.addEventListener(\'message\', event => alert(event.data));");
+
+        }
+
+        private void CoreWebView2_WebMessageReceived(object sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)
+        {
+            string value = e.TryGetWebMessageAsString();
+            string[] args = value.Split(new char[] { '|' }, 2);
+
+            if (args[0] == "PasteValue")
+            {
+
+                PasteValue(args[1]);
+
+
+            }
+            else if (args[0] == "PasteValueList")
+            {
+
+
+                PasteValueList(args[1]);
+
+            }
+            else if (args[0] == "SetToClipBoard")
+            {
+                SetToClipboard(args[1]);
+            }
+
+            else if (args[0] == "ChangeWindowHeight")
+            {
+                ChangeWindowHeight(double.Parse(args[1]));
+            }
+
+
+            else if (args[0] == "esc")
+            {
+
+                Hide();
+            }
+            else if (args[0].StartsWith("test"))
+            {
+                Console.WriteLine(args[1]);
+            }
+
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -120,31 +169,23 @@ namespace ClipOne.view
             WinAPIHelper.SetWindowLong(wpfHwnd, -20, exStyle);
 
         }
- 
+
         /// <summary>
         /// 初始化浏览器
         /// </summary>
-        private void InitWebView()
+        async void InitWebView()
         {
-            webView1.IsJavaScriptEnabled = true;
-            webView1.IsScriptNotifyAllowed = true;
+            await webView2.EnsureCoreWebView2Async();
 
-            webView1.IsIndexedDBEnabled = true;
-            webView1.ScriptNotify += WebView1_ScriptNotify;
-            
-            webView1.NavigateToLocal(defaultHtml);
+            webView2.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
+            // webView2.Source = Url."https://www.baidu.com";
 
-            webView1.NavigationCompleted += (x, y) => {
-                try {
-                    webView1.InvokeScript("setMaxRecords", config.RecordCount.ToString());
-                }
-                catch { }
-            };
+            //webView2.CoreWebView2.Navigate("https://www.baidu.com");
 
 
         }
 
-        
+
 
         private void WebView1_ScriptNotify(object sender, WebViewControlScriptNotifyEventArgs e)
         {
@@ -222,16 +263,18 @@ namespace ClipOne.view
             //清空记录
             clear.Click += (x, y) =>
             {
-               
-                webView1.InvokeScript("clear");
+                webView2.CoreWebView2.ExecuteScriptAsync("clear");
+                //webView1.InvokeScript("clear");
             };
 
 
             //刷新页面,一般用于自定义html css js时
             reload.Click += (x, y) =>
             {
-                webView1.InvokeScript("saveData");
-                webView1.Refresh();
+                webView2.CoreWebView2.ExecuteScriptAsync("saveData");
+                webView2.Reload();
+                //webView1.InvokeScript("saveData");
+                //webView1.Refresh();
             };
             //退出
             exit.Click += (x, y) => { Application.Current.Shutdown(); };
@@ -358,8 +401,8 @@ namespace ClipOne.view
             item.IsChecked = true;
             config.SkinName = (string)item.Header;
             configService.SaveSettings();
-
-            webView1.InvokeScript("saveData");
+            webView2.CoreWebView2.ExecuteScriptAsync("saveData");
+           // webView1.InvokeScript("saveData");
             string css = item.Tag.ToString();
             ChangeSkin(css);
 
@@ -395,8 +438,8 @@ namespace ClipOne.view
                 fileLines.Add(" <link rel='stylesheet' type='text/css' href='" + str + "'/>");
             }
             File.WriteAllLines(defaultHtml, fileLines, Encoding.UTF8);
-
-            webView1.Refresh();
+            webView2.Reload();
+            //webView1.Refresh();
 
 
         }
@@ -460,7 +503,8 @@ namespace ClipOne.view
             item.IsChecked = true;
             config.RecordCount = int.Parse((string)item.Header);
             configService.SaveSettings();
-            webView1.InvokeScript("setMaxRecords", (String)item.Header);
+            webView2.CoreWebView2.ExecuteScriptAsync("setMaxRecords(" + item.Header + ")");
+           // webView1.InvokeScript("setMaxRecords", (String)item.Header);
 
 
         }
@@ -544,8 +588,9 @@ namespace ClipOne.view
            
             string json = JsonConvert.SerializeObject(clip);
             json= HttpUtility.UrlEncode(json);
-           // json = HttpUtility.UrlEncode(json);
-            await webView1.InvokeScriptAsync("addData", json);
+            // json = HttpUtility.UrlEncode(json);
+          await  webView2.CoreWebView2.ExecuteScriptAsync($"addData({json})");
+          //  await webView1.InvokeScriptAsync("addData", json);
         }
 
 
@@ -554,7 +599,8 @@ namespace ClipOne.view
         /// </summary>
         private async void ShowWindowAndList()
         {
-            await webView1.InvokeScriptAsync("showRecord");
+            await webView2.ExecuteScriptAsync("showRecord()");
+           // await webView1.InvokeScriptAsync("showRecord");
 
         }
 
@@ -580,12 +626,13 @@ namespace ClipOne.view
            
             try
             {
-                webView1?.InvokeScript("saveData");
-                
+                webView2?.CoreWebView2.ExecuteScriptAsync("saveData()");
+                // webView1?.InvokeScript("saveData");
+
             }
             catch { }
-
-            webView1?.Dispose();
+            webView2?.Dispose();
+          //  webView1?.Dispose();
            
             if (wpfHwnd != null)
             {
