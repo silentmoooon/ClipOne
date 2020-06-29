@@ -74,7 +74,7 @@ function keyDown(event) {
         if (searchMode) {
             hideSearch();
         }
-        window.external.notify("esc|1");
+        window.chrome.webview.postMessage("esc|1");
     } else if (event.keyCode == 13) {
         //回车直接粘贴当前选中项
         if (searchMode) {
@@ -128,7 +128,7 @@ function keyDown(event) {
 
 
 function keyUp(event) {
-    // window.external.notify(
+    // window.chrome.webview.postMessage(
     //     "test|" +event.key);
     if (event.key == "Shift") {
         rangeStartIndex = -1;
@@ -322,6 +322,7 @@ function setMaxRecords(records) {
 }
 //增加条目
 function addData(data) {
+    console.log("-----")
     data = decodeURIComponent(data.replace(/\+/g, "%20"));
     var obj = JSON.parse(data);
 
@@ -380,7 +381,7 @@ function pasteValue(index, sendToTop) {
         clipObj.splice(index, 1)[0];
         clipObj.splice(0, 0, obj);
     }
-    window.external.notify(
+    window.chrome.webview.postMessage(
         "PasteValue|" + encodeURIComponent(JSON.stringify(obj))
     );
 
@@ -393,7 +394,7 @@ function setToClipBoard(index, ) {
     clipObj.splice(index, 1)[0];
     clipObj.splice(0, 0, obj);
 
-    window.external.notify(
+    window.chrome.webview.postMessage(
         "SetToClipBoard|" + encodeURIComponent(JSON.stringify(obj))
     );
 
@@ -420,7 +421,7 @@ function pasteMultiValue() {
         clipList.push(result);
         lastIndex = index;
     });
-    window.external.notify(
+    window.chrome.webview.postMessage(
         "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
     );
     if (multiSendToTop) {
@@ -458,7 +459,7 @@ function pasteValueByRange(startIndex, endIndex, sendToTop) {
         return;
     }
 
-    window.external.notify(
+    window.chrome.webview.postMessage(
         "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
     );
     if (multiSendToTop) {
@@ -470,7 +471,7 @@ function pasteValueByRange(startIndex, endIndex, sendToTop) {
 
 //调整高度
 function changeWindowHeight(height) {
-    window.external.notify("ChangeWindowHeight|" + height);
+    window.chrome.webview.postMessage("ChangeWindowHeight|" + height);
 }
 
 
