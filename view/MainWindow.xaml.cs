@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading;
 
@@ -70,17 +71,18 @@ namespace ClipOne.view
             InitializeComponent();
             
             Environment.CurrentDirectory =AppDomain.CurrentDomain.BaseDirectory;
-           // InitializeAsync();
+           
         }
         async void InitializeAsync()
         {
-          
-          //  await webView2.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.chrome.webview.addEventListener(\'message\', event => alert(event.data));");
+            
+              await webView2.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.chrome.webview.addEventListener(\'message\', event => alert(event.data));");
 
         }
 
         private void CoreWebView2_WebMessageReceived(object sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)
         {
+            
             string value = e.TryGetWebMessageAsString();
             string[] args = value.Split(new char[] { '|' }, 2);
 
@@ -175,14 +177,21 @@ namespace ClipOne.view
         /// </summary>
         async void InitWebView()
         {
+             
             await webView2.EnsureCoreWebView2Async();
+            InitializeAsync();
 
+            webView2.KeyDown += (x, y) =>
+            {
+                y.Handled = true;
+            };
+            webView2.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
+            webView2.CoreWebView2.Settings.IsScriptEnabled = true;
+            webView2.CoreWebView2.Settings.IsWebMessageEnabled = true;
+            
             webView2.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
-            // webView2.Source = Url."https://www.baidu.com";
-
-            //webView2.CoreWebView2.Navigate("https://www.baidu.com");
-
-
+            webView2.CoreWebView2.Navigate("file://"+AppDomain.CurrentDomain.BaseDirectory+"\\"+defaultHtml);
+            // webView2.CoreWebView2.Navigate("https://www.qq.com");
         }
 
 
@@ -240,7 +249,10 @@ namespace ClipOne.view
             //设置菜单项
             MenuItem exit = new MenuItem();
             exit.Header = "退出";
-           
+
+            MenuItem devToos = new MenuItem();
+            devToos.Header = "开发者工具";
+
             MenuItem startup = new MenuItem();
             startup.Header = "开机自启";
             MenuItem hotkey = new MenuItem();
@@ -259,11 +271,15 @@ namespace ClipOne.view
             reload.Header = "刷新";
             MenuItem clear = new MenuItem();
             clear.Header = "清空";
+            devToos.Click += (x, y) =>
+            {
+                webView2.CoreWebView2.OpenDevToolsWindow();
+            };
 
             //清空记录
             clear.Click += (x, y) =>
             {
-                webView2.CoreWebView2.ExecuteScriptAsync("clear");
+                webView2.CoreWebView2.ExecuteScriptAsync("clear()");
                 //webView1.InvokeScript("clear");
             };
 
@@ -271,7 +287,7 @@ namespace ClipOne.view
             //刷新页面,一般用于自定义html css js时
             reload.Click += (x, y) =>
             {
-                webView2.CoreWebView2.ExecuteScriptAsync("saveData");
+                webView2.CoreWebView2.ExecuteScriptAsync("saveData()");
                 webView2.Reload();
                 //webView1.InvokeScript("saveData");
                 //webView1.Refresh();
@@ -362,6 +378,7 @@ namespace ClipOne.view
             taskbar.ContextMenu.Items.Add(hotkey);
             taskbar.ContextMenu.Items.Add(startup);
             taskbar.ContextMenu.Items.Add(new Separator());
+            taskbar.ContextMenu.Items.Add(devToos);
             taskbar.ContextMenu.Items.Add(exit);
 
         }
@@ -401,7 +418,7 @@ namespace ClipOne.view
             item.IsChecked = true;
             config.SkinName = (string)item.Header;
             configService.SaveSettings();
-            webView2.CoreWebView2.ExecuteScriptAsync("saveData");
+            webView2.CoreWebView2.ExecuteScriptAsync("saveData()");
            // webView1.InvokeScript("saveData");
             string css = item.Tag.ToString();
             ChangeSkin(css);
@@ -588,8 +605,8 @@ namespace ClipOne.view
            
             string json = JsonConvert.SerializeObject(clip);
             json= HttpUtility.UrlEncode(json);
-            // json = HttpUtility.UrlEncode(json);
-          await  webView2.CoreWebView2.ExecuteScriptAsync($"addData({json})");
+          
+            webView2.CoreWebView2.ExecuteScriptAsync($"addData('{json}')");
           //  await webView1.InvokeScriptAsync("addData", json);
         }
 
@@ -599,7 +616,8 @@ namespace ClipOne.view
         /// </summary>
         private async void ShowWindowAndList()
         {
-            await webView2.ExecuteScriptAsync("showRecord()");
+            
+            await webView2.CoreWebView2.ExecuteScriptAsync("showRecord()");
            // await webView1.InvokeScriptAsync("showRecord");
 
         }
@@ -712,7 +730,7 @@ namespace ClipOne.view
             if (Visibility == Visibility.Visible)
             {
  
-                Hide();
+                //Hide();
             }
         }
  
