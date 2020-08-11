@@ -205,7 +205,15 @@ namespace ClipOne.service
                 //处理图片类型
                 else if ((config.SupportFormat & ClipType.image) != 0 && (Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib)))
                 {
-                    HandleImage(clip);
+                    //MessageBox.Show("aaa");
+                    // Console.WriteLine("aaaa");
+                    //try
+                    //{
+                        HandleImage(clip);
+                    //}catch(Exception e)
+                    //{
+                    //    MessageBox.Show("err");
+                    //}
 
                 }
                 //处理剪切板文件
