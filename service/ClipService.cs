@@ -3,6 +3,7 @@ using ClipOne.util;
 using ClipOne.view;
 using HtmlAgilityPack;
 using System;
+using System.Diagnostics;
 using System.IO;
 
 using System.Text;
@@ -50,7 +51,7 @@ namespace ClipOne.service
         public const string TEXT_TYPE = "text";
 
 
-        
+
         /// <summary>
         /// 设置条目到剪切板
         /// </summary>
@@ -96,8 +97,9 @@ namespace ClipOne.service
                     {
                         ext = ".jpg";
                     }
-                    else { 
-                      ext = Path.GetExtension(result.DisplayValue).ToLower();
+                    else
+                    {
+                        ext = Path.GetExtension(result.DisplayValue).ToLower();
                     }
 
                     string savePath = Path.GetTempPath() + Guid.NewGuid().ToString() + ext;
@@ -178,52 +180,59 @@ namespace ClipOne.service
         public ClipModel HandClip()
         {
             ClipModel clip = new ClipModel();
-            try
+            //如果有极小概率会出现 OpenClipboard 失败的异常,所以增加重试
+            for (int i = 0; i < 3; i++)
             {
-                //处理剪切板微信自定义格式
-                if ((config.SupportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(WECHAT_TYPE))
+                try
                 {
-                    HandleWeChat(clip);
+                    //处理剪切板微信自定义格式
+                    if ((config.SupportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(WECHAT_TYPE))
+                    {
+                        HandleWeChat(clip);
 
+                    }
+
+                    //处理剪切板QQ自定义格式
+                    else if ((config.SupportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
+                    {
+
+                        HandleQQ(clip);
+
+                    }
+
+                    //处理HTML类型
+                    else if ((config.SupportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
+                    {
+
+                        HandleHtml(clip);
+
+                    }
+                    //处理图片类型
+                    else if ((config.SupportFormat & ClipType.image) != 0 && (Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib)))
+                    {
+                        HandleImage(clip);
+
+                    }
+                    //处理剪切板文件
+                    else if ((config.SupportFormat & ClipType.file) != 0 && Clipboard.ContainsFileDropList())
+                    {
+                        HandleFile(clip);
+
+                    }
+                    //处理剪切板文字
+                    else if (Clipboard.ContainsText())
+                    {
+
+                        HandleText(clip);
+
+                    }
+                    return clip;
                 }
-
-                //处理剪切板QQ自定义格式
-                else if ((config.SupportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
+                catch  
                 {
-
-                    HandleQQ(clip);
-
+                    
                 }
-
-                //处理HTML类型
-                else if ((config.SupportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
-                {
-
-                    HandleHtml(clip);
-
-                }
-                //处理图片类型
-                else if ((config.SupportFormat & ClipType.image) != 0 && (Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib)))
-                {
-                    HandleImage(clip);
-
-                }
-                //处理剪切板文件
-                else if ((config.SupportFormat & ClipType.file) != 0 && Clipboard.ContainsFileDropList())
-                {
-                    HandleFile(clip);
-
-                }
-                //处理剪切板文字
-                else if (Clipboard.ContainsText())
-                {
-
-                    HandleText(clip);
-
-                }
-
             }
-            catch  {  }
             return clip;
         }
 
@@ -515,7 +524,7 @@ namespace ClipOne.service
             //如果有img标签
             if (htmlStr.ToLower().IndexOf("<img") >= 0)
             {
-               
+
                 HtmlDocument doc = new HtmlDocument();
                 doc.LoadHtml(htmlStr);
 
@@ -544,7 +553,7 @@ namespace ClipOne.service
                     }
 
                     htmlStr = doc.DocumentNode.OuterHtml;
-                     
+
                 }
             }
             clip.Type = QQ_RICH_TYPE;

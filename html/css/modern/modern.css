@@ -109,84 +109,35 @@ tr:hover>td {
 }
 
 
-.dropdown-menu {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    z-index: 1000;
-    display: none;
-    float: left;
-    width: 100px;
-    height: 40px;
-    padding: 5px 0;
-    margin: 2px 0 0;
-    list-style: none;
-    background-color: #ffffff;
-    border: 1px solid #ccc;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    *border-right-width: 2px;
-    *border-bottom-width: 2px;
-    -webkit-border-radius: 6px;
-    -moz-border-radius: 6px;
-    border-radius: 6px;
-    -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-    -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-    -webkit-background-clip: padding-box;
-    -moz-background-clip: padding;
-    background-clip: padding-box;
-}
-
-.dropdown-menu>ul {
-    padding-left: 5px;
-    margin-left: 5px;
-    margin-top: 8px;
-    width: 80px;
-}
-
-.dropdown-menu.pull-right {
-    right: 0;
-    left: auto;
-}
-
-.dropdown-menu>ul>li {
-    list-style: none
-}
-
-.dropdown-menu>ul>li>a {
-    display: block;
-    padding: 3px 20px;
-    clear: both;
-    font-weight: normal;
-    line-height: 20px;
-    color: #333333;
-    white-space: nowrap;
-}
-
-.dropdown-menu>ul>li>a:hover,
-.dropdown-menu>ul>li>a:focus {
-    text-decoration: none;
-    color: #ffffff;
-    background-color: #0078d7;
-}
-
 a {
     text-decoration: none
 }
 
 #searchDiv {
-    height: 35px;
+    position: absolute;
+    top: 5px;
+    right: 25px;
+    z-index: 1000;
+    float: right;
+    width: 150px;
+    height: 25px;
+    padding: 5px 0;
+    margin: 2px 0 0;
+    list-style: none;
+    background-color: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0px 2px 8px #909090;
+    background-clip: padding-box;
 }
 
 #searchInput {
-    margin-top: 3px;
-    margin-left: 3px;
-    width: 200px;
+    width: 150px;
     height: 25px;
     font-size: 14px;
     border-top-width: 0px;
     border-left-width: 0px;
     border-right-width: 0px;
+    border-bottom-width: 0px;
     outline: none;
     background-color: transparent;
 }
