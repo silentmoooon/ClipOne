@@ -352,6 +352,9 @@ function addData(data) {
         clipObj.splice(clipObj.length - 1, 1)[0];
     }
     displayData();
+    $(".content").getNiceScroll().resize();
+
+    changeWindowHeight();
 }
 
 //显示记录
