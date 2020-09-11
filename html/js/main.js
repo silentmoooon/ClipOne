@@ -264,11 +264,12 @@ function displayData() {
         tbody += trs;
     }
 
-    $(".myTable").html(tbody);
+    
     if (matchCount == -1) {
         tbody = " <tr style='cursor: default'> <td  class='td_content' style='cursor: default;height:30px;' > 无记录 </td> </tr>";
-        $(".myTable").html(tbody);
+       
     }
+     $(".myTable").html(tbody);
  
 
 }
