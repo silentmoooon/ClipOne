@@ -84,9 +84,7 @@ namespace ClipOne.view
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
            
-
             taskbar = (TaskbarIcon)FindResource("Taskbar");
-
 
             configService = new ConfigService();
             config = configService.GetConfig();
@@ -97,7 +95,6 @@ namespace ClipOne.view
 
             //初始化托盘图标
             InitialTray();
-
 
 
             Task.Run(RegHotKey);

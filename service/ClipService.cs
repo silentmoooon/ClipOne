@@ -1,9 +1,6 @@
 ﻿using ClipOne.model;
-using ClipOne.util;
-using ClipOne.view;
 using HtmlAgilityPack;
 using System;
-using System.Diagnostics;
 using System.IO;
 
 using System.Text;
