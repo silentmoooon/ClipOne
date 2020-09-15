@@ -62,7 +62,7 @@ $(document).ready(function () {
         clipObj = JSON.parse(str);
     }
     displayData();
-    changeWindowHeight();
+     
     storeInterval = setInterval(saveData, 120000);
 
 });
@@ -269,6 +269,10 @@ function displayData() {
         tbody = " <tr style='cursor: default'> <td  class='td_content' style='cursor: default;height:30px;' > 无记录 </td> </tr>";
         $(".myTable").html(tbody);
     }
+     $(".myTable").html(tbody);
+
+     $(".content").getNiceScroll().resize();
+     changeWindowHeight();
  
 
 }
@@ -352,9 +356,7 @@ function addData(data) {
         clipObj.splice(clipObj.length - 1, 1)[0];
     }
     displayData();
-    $(".content").getNiceScroll().resize();
-
-    changeWindowHeight();
+   
 }
 
 //显示记录
@@ -376,12 +378,10 @@ function showRecord() {
         $("#tr" + selectIndex).addClass("tr_selected");
 
     }
-
-    //不加这一句无法呼出搜索框
-    $(".content")[0].focus();
-    $(".content").getNiceScroll().resize();
    
+    $(".content").getNiceScroll().resize();
     changeWindowHeight();
+  
 }
 
 
@@ -484,7 +484,13 @@ function pasteValueByRange(startIndex, endIndex, sendToTop) {
 
 //调整高度
 function changeWindowHeight() {
-    window.chrome.webview.postMessage("ChangeWindowHeight|" + $("body").height());
+    if($(".content").height()<=308){
+        $("body").css("height",308);
+    }else{
+     $("body").css("height",617);
+    }
+    console.log($("body").height());
+    window.chrome.webview.postMessage("ChangeWindowHeight|" + $(".content").height());
 }
 
 
