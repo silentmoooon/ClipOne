@@ -632,8 +632,16 @@ namespace ClipOne.view
         public void ChangeWindowHeight(double height)
         {
             Trace.WriteLine(height);
-            Height = height + 1;
-
+            //Height = height + 1;
+            if (height < MaxHeight / 2)
+            {
+                Height = MaxHeight / 2;
+            }
+            else
+            {
+                Height = MaxHeight;
+            }
+            Trace.WriteLine(Height);
             double y = SystemParameters.WorkArea.Height;//得到屏幕工作区域高度
             if (ActualHeight + Top > y)
             {
