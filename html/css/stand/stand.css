@@ -5,10 +5,12 @@
     font-size: 12px;
 }
 
+ 
 
 /*body*/
 
 body {
+
     -ms-overflow-style: none;
     background-color: #FFFFFF;
     border: 1px solid #A9CBEE;
@@ -18,7 +20,7 @@ body {
     margin-right: 0px;
     margin-bottom: 0px;
     width: 438px;
-    max-height: 599px;
+    max-height: 617px;
     border-radius: 2px;
 }
 
@@ -28,7 +30,7 @@ body {
     margin: 0px;
     padding: 0px;
     width: 100%;
-    max-height: 599px;
+    max-height: 618px;
 }
 
 
