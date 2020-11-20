@@ -1,3 +1,6 @@
+using System;
+using System.Diagnostics;
+
 namespace ClipOne.model
 {
     public class ClipModel
@@ -23,7 +26,25 @@ namespace ClipOne.model
         /// </summary>
         public string PlainText { get; set; }
 
+
+        public override bool Equals(object obj)
+        {
        
-        
+            return ToString() == obj.ToString();
+        }
+
+        public override string ToString()
+        {
+            return   Type + ClipValue + DisplayValue + PlainText;
+        }
+
+        public override int GetHashCode()
+        {
+            return ToString().GetHashCode();
+        }
+
+
+
+
     }
 }

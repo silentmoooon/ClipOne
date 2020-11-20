@@ -163,10 +163,10 @@ namespace ClipOne.service
 
                 IDataObject data = new DataObject(DataFormats.Text, result.ClipValue);
 
-                // Clipboard.SetDataObject(data, true);
+                 Clipboard.SetDataObject(data, true);
 
                 //当有其他进程占用剪切板时,WPF的Clipboard会有BUG,winform的没有,所以暂时用winform的
-                System.Windows.Forms.Clipboard.SetDataObject(data, true);
+                //System.Windows.Forms.Clipboard.SetDataObject(data, true);
 
 
             }
