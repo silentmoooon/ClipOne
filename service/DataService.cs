@@ -27,27 +27,18 @@ namespace ClipOne.service
             }
             if (File.Exists(cacheFilePath))
             {
-               clips.AddRange(JsonConvert.DeserializeObject<List<ClipModel>>(File.ReadAllText(cacheFilePath)));
+                var content = File.ReadAllText(cacheFilePath);
+                if(content!=null && content.Trim() != string.Empty) {
+                    clips.AddRange(JsonConvert.DeserializeObject<List<ClipModel>>(content));
+                }
             }
             
             //2分钟保存一次
             threadTimer = new Timer(Save, null, TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(2));
          
-           
-
         }
 
-        public void Put(ClipModel clip)
-        {
-            clips.Insert(0, clip);
-           
-            if (clips.Count > maxCount)
-            {
-                clips.RemoveAt(clips.Count-1);
-            }
-        }
-
-        public List<ClipModel> PutAndGet(ClipModel clip)
+        private void PutAndTrim(ClipModel clip)
         {
             clips.Insert(0, clip);
 
@@ -55,6 +46,26 @@ namespace ClipOne.service
             {
                 clips.RemoveAt(clips.Count - 1);
             }
+        }
+
+        public void Put(ClipModel clip)
+        {
+            if (clips.Contains(clip))
+            {
+                if(!clips[0].Equals(clip))
+                {
+                    clips.Remove(clip);
+                }
+            }
+
+            PutAndTrim(clip);
+
+
+        }
+
+        public List<ClipModel> PutAndGet(ClipModel clip)
+        {
+            Put(clip);
             return clips;
         }
 
@@ -127,7 +138,7 @@ namespace ClipOne.service
             
             ClipModel clip = clips[index];
             Del(index);
-            Put(clip);
+            PutAndTrim(clip);
         }
 
         public ClipModel GetAndTop(int index)
@@ -135,7 +146,7 @@ namespace ClipOne.service
 
             ClipModel clip = clips[index];
             Del(index);
-            Put(clip);
+            PutAndTrim(clip);
             return clip;
         }
 
@@ -221,7 +232,7 @@ namespace ClipOne.service
             }
             foreach (var index in indexes)
             {
-                Put(keyValues[index]);
+                PutAndTrim(keyValues[index]);
             }
 
         }
@@ -245,7 +256,7 @@ namespace ClipOne.service
             }
             foreach (var index in indexes)
             {
-                Put(keyValues[index]);
+                PutAndTrim(keyValues[index]);
             }
 
             return keyValues.Values.ToList();

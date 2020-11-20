@@ -4,8 +4,8 @@
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net5.0-windows</TargetFrameworks>
     <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms>
-    <NoWin32Manifest>true</NoWin32Manifest>
+<!--     <UseWindowsForms>true</UseWindowsForms> -->    
+ <NoWin32Manifest>true</NoWin32Manifest>
     <Platforms>x64</Platforms>
     <ApplicationIcon>ClipOne.ico</ApplicationIcon>
   </PropertyGroup>
@@ -55,7 +55,7 @@
 
   <ItemGroup>
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="1.0.8" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.25" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.28" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.674-prerelease" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
