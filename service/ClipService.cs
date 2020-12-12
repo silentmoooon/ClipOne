@@ -1,6 +1,7 @@
 ﻿using ClipOne.model;
 using HtmlAgilityPack;
 using System;
+using System.Diagnostics;
 using System.IO;
 
 using System.Text;
@@ -55,16 +56,16 @@ namespace ClipOne.service
         /// <param name="result"></param>
         public void SetValueToClipboard(ClipModel result)
         {
-
+            IDataObject dataObject;
             if (result.Type == WECHAT_TYPE)
             {
                 MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
-                var dataObject = new DataObject();
+                dataObject = new DataObject();
                 dataObject.SetData(WECHAT_TYPE, ms);
                 dataObject.SetData(DataFormats.Text, result.PlainText);
                 dataObject.SetData(DataFormats.UnicodeText, result.PlainText);
 
-                Clipboard.SetDataObject(dataObject, true);
+               
 
             }
             else if (result.Type == IMAGE_TYPE)
@@ -77,99 +78,101 @@ namespace ClipOne.service
                 bitImg.StreamSource = ms;
                 bitImg.EndInit();
 
+                
+                dataObject = new DataObject();
+                dataObject.SetData(DataFormats.Bitmap, bitImg);
+                MemoryStream memo = new MemoryStream(4);
+                byte[] bytes = new byte[] { 5, 0, 0, 0 };
+                memo.Write(bytes, 0, bytes.Length);
+                dataObject.SetData("Preferred DropEffect", memo);
                 if (File.Exists(result.DisplayValue))
                 {
-                    var dataObject = new DataObject();
-                    dataObject.SetData(DataFormats.Bitmap, bitImg);
-                    MemoryStream memo = new MemoryStream(4);
-                    byte[] bytes = new byte[] { (byte)(5), 0, 0, 0 };
-                    memo.Write(bytes, 0, bytes.Length);
                     dataObject.SetData(DataFormats.FileDrop, new string[] { result.DisplayValue });
-                    Clipboard.SetDataObject(dataObject, true);
                 }
-                else
-                {
-                    string ext;
-                    if (result.DisplayValue == null || result.DisplayValue == string.Empty)
-                    {
-                        ext = ".jpg";
-                    }
-                    else
-                    {
-                        ext = Path.GetExtension(result.DisplayValue).ToLower();
-                    }
+                
+                
+                //为了性能考虑,暂时不增加可以直接粘贴到资源管理器的功能
+                //else
+                //{
+                //    string ext;
+                //    if (result.DisplayValue == null || result.DisplayValue == string.Empty)
+                //    {
+                //        ext = ".jpg";
+                //    }
+                //    else
+                //    {
+                //        ext = Path.GetExtension(result.DisplayValue).ToLower();
+                //    }
 
-                    string savePath = Path.GetTempPath() + Guid.NewGuid().ToString() + ext;
-                    //savePath= @"C:\users\xiecan\desktop\" + Guid.NewGuid().ToString() + ext;
-                    File.WriteAllBytes(savePath, fileBytes);
-
-
-                    var dataObject = new DataObject();
-                    dataObject.SetData(DataFormats.Bitmap, bitImg);
-                    dataObject.SetData(DataFormats.FileDrop, new string[] { savePath });
-                    MemoryStream memo = new MemoryStream(4);
-                    byte[] bytes = new byte[] { (byte)(5), 0, 0, 0 };
-                    memo.Write(bytes, 0, bytes.Length);
-
-                    dataObject.SetData("Preferred DropEffect", memo);
-                    Clipboard.SetDataObject(dataObject, true);
-                }
+                //    string savePath = Path.GetTempPath() + Guid.NewGuid().ToString() + ext;
+                //    //savePath= @"C:\users\xiecan\desktop\" + Guid.NewGuid().ToString() + ext;
+                //    File.WriteAllBytes(savePath, fileBytes);
 
 
+                //    var dataObject = new DataObject();
+                //    dataObject.SetData(DataFormats.Bitmap, bitImg);
+                //    dataObject.SetData(DataFormats.FileDrop, new string[] { savePath });
+                //    MemoryStream memo = new MemoryStream(4);
+                //    byte[] bytes = new byte[] { 5, 0, 0, 0 };
+                //    memo.Write(bytes, 0, bytes.Length);
 
-
+                //    dataObject.SetData("Preferred DropEffect", memo);
+                //    Clipboard.SetDataObject(dataObject, true);
+                //}
 
             }
             else if (result.Type == HTML_TYPE)
             {
-                var dataObject = new DataObject();
+                dataObject = new DataObject();
                 dataObject.SetData(DataFormats.Html, result.ClipValue);
                 dataObject.SetData(DataFormats.Text, result.PlainText);
                 dataObject.SetData(DataFormats.UnicodeText, result.PlainText);
-                Clipboard.SetDataObject(dataObject, true);
+                
             }
             else if (result.Type == QQ_RICH_TYPE)
             {
 
 
                 MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
-                var dataObject = new DataObject();
+                dataObject = new DataObject();
                 dataObject.SetData(QQ_RICH_TYPE, ms);
                 dataObject.SetData(DataFormats.Text, result.PlainText);
                 dataObject.SetData(DataFormats.UnicodeText, result.PlainText);
-
-                Clipboard.SetDataObject(dataObject, true);
+ 
             }
             else if (result.Type == FILE_TYPE)
             {
 
                 string[] tmp = result.ClipValue.Split(',');
-
-
-                try
-                {
-                    IDataObject data = new DataObject(DataFormats.FileDrop, tmp);
-                    MemoryStream memo = new MemoryStream(4);
-                    byte[] bytes = new byte[] { (byte)(5), 0, 0, 0 };
-                    memo.Write(bytes, 0, bytes.Length);
-                    data.SetData("Preferred DropEffect", memo);
-
-                    Clipboard.SetDataObject(data, true);
-                }
-                catch { return; }
+                dataObject = new DataObject(DataFormats.FileDrop, tmp);
+                MemoryStream memo = new MemoryStream(4);
+                byte[] bytes = new byte[] { 5, 0, 0, 0 };
+                memo.Write(bytes, 0, bytes.Length);
+                dataObject.SetData("Preferred DropEffect", memo);
+ 
             }
             else
             {
 
-                IDataObject data = new DataObject(DataFormats.Text, result.ClipValue);
+                dataObject = new DataObject(DataFormats.Text, result.ClipValue);
 
-                 Clipboard.SetDataObject(data, true);
+                
 
-                //当有其他进程占用剪切板时,WPF的Clipboard会有BUG,winform的没有,所以暂时用winform的
-                //System.Windows.Forms.Clipboard.SetDataObject(data, true);
+               
 
-
+                
             }
+            try {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Clipboard.SetDataObject(dataObject, true);
+                });
+            }catch(Exception e)
+            {
+                
+            }
+            //当有其他进程占用剪切板时,WPF的Clipboard会有BUG,winform的没有,所以暂时用winform的
+            //System.Windows.Forms.Clipboard.SetDataObject(data, true);
         }
 
 

@@ -15,7 +15,8 @@ var multiIndexList = []
     //多记录粘贴时是否将粘贴记录发送到顶部,默认为true
 var multiSendToTop = true;
 
-
+//记录行数
+var length = 0;
 
 //屏蔽鼠标选择操作
 document.onselectstart = function(e) {
@@ -70,7 +71,7 @@ function keyDown(event) {
     } else if (event.ctrlKey && event.keyCode == 70) {
 
         //ctrl+f
-        if (!searchMode && clipObj.length > 0) {
+        if (!searchMode && length > 0) {
             showSearch();
         } else {
             hideSearch();
@@ -188,7 +189,8 @@ function num2key(num) {
 }
 
 //显示记录
-function applyData(html) {
+function applyData(html, count) {
+    length = count;
     html = decodeURIComponent(html.replace(/\+/g, "%20"));
     $(".myTable").html(html);
 
@@ -253,7 +255,7 @@ function show() {
     scrollTop();
 
 
-    if (clipObj.length != 0) {
+    if (length != 0) {
 
         selectIndex = 1;
 
@@ -328,7 +330,6 @@ function changeWindowHeight() {
     } else {
         $("body").css("height", 617);
     }
-    console.log($("body").height());
     window.chrome.webview.postMessage("ChangeWindowHeight|" + $(".content").height());
 }
 

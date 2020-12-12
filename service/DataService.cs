@@ -48,26 +48,24 @@ namespace ClipOne.service
             }
         }
 
-        public void Put(ClipModel clip)
+        public bool Put(ClipModel clip)
         {
             if (clips.Contains(clip))
             {
-                if(!clips[0].Equals(clip))
+                if(clips[0].Equals(clip))
                 {
-                    clips.Remove(clip);
+                    return false;   
+                   
                 }
+                clips.Remove(clip);
             }
-
             PutAndTrim(clip);
+            return true;
 
 
         }
 
-        public List<ClipModel> PutAndGet(ClipModel clip)
-        {
-            Put(clip);
-            return clips;
-        }
+ 
 
         public List<ClipModel> Get()
         {
@@ -124,7 +122,7 @@ namespace ClipOne.service
 
         public List<ClipModel> Search(string value)
         {
-           return clips.FindAll((clip) => { return clip.Type == value || clip.Type != ClipService.IMAGE_TYPE && clip.ClipValue.ToLower().IndexOf(value) >= 0; });
+           return clips.FindAll((clip) => { return clip.Type == value || clip.Type != ClipService.IMAGE_TYPE && clip.ClipValue.ToLower().IndexOf(value.ToLower()) >= 0; });
         }
 
         public void Clear()
@@ -264,7 +262,7 @@ namespace ClipOne.service
 
         private void Save(object value)
         {
-            Trace.WriteLine("save");
+            
             string json = JsonConvert.SerializeObject(clips);
             File.WriteAllText(cacheDir + "/" + cacheName, json);
 
