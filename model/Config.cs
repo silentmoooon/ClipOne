@@ -28,7 +28,7 @@ namespace ClipOne.model
         /// <summary>
         /// 允许保存的最大记录数
         /// </summary>
-        public int MaxRecordCount { get; set; } = 300;
+        public int MaxRecordCount { get; set; } = 500;
 
 
 

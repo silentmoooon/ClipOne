@@ -123,14 +123,14 @@ namespace ClipOne.util
 
 
 
-            [PermissionSet(SecurityAction.Assert, Name = "FullTrust")]
+            
             private static void SendKeyboardInput(Key key, bool press)
             {
-                PermissionSet permissions = new PermissionSet(PermissionState.Unrestricted);
-                permissions.Demand();
 
-                NativeMethods.INPUT ki = new NativeMethods.INPUT();
-                ki.type = NativeMethods.InputKeyboard;
+                NativeMethods.INPUT ki = new NativeMethods.INPUT
+                {
+                    type = NativeMethods.InputKeyboard
+                };
                 ki.union.keyboardInput.wVk = (short)KeyInterop.VirtualKeyFromKey(key);
                 ki.union.keyboardInput.wScan = (short)NativeMethods.MapVirtualKey(ki.union.keyboardInput.wVk, 0);
 
