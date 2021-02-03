@@ -1,6 +1,3 @@
-//所有记录
-var clipObj = [];
-
 //是否处于搜索模式
 var searchMode = false;
 
@@ -15,27 +12,22 @@ var rangeStartIndex = -1;
 var isCtrlPressed = false;
 //多记录粘贴列表
 var multiIndexList = []
-//多记录粘贴时是否将粘贴记录发送到顶部,默认为true
+    //多记录粘贴时是否将粘贴记录发送到顶部,默认为true
 var multiSendToTop = true;
 
-//存储到localStorage间隔
-var storeInterval;
-
-//最大记录数
-var maxRecords = 0;
-//搜索值
-var searchValue = "";
+//记录行数
+var length = 0;
 
 //屏蔽鼠标选择操作
-document.onselectstart = function () {
-    event.returnValue = false;
+document.onselectstart = function(e) {
+    e.returnValue = false;
 };
 //屏蔽右键菜单
-document.oncontextmenu = function (e) {
+document.oncontextmenu = function(e) {
     e.preventDefault();
 };
 
-$(document).ready(function () {
+$(document).ready(function() {
     $(".content").niceScroll(".table_main", {
         cursorborder: "",
         cursoropacitymin: 0,
@@ -45,36 +37,30 @@ $(document).ready(function () {
     });
 
     //查找
-    $("#searchInput").on("input", function (event) {
+    $("#searchInput").on("input", function(event) {
         var value = $("#searchInput")
             .val()
             .toLowerCase();
-        searchValue = value;
-        displayData();
+        search(value);
         $(".tr_selected").removeClass("tr_selected");
         $("#tr0").addClass("tr_selected");
     });
     $("body").on("keydown", keyDown);
     $("body").on("keyup", keyUp);
 
-    var str = window.localStorage.getItem("data");
-    if (str != null) {
-        clipObj = JSON.parse(str);
-    }
-    displayData();
 
-    storeInterval = setInterval(saveData, 120000);
 
 });
 
 
 function keyDown(event) {
+
     if (event.keyCode == 27) {
         //esc
         if (searchMode) {
             hideSearch();
         }
-        window.external.notify("esc|1");
+        window.chrome.webview.postMessage("esc|1");
     } else if (event.keyCode == 13) {
         //回车直接粘贴当前选中项
         if (searchMode) {
@@ -83,8 +69,9 @@ function keyDown(event) {
             pasteValue(selectIndex, true);
         }
     } else if (event.ctrlKey && event.keyCode == 70) {
+
         //ctrl+f
-        if (!searchMode && clipObj.length > 0) {
+        if (!searchMode && length > 0) {
             showSearch();
         } else {
             hideSearch();
@@ -119,30 +106,34 @@ function keyDown(event) {
         } else if (event.keyCode == 8 || event.keyCode == 46) {
             //退格或者del键删除
 
-            clipObj.splice(selectIndex, 1)[0];
-
-            displayData();
+            del(selectIndex);
         }
     }
 }
 
 
 function keyUp(event) {
-    // window.external.notify(
-    //     "test|" +event.key);
+
     if (event.key == "Shift") {
         rangeStartIndex = -1;
         isShiftPressed = false;
-    }
-    else if (event.key == "Control") {
+    } else if (event.key == "Control") {
         if (multiIndexList.length > 0) {
             pasteMultiValue();
         }
         multiIndexList = []
         isCtrlPressed = false;
+
     }
 }
 
+function toggleSearch() {
+    if (searchMode) {
+        hideSearch();
+    } else {
+        showSearch();
+    }
+}
 //显示搜索框
 function showSearch() {
     $("#searchDiv").css("display", "block");
@@ -157,8 +148,7 @@ function hideSearch() {
 
     if ($("#searchInput").val() != "") {
         $("#searchInput").val("");
-        searchValue = "";
-        displayData();
+        search("");
     }
 }
 
@@ -199,69 +189,14 @@ function num2key(num) {
 }
 
 //显示记录
-function displayData() {
-    var tbody = "";
-
-    var matchCount = -1;
-
-    for (var i = 0; i < clipObj.length; i++) {
-        if (clipObj[i] == null) {
-            clipObj.splice(i, 1);
-            i--;
-        }
-        var trs = "";
-        var num = "";
-
-        if (
-            searchValue == "" ||
-            clipObj[i].Type == searchValue ||
-            clipObj[i].ClipValue.toLowerCase().indexOf(searchValue) >= 0
-        ) {
-            matchCount++;
-            if (matchCount < 9) {
-                num = "<u>" + (matchCount + 1) + "</u>";
-            } else if (matchCount < 35) {
-                num = "<u>" + num2key(matchCount + 1) + "</u>";
-            } else {
-                num = "" + (matchCount + 1);
-            }
-            if (clipObj[i].Type == "image") {
-
-                trs =
-                    " <tr style='cursor: default' index='" +
-                    i +
-                    "' id='tr" +
-                    matchCount +
-                    "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' )'> <td  class='td_content' > <img class='image' src='data:image/png;base64," +
-                    clipObj[i].ClipValue +
-                    "' /> </td><td class='td_index'  >" +
-                    num +
-                    "</td> </tr>";
-
-            } else {
-                trs =
-                    " <tr style='cursor: default' index='" +
-                    i +
-                    "' id='tr" +
-                    matchCount +
-                    "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' '> <td  class='td_content' >  " +
-                    clipObj[i].DisplayValue +
-                    " </td><td class='td_index'  >" +
-                    num +
-                    "</td> </tr>";
-            }
-        }
-        tbody += trs;
-    }
-
-    $(".myTable").html(tbody);
-    if (matchCount == -1) {
-        tbody = " <tr style='cursor: default'> <td  class='td_content' style='cursor: default' > 无记录 </td> </tr>";
-        $(".myTable").html(tbody);
-    }
+function applyData(html, count) {
+    length = count;
+    html = decodeURIComponent(html.replace(/\+/g, "%20"));
+    $(".myTable").html(html);
 
     $(".content").getNiceScroll().resize();
-    setTimeout(function () { changeWindowHeight($("body").height()); }, 50);
+    changeWindowHeight();
+
 
 }
 
@@ -294,8 +229,7 @@ function mouseup(e) {
                 multiIndexList.splice(keyIndex, 1)
                 $("#" + e.id).removeClass("tr_selected");
             }
-        }
-        else {
+        } else {
             //单条
 
             var sendToTop = true;
@@ -310,43 +244,8 @@ function mouseup(e) {
 
 }
 
-//设置保存最大记录数
-function setMaxRecords(records) {
-    if (records <= 0) return;
-    maxRecords = records;
-    if (clipObj.length > maxRecords) {
-        clipObj = clipObj.slice(0, maxRecords);
-        displayData();
-    }
-
-}
-//增加条目
-function addData(data) {
-    data = decodeURIComponent(data.replace(/\+/g, "%20"));
-    var obj = JSON.parse(data);
-
-    if (obj == null) {
-        return;
-    }
-
-
-    for (var i = 0; i < clipObj.length; i++) {
-        if (clipObj[i].ClipValue == obj.ClipValue) {
-            clipObj.splice(i, 1);
-            break;
-        }
-    }
-
-    clipObj.splice(0, 0, obj);
-
-    if (maxRecords > 0 && clipObj.length > maxRecords) {
-        clipObj.splice(clipObj.length - 1, 1)[0];
-    }
-    displayData();
-}
-
 //显示记录
-function showRecord() {
+function show() {
     rangeStartIndex = -1;
     isShiftPressed = false;
     isCtrlPressed = false;
@@ -356,7 +255,7 @@ function showRecord() {
     scrollTop();
 
 
-    if (clipObj.length != 0) {
+    if (length != 0) {
 
         selectIndex = 1;
 
@@ -365,123 +264,76 @@ function showRecord() {
 
     }
 
-    //不加这一句无法呼出搜索框
-    $(".content")[0].focus();
+    $(".content").getNiceScroll().resize();
+    changeWindowHeight();
 
 }
 
 
 // 回调本地代码
 
-//粘贴单条
+//粘贴单条,sednToTop为false则不改变顺序
 function pasteValue(index, sendToTop) {
-    var obj = clipObj[index];
-    if (sendToTop) {
-        clipObj.splice(index, 1)[0];
-        clipObj.splice(0, 0, obj);
+    let command = "PasteValue";
+    if (!sendToTop) {
+        command += "WithoutTop";
     }
-    window.external.notify(
-        "PasteValue|" + encodeURIComponent(JSON.stringify(obj))
-    );
+    window.chrome.webview.postMessage(
+        command + "|" + index);
 
-    displayData();
 }
 
+
 //设置到剪切板但不粘贴
-function setToClipBoard(index, ) {
-    var obj = clipObj[index];
-    clipObj.splice(index, 1)[0];
-    clipObj.splice(0, 0, obj);
+function setToClipBoard(index) {
 
-    window.external.notify(
-        "SetToClipBoard|" + encodeURIComponent(JSON.stringify(obj))
-    );
-
-    displayData();
+    window.chrome.webview.postMessage(
+        "SetToClipBoard|" + index);
 }
 //粘贴多条
 function pasteMultiValue() {
-    var clipList = [];
-    var lastIndex = -1;
-    var diffLenth = 0;
-    multiIndexList.forEach(index => {
-
-        var result = clipObj[index];
-        if (multiSendToTop) {
-
-            if (lastIndex >= 0 && lastIndex > index) {
-                diffLenth++;
-                index = index + diffLenth;
-                result = clipObj[index];
-            }
-            clipObj.splice(index, 1)[0];
-            clipObj.splice(0, 0, result);
-        }
-        clipList.push(result);
-        lastIndex = index;
-    });
-    window.external.notify(
-        "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
-    );
-    if (multiSendToTop) {
-        displayData();
+    let command = "PasteValueList";
+    if (!multiSendToTop) {
+        command += "WithoutTop";
     }
+    window.chrome.webview.postMessage(
+        command + "|" + encodeURIComponent(JSON.stringify(multiIndexList))
+    );
 
 }
 //粘贴范围
 function pasteValueByRange(startIndex, endIndex, sendToTop) {
-    var clipList = [];
-    if (endIndex > startIndex) {
-        for (var i = startIndex; i <= endIndex; i++) {
-            var result = clipObj[i];
-            if (sendToTop) {
-                clipObj.splice(i, 1)[0];
-                clipObj.splice(0, 0, result);
-            }
-            clipList.push(result);
-        }
-    } else if (endIndex < startIndex) {
-        for (var i = startIndex; i >= endIndex; i--) {
-            var result = clipObj[i];
-            if (sendToTop) {
-                clipObj.splice(i, 1)[0];
-            }
-            clipList.push(result);
-        }
-        if (sendToTop) {
-            clipList.forEach(value => {
-                clipObj.splice(0, 0, value);
-            });
-        }
-    } else {
-        pasteValue(startIndex, sendToTop);
-        return;
+    let command = "PasteValueRange";
+    if (!sendToTop) {
+        command += "WithoutTop";
     }
 
-    window.external.notify(
-        "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
-    );
-    if (multiSendToTop) {
-        displayData();
-    }
+    window.chrome.webview.postMessage(
+        command + "|" + startIndex + "," + endIndex);
 
+}
+
+
+function del(index) {
+    window.chrome.webview.postMessage("del|" + index);
+}
+
+function search(value) {
+    window.chrome.webview.postMessage("search|" + value);
 }
 
 
 //调整高度
-function changeWindowHeight(height) {
-    window.external.notify("ChangeWindowHeight|" + height);
-}
-
-
-
-function saveData() {
-    window.localStorage.setItem("data", JSON.stringify(clipObj));
+function changeWindowHeight() {
+    if ($(".content").height() <= 308) {
+        $("body").css("height", 308);
+    } else {
+        $("body").css("height", 617);
+    }
+    window.chrome.webview.postMessage("ChangeWindowHeight|" + $(".content").height());
 }
 
 
 function clear() {
-    clipObj = [];
-    window.localStorage.clear();
-    displayData();
+    window.chrome.webview.postMessage("clear|");
 }
