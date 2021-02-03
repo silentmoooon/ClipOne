@@ -59,7 +59,10 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.781-prerelease" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
-
+<!--   <ItemGroup>
+<TrimmerRootAssembly Include="System.Runtime" />
+<TrimmerRootAssembly Include="System.Runtime.Extensions" />
+</ItemGroup> -->
   <ItemGroup>
     <Resource Include="ClipOne.ico" />
   </ItemGroup>
