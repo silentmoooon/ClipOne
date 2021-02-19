@@ -6,53 +6,52 @@ using System.IO;
 
 namespace ClipOne.service
 {
-   public class ConfigService
+    public class ConfigService
     {
-     
 
-        private readonly Config config=new Config();
+
+        private readonly Config config;
         /// <summary>
         /// 配置文件路径
         /// </summary>
         private readonly string settingsPath = "config\\settings.json";
 
-        
-
-        /// <summary>
-        /// /加载设置项
-        /// </summary>
-        public   Config GetConfig()
+        public ConfigService()
         {
             if (!File.Exists(settingsPath))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(settingsPath));
-                return config;
+                config = new Config();
             }
-            string json = File.ReadAllText(settingsPath);
-            Config tmpConfig = JsonConvert.DeserializeObject<Config>(json);
-            config.HotkeyKey = tmpConfig.HotkeyKey;
-            config.HotkeyModifier = tmpConfig.HotkeyModifier;
-            config.MaxRecordCount = tmpConfig.MaxRecordCount;
-            config.RecordCount = tmpConfig.RecordCount;
-            config.SkinName = tmpConfig.SkinName;
-            config.SupportFormat = tmpConfig.SupportFormat;
-            
-            if (config.AutoStartup)
+            else
             {
-                SetStartup(true);
+                string json = File.ReadAllText(settingsPath);
+                config = JsonConvert.DeserializeObject<Config>(json);
+                if (config.AutoStartup)
+                {
+                    SetStartup(true);
+                }
             }
+        }
+
+
+        /// <summary>
+        /// /加载设置项
+        /// </summary>
+        public Config GetConfig()
+        {
             return config;
         }
- 
+
 
         /// <summary>
         /// 设置开机启动
         /// </summary>
-        public  void SetStartup(bool isAutoStartup)
+        public void SetStartup(bool isAutoStartup)
         {
 
             RegistryKey reg = Registry.CurrentUser.CreateSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
-            
+
             string exePath = Process.GetCurrentProcess().MainModule.FileName;
             string exeName = Process.GetCurrentProcess().MainModule.ModuleName;
             if (!isAutoStartup)
