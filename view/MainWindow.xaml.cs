@@ -36,7 +36,9 @@ namespace ClipOne.view
 
         private DataService dataService;
 
-        private string searchValue = string.Empty;
+        private IntPtr activityWindow=IntPtr.Zero;
+
+       
 
 
         /// <summary>
@@ -100,6 +102,7 @@ namespace ClipOne.view
 
             Task.Run(RegHotKey);
 
+            DiyHide();
 
         }
 
@@ -265,7 +268,7 @@ namespace ClipOne.view
             else if (args[0] == "esc")
             {
 
-                Hide();
+                DiyHide();
             }
             else if (args[0].StartsWith("test"))
             {
@@ -619,7 +622,7 @@ namespace ClipOne.view
 
                 if (hotkeyAtom == wParam.ToInt32())
                 {
-
+                    activityWindow = WinAPIHelper.GetForegroundWindow();
                     if (WinAPIHelper.GetCursorPos(out WinAPIHelper.POINT point))
                     {
                         double x = SystemParameters.WorkArea.Width;//得到屏幕工作区域宽度
@@ -680,7 +683,7 @@ namespace ClipOne.view
             html = HttpUtility.UrlEncode(html);
             Application.Current.Dispatcher.Invoke(() =>
             {
-                webView2.CoreWebView2.ExecuteScriptAsync($"applyData('{html}',{count})");
+                webView2.CoreWebView2.ExecuteScriptAsync($"applyData('{html}',{count})").ConfigureAwait(false);
             });
         }
 
@@ -822,7 +825,7 @@ namespace ClipOne.view
         public void SetToClipboard(int index)
         {
 
-            Hide();
+            DiyHide();
             Task.Run(() =>
             {
                 ClipModel clip = dataService.GetAndTop(index);
@@ -838,7 +841,7 @@ namespace ClipOne.view
         /// <param name="id">索引</param>
         public void PasteValue(int index)
         {
-            Hide();
+            DiyHide();
             Task.Run(() =>
             {
                 ClipModel clip = dataService.Get(index);
@@ -852,7 +855,7 @@ namespace ClipOne.view
 
         public void PasteValueWithoutTop(int index)
         {
-            Hide();
+            DiyHide();
 
             SinglePaste(dataService.Get(index));
 
@@ -887,14 +890,22 @@ namespace ClipOne.view
 
         }
 
-
+        private void DiyHide()
+        {
+            if (activityWindow != IntPtr.Zero)
+            {
+                WinAPIHelper.SetForegroundWindow(activityWindow);
+            }
+            this.Left = -10000;
+        }
+      
         private void Window_Deactivated(object sender, EventArgs e)
         {
 
             if (Visibility == Visibility.Visible)
             {
 
-                Hide();
+                DiyHide();
             }
         }
 
@@ -904,7 +915,7 @@ namespace ClipOne.view
 
         public void PasteValueList(List<int> indexes)
         {
-            Hide();
+            DiyHide();
             List<ClipModel> clipList = dataService.Get(indexes);
             BatchPaste(clipList);
 
@@ -918,7 +929,7 @@ namespace ClipOne.view
 
         public void PasteValueListWithoutTop(List<int> indexes)
         {
-            Hide();
+            DiyHide();
             List<ClipModel> clipList = dataService.Get(indexes);
 
             BatchPaste(clipList);
@@ -930,7 +941,7 @@ namespace ClipOne.view
 
         public void PasteValueRange(int startIndex, int endIndex)
         {
-            Hide();
+            DiyHide();
             List<ClipModel> clipList = dataService.Get(startIndex, endIndex);
             ApplyData();
 
@@ -946,7 +957,7 @@ namespace ClipOne.view
 
         public void PasteValueRangeWithoutTop(int startIndex, int endIndex)
         {
-            Hide();
+            DiyHide();
             List<ClipModel> clipList = dataService.Get(startIndex, endIndex);
 
             BatchPaste(clipList);
