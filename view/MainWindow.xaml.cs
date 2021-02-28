@@ -94,7 +94,7 @@ namespace ClipOne.view
 
             //初始化浏览器
             InitWebView();
-            webView1.Focus();
+           
             //初始化托盘图标
             InitialTray();
 
@@ -155,13 +155,13 @@ namespace ClipOne.view
 
             webView1.IsIndexedDBEnabled = true;
             webView1.ScriptNotify += WebView1_ScriptNotify; ;
-            Debug.WriteLine("webView1");
+
             webView1.NavigationCompleted += (x, y) => {
-                Trace.WriteLine("complete");
+   
                 if (!loadDataToWeb)
                 {
                     loadDataToWeb = true;
-                    ApplyData();
+                    InitApplyData();
                    
                 }
             };
@@ -252,7 +252,6 @@ namespace ClipOne.view
             }
             else if (args[0].StartsWith("test"))
             {
-                System.Windows.Forms.MessageBox.Show(args[1]);
                 Trace.WriteLine(args[1]);
             }
         }
@@ -654,6 +653,22 @@ namespace ClipOne.view
             ApplyData(value.Item1, value.Item2);
 
         }
+        private void InitApplyData()
+        {
+            var clips = dataService.Get();
+            Tuple<string, int> value = GenerateHtml(clips, string.Empty);
+            InitApplyData(value.Item1, value.Item2);
+
+        }
+        private void InitApplyData(string html, int count)
+        {
+            html = HttpUtility.UrlEncode(html);
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                webView1.InvokeScript("applyData", new string[] { html, count.ToString() });
+
+            });
+        }
         private void ApplyData(string html, int count)
         {
             html = HttpUtility.UrlEncode(html);
@@ -873,6 +888,7 @@ namespace ClipOne.view
             if (activityWindow != IntPtr.Zero)
             {
                 WinAPIHelper.SetForegroundWindow(activityWindow);
+                activityWindow = IntPtr.Zero;
             }
             this.Left = -10000;
         }
@@ -880,11 +896,8 @@ namespace ClipOne.view
         private void Window_Deactivated(object sender, EventArgs e)
         {
 
-            if (Visibility == Visibility.Visible)
-            {
+            DiyHide();
 
-                DiyHide();
-            }
         }
 
         /// <summary>

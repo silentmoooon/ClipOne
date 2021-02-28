@@ -8,12 +8,12 @@
         mc:Ignorable="d"
         Title="MainWindow"    Width="440"  Height="620"   Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None"  Background="Transparent"    ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False"   MaxHeight="620" SourceInitialized="Window_SourceInitialized"  >
     <!---->
-    <Border  Margin="0" >
+    <Border  Margin="0"  Background="Transparent" >
         <Border.Effect>
             <DropShadowEffect Color="gray" BlurRadius="15" Direction="-90" RenderingBias="Quality" ShadowDepth="2"/>
         </Border.Effect>
 
-        <Controls:WebView Name="webView1"   />
+        <Controls:WebView Name="webView1"   Width="440" Height="620"  MaxHeight="620" />
        
 
     </Border>

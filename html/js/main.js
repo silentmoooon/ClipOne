@@ -56,7 +56,7 @@ $(document).ready(function() {
 
 
 function keyDown(event) {
-     window.external.notify("test|1111111" );
+   
     if (event.keyCode == 27) {
         //esc
         if (searchMode) {
@@ -71,10 +71,7 @@ function keyDown(event) {
             pasteValue(selectIndex, true);
         }
     }  else if (event.ctrlKey && event.keyCode == 70) {
-         window.external.notify("test|1111111" );
         toggleSearch();
-        
-    
     } else if (!searchMode) {
         if (event.shiftKey) {
             //范围操作
@@ -262,7 +259,7 @@ function show() {
         $("#tr" + selectIndex).addClass("tr_selected");
 
     }
-
+     $(".content")[0].focus();
     $(".content").getNiceScroll().resize();
     changeWindowHeight();
 
