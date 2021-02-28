@@ -36,6 +36,9 @@ $(document).ready(function() {
         cursorcolor: "#808080"
     });
 
+     $("body").on("keydown", keyDown);
+    $("body").on("keyup", keyUp);
+
     //查找
     $("#searchInput").on("input", function(event) {
         var value = $("#searchInput")
@@ -45,8 +48,7 @@ $(document).ready(function() {
         $(".tr_selected").removeClass("tr_selected");
         $("#tr0").addClass("tr_selected");
     });
-    $("body").on("keydown", keyDown);
-    $("body").on("keyup", keyUp);
+   
 
 
 
@@ -54,13 +56,13 @@ $(document).ready(function() {
 
 
 function keyDown(event) {
-
+     window.external.notify("test|1111111" );
     if (event.keyCode == 27) {
         //esc
         if (searchMode) {
             hideSearch();
         }
-        window.chrome.webview.postMessage("esc|1");
+        window.external.notify("esc|1");
     } else if (event.keyCode == 13) {
         //回车直接粘贴当前选中项
         if (searchMode) {
@@ -68,15 +70,11 @@ function keyDown(event) {
         } else {
             pasteValue(selectIndex, true);
         }
-    } else if (event.ctrlKey && event.keyCode == 70) {
-
-        //ctrl+f
-        if (!searchMode && length > 0) {
-            showSearch();
-        } else {
-            hideSearch();
-        }
-        return;
+    }  else if (event.ctrlKey && event.keyCode == 70) {
+         window.external.notify("test|1111111" );
+        toggleSearch();
+        
+    
     } else if (!searchMode) {
         if (event.shiftKey) {
             //范围操作
@@ -108,6 +106,7 @@ function keyDown(event) {
 
             del(selectIndex);
         }
+       
     }
 }
 
@@ -278,7 +277,7 @@ function pasteValue(index, sendToTop) {
     if (!sendToTop) {
         command += "WithoutTop";
     }
-    window.chrome.webview.postMessage(
+    window.external.notify(
         command + "|" + index);
 
 }
@@ -287,7 +286,7 @@ function pasteValue(index, sendToTop) {
 //设置到剪切板但不粘贴
 function setToClipBoard(index) {
 
-    window.chrome.webview.postMessage(
+    window.external.notify(
         "SetToClipBoard|" + index);
 }
 //粘贴多条
@@ -296,7 +295,7 @@ function pasteMultiValue() {
     if (!multiSendToTop) {
         command += "WithoutTop";
     }
-    window.chrome.webview.postMessage(
+    window.external.notify(
         command + "|" + encodeURIComponent(JSON.stringify(multiIndexList))
     );
 
@@ -308,18 +307,18 @@ function pasteValueByRange(startIndex, endIndex, sendToTop) {
         command += "WithoutTop";
     }
 
-    window.chrome.webview.postMessage(
+    window.external.notify(
         command + "|" + startIndex + "," + endIndex);
 
 }
 
 
 function del(index) {
-    window.chrome.webview.postMessage("del|" + index);
+    window.external.notify("del|" + index);
 }
 
 function search(value) {
-    window.chrome.webview.postMessage("search|" + value);
+    window.external.notify("search|" + value);
 }
 
 
@@ -330,10 +329,10 @@ function changeWindowHeight() {
     } else {
         $("body").css("height", 617);
     }
-    window.chrome.webview.postMessage("ChangeWindowHeight|" + $(".content").height());
+    window.external.notify("ChangeWindowHeight|" + $(".content").height());
 }
 
 
 function clear() {
-    window.chrome.webview.postMessage("clear|");
+    window.external.notify("clear|");
 }

@@ -15,7 +15,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Ribbon;
 using System.Windows.Input;
 using System.Windows.Interop;
 
@@ -71,21 +70,21 @@ namespace ClipOne.view
         /// </summary>
         private IntPtr wpfHwnd = IntPtr.Zero;
 
-        private bool loadDataToWeb = false;
+        private volatile bool loadDataToWeb = false;
 
         public MainWindow()
         {
             InitializeComponent();
 
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-
+            activityWindow = WinAPIHelper.GetForegroundWindow();
 
         }
 
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-
+            
             taskbar = (TaskbarIcon)FindResource("Taskbar");
 
             configService = new ConfigService();
@@ -95,7 +94,7 @@ namespace ClipOne.view
 
             //初始化浏览器
             InitWebView();
-
+            webView1.Focus();
             //初始化托盘图标
             InitialTray();
 
@@ -148,53 +147,34 @@ namespace ClipOne.view
         /// <summary>
         /// 初始化浏览器
         /// </summary>
-        async void InitWebView()
+        private void InitWebView()
         {
+             
+            webView1.IsJavaScriptEnabled = true;
+            webView1.IsScriptNotifyAllowed = true;
 
-            await webView2.EnsureCoreWebView2Async(null);
-            webView2.CoreWebView2.Settings.IsScriptEnabled = true;
-            webView2.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
-
-            webView2.CoreWebView2.Settings.IsWebMessageEnabled = true;
-
-
-
-            webView2.KeyDown += (x, y) =>
-            {
-
-                if (Keyboard.IsKeyDown(Key.LeftCtrl) && Keyboard.IsKeyDown(Key.F))
+            webView1.IsIndexedDBEnabled = true;
+            webView1.ScriptNotify += WebView1_ScriptNotify; ;
+            Debug.WriteLine("webView1");
+            webView1.NavigationCompleted += (x, y) => {
+                Trace.WriteLine("complete");
+                if (!loadDataToWeb)
                 {
-
-                    y.Handled = true;
-                    webView2.CoreWebView2.ExecuteScriptAsync("toggleSearch()");
+                    loadDataToWeb = true;
+                    ApplyData();
+                   
                 }
             };
 
+            
+            webView1.NavigateToLocal(defaultHtml);
 
-            webView2.CoreWebView2.NavigationCompleted += CoreWebView2_NavigationCompleted;
-            webView2.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
-            webView2.CoreWebView2.Navigate("file://" + AppDomain.CurrentDomain.BaseDirectory + "/" + defaultHtml);
-
-        }
-
-        private void CoreWebView2_NavigationCompleted(object sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
-        {
-
-            if (!loadDataToWeb)
-            {
-
-                ApplyData();
-                loadDataToWeb = true;
-            }
 
         }
 
-        private void CoreWebView2_WebMessageReceived(object sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)
+        private void WebView1_ScriptNotify(object sender, Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT.WebViewControlScriptNotifyEventArgs e)
         {
-
-            string value = e.TryGetWebMessageAsString();
-            string[] args = value.Split(new char[] { '|' }, 2);
-
+            string[] args = e.Value.Split(new char[] { '|' }, 2);
             if (args[0] == "PasteValue")
             {
 
@@ -226,14 +206,14 @@ namespace ClipOne.view
             else if (args[0] == "PasteValueRange")
             {
 
-                string[] param = args[1].Split(",");
+                string[] param = args[1].Split(',');
                 PasteValueRange(int.Parse(param[0]), int.Parse(param[1]));
 
             }
             else if (args[0] == "PasteValueRangeWithoutTop")
             {
 
-                string[] param = args[1].Split(",");
+                string[] param = args[1].Split(',');
                 PasteValueRange(int.Parse(param[0]), int.Parse(param[1]));
 
             }
@@ -272,9 +252,9 @@ namespace ClipOne.view
             }
             else if (args[0].StartsWith("test"))
             {
-                Console.WriteLine(args[1]);
+                System.Windows.Forms.MessageBox.Show(args[1]);
+                Trace.WriteLine(args[1]);
             }
-
         }
 
 
@@ -292,10 +272,10 @@ namespace ClipOne.view
                 Header = "退出"
             };
 
-            MenuItem devToos = new MenuItem
-            {
-                Header = "开发者工具"
-            };
+            //MenuItem devToos = new MenuItem
+            //{
+            //    Header = "开发者工具"
+            //};
 
             MenuItem startup = new MenuItem
             {
@@ -329,16 +309,13 @@ namespace ClipOne.view
             {
                 Header = "清空"
             };
-            devToos.Click += (x, y) =>
-            {
-                webView2.CoreWebView2.OpenDevToolsWindow();
-
-            };
+            
 
             //清空记录
             clear.Click += (x, y) =>
             {
-                webView2.CoreWebView2.ExecuteScriptAsync("clear()");
+                dataService.Clear();
+                ApplyData();   
 
             };
 
@@ -346,8 +323,8 @@ namespace ClipOne.view
             //刷新页面,一般用于自定义html css js时
             reload.Click += (x, y) =>
             {
-                webView2.CoreWebView2.ExecuteScriptAsync("saveData()");
-                webView2.Reload();
+                webView1.Refresh();
+                ApplyData();
 
             };
             //退出
@@ -440,7 +417,7 @@ namespace ClipOne.view
             taskbar.ContextMenu.Items.Add(hotkey);
             taskbar.ContextMenu.Items.Add(startup);
             taskbar.ContextMenu.Items.Add(new Separator());
-            taskbar.ContextMenu.Items.Add(devToos);
+            //taskbar.ContextMenu.Items.Add(devToos);
             taskbar.ContextMenu.Items.Add(exit);
 
         }
@@ -480,7 +457,7 @@ namespace ClipOne.view
             item.IsChecked = true;
             config.SkinName = (string)item.Header;
             configService.SaveSettings();
-            webView2.CoreWebView2.ExecuteScriptAsync("saveData()");
+            //webView2.CoreWebView2.ExecuteScriptAsync("saveData()");
 
             string css = item.Tag.ToString();
             ChangeSkin(css);
@@ -517,7 +494,8 @@ namespace ClipOne.view
                 fileLines.Add(" <link rel='stylesheet' type='text/css' href='" + str + "'/>");
             }
             File.WriteAllLines(defaultHtml, fileLines, Encoding.UTF8);
-            webView2.Reload();
+            webView1.Refresh();
+            ApplyData();
 
 
 
@@ -582,9 +560,7 @@ namespace ClipOne.view
             item.IsChecked = true;
             config.RecordCount = int.Parse((string)item.Header);
             configService.SaveSettings();
-            webView2.CoreWebView2.ExecuteScriptAsync("setMaxRecords(" + item.Header + ")");
-
-
+            
 
         }
 
@@ -683,7 +659,8 @@ namespace ClipOne.view
             html = HttpUtility.UrlEncode(html);
             Application.Current.Dispatcher.Invoke(() =>
             {
-                webView2.CoreWebView2.ExecuteScriptAsync($"applyData('{html}',{count})").ConfigureAwait(false);
+                webView1.InvokeScriptAsync("applyData", new string[] { html, count.ToString() });
+   
             });
         }
 
@@ -772,8 +749,8 @@ namespace ClipOne.view
         private async void ShowPage()
         {
 
-            await webView2.CoreWebView2.ExecuteScriptAsync("show()");
-
+            await webView1.InvokeScriptAsync("show");
+            
 
         }
 
@@ -806,7 +783,8 @@ namespace ClipOne.view
         {
 
             dataService.Close();
-            webView2?.Dispose();
+            webView1?.Close();
+            webView1?.Dispose();
 
             if (wpfHwnd == IntPtr.Zero)
             {
