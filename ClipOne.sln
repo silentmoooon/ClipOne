@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-VisualStudioVersion = 16.0.30114.105
+VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClipOne", "ClipOne.csproj", "{F5D977B1-31F3-48D5-8656-56C9F15762BF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClipOne", "ClipOne.csproj", "{90FB9219-A219-48DF-BD87-D8EB4FAB533E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,17 +13,19 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F5D977B1-31F3-48D5-8656-56C9F15762BF}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{F5D977B1-31F3-48D5-8656-56C9F15762BF}.Debug|x64.ActiveCfg = Debug|x64
-		{F5D977B1-31F3-48D5-8656-56C9F15762BF}.Debug|x64.Build.0 = Debug|x64
-		{F5D977B1-31F3-48D5-8656-56C9F15762BF}.Release|Any CPU.ActiveCfg = Release|x64
-		{F5D977B1-31F3-48D5-8656-56C9F15762BF}.Release|x64.ActiveCfg = Release|x64
-		{F5D977B1-31F3-48D5-8656-56C9F15762BF}.Release|x64.Build.0 = Release|x64
+		{90FB9219-A219-48DF-BD87-D8EB4FAB533E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90FB9219-A219-48DF-BD87-D8EB4FAB533E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90FB9219-A219-48DF-BD87-D8EB4FAB533E}.Debug|x64.ActiveCfg = Debug|x64
+		{90FB9219-A219-48DF-BD87-D8EB4FAB533E}.Debug|x64.Build.0 = Debug|x64
+		{90FB9219-A219-48DF-BD87-D8EB4FAB533E}.Release|Any CPU.ActiveCfg = Release|x64
+		{90FB9219-A219-48DF-BD87-D8EB4FAB533E}.Release|Any CPU.Build.0 = Release|x64
+		{90FB9219-A219-48DF-BD87-D8EB4FAB533E}.Release|x64.ActiveCfg = Release|x64
+		{90FB9219-A219-48DF-BD87-D8EB4FAB533E}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {6B56CE9F-1555-4D25-8B09-A1F72EE177CE}
+		SolutionGuid = {99BDCE5C-4E54-450A-A5F2-65BCBB266EC5}
 	EndGlobalSection
 EndGlobal

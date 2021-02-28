@@ -155,17 +155,13 @@ namespace ClipOne.service
             {
 
                 dataObject = new DataObject(DataFormats.Text, result.ClipValue);
-
-                
-
-               
-
-                
+  
             }
             try {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    Clipboard.SetDataObject(dataObject, true);
+                    System.Windows.Forms.Clipboard.SetDataObject(dataObject, true);
+                    //Clipboard.SetDataObject(dataObject, true);
                 });
             }catch(Exception e)
             {
