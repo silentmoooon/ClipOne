@@ -20,17 +20,6 @@ namespace ClipOne.model
         /// </summary>
         public bool AutoStartup { get; set; } = false;
 
-        /// <summary>
-        /// 默认保存记录数
-        /// </summary>
-        public int RecordCount { get; set; } = 100;
-
-        /// <summary>
-        /// 允许保存的最大记录数
-        /// </summary>
-        public int MaxRecordCount { get; set; } = 500;
-
-
 
         /// <summary>
         /// 默认皮肤

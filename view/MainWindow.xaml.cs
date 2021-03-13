@@ -33,7 +33,7 @@ namespace ClipOne.view
 
         private ClipService clipService;
 
-        private DataService dataService;
+      
 
         private IntPtr activityWindow=IntPtr.Zero;
 
@@ -90,7 +90,7 @@ namespace ClipOne.view
             configService = new ConfigService();
             config = configService.GetConfig();
             clipService = new ClipService(config);
-            dataService = new DataService(config.RecordCount);
+           
 
             //初始化浏览器
             InitWebView();
@@ -101,7 +101,7 @@ namespace ClipOne.view
 
             Task.Run(RegHotKey);
 
-            DiyHide();
+            DiyHide(false);
 
         }
 
@@ -154,23 +154,13 @@ namespace ClipOne.view
             webView1.IsScriptNotifyAllowed = true;
 
             webView1.IsIndexedDBEnabled = true;
-            webView1.ScriptNotify += WebView1_ScriptNotify; ;
+            webView1.ScriptNotify += WebView1_ScriptNotify; ;             
 
-            webView1.NavigationCompleted += (x, y) => {
-   
-                if (!loadDataToWeb)
-                {
-                    loadDataToWeb = true;
-                    InitApplyData();
-                   
-                }
-            };
-
-            
             webView1.NavigateToLocal(defaultHtml);
 
 
         }
+
 
         private void WebView1_ScriptNotify(object sender, Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT.WebViewControlScriptNotifyEventArgs e)
         {
@@ -178,67 +168,36 @@ namespace ClipOne.view
             if (args[0] == "PasteValue")
             {
 
-                PasteValue(int.Parse(args[1]));
+                PasteValue(args[1]);
 
 
             }
             if (args[0] == "PasteValueWithoutTop")
             {
 
-                PasteValueWithoutTop(int.Parse(args[1]));
+                PasteValueWithoutTop(args[1]);
 
 
             }
             else if (args[0] == "PasteValueList")
             {
 
-                List<int> indexes = JsonConvert.DeserializeObject<List<int>>(HttpUtility.UrlDecode(args[1]));
-                PasteValueList(indexes);
+                PasteValueList(args[1]);
 
             }
             else if (args[0] == "PasteValueListWithoutTop")
             {
 
-                List<int> indexes = JsonConvert.DeserializeObject<List<int>>(HttpUtility.UrlDecode(args[1]));
-                PasteValueList(indexes);
+                
+                PasteValueList(args[1]);
 
             }
-            else if (args[0] == "PasteValueRange")
-            {
-
-                string[] param = args[1].Split(',');
-                PasteValueRange(int.Parse(param[0]), int.Parse(param[1]));
-
-            }
-            else if (args[0] == "PasteValueRangeWithoutTop")
-            {
-
-                string[] param = args[1].Split(',');
-                PasteValueRange(int.Parse(param[0]), int.Parse(param[1]));
-
-            }
+            
             else if (args[0] == "SetToClipBoard")
             {
-                SetToClipboard(int.Parse(args[1]));
+                SetToClipboard(args[1]);
             }
-            else if (args[0] == "del")
-            {
-                dataService.Del(int.Parse(args[1]));
-                ApplyData();
-            }
-            else if (args[0] == "search")
-            {
-
-                List<ClipModel> clips = dataService.Get();
-                Tuple<string, int> tuple = GenerateHtml(clips, args[1]);
-                ApplyData(tuple.Item1, tuple.Item2);
-
-            }
-            else if (args[0] == "clear")
-            {
-                dataService.Clear();
-                ApplyData();
-            }
+             
             else if (args[0] == "ChangeWindowHeight")
             {
                 ChangeWindowHeight(double.Parse(args[1]));
@@ -284,12 +243,7 @@ namespace ClipOne.view
             {
                 Header = "热键"
             };
-
-
-            MenuItem record = new MenuItem
-            {
-                Header = "记录数"
-            };
+ 
             MenuItem skin = new MenuItem
             {
                 Header = "皮肤"
@@ -313,8 +267,8 @@ namespace ClipOne.view
             //清空记录
             clear.Click += (x, y) =>
             {
-                dataService.Clear();
-                ApplyData();   
+                webView1.InvokeScriptAsync("clear");
+
 
             };
 
@@ -322,36 +276,24 @@ namespace ClipOne.view
             //刷新页面,一般用于自定义html css js时
             reload.Click += (x, y) =>
             {
+                webView1.InvokeScript("saveData");
+                
                 webView1.Refresh();
-                ApplyData();
+               
 
             };
             //退出
-            exit.Click += (x, y) => { Application.Current.Shutdown(); };
+            exit.Click += (x, y) => {
+                webView1.InvokeScript("saveData");
+                Application.Current.Shutdown(); 
+            };
 
             hotkey.Click += Hotkey_Click;
             startup.Click += Startup_Click;
             startup.IsChecked = config.AutoStartup;
 
 
-            //增加记录数设置子菜单项
-            for (int i = 100; i <= config.MaxRecordCount; i += 100)
-            {
-
-                string recordsNum = i.ToString();
-                MenuItem subRecord = new MenuItem
-                {
-                    Header = recordsNum
-                };
-                if (int.Parse(recordsNum) == config.RecordCount)
-                {
-                    subRecord.IsChecked = true;
-                }
-                subRecord.Click += RecordSet_Click;
-
-                record.Items.Add(subRecord);
-
-            }
+    
 
             //增加格式选择子菜单项
             foreach (ClipType type in Enum.GetValues(typeof(ClipType)))
@@ -411,8 +353,6 @@ namespace ClipOne.view
             taskbar.ContextMenu.Items.Add(new Separator());
             taskbar.ContextMenu.Items.Add(format);
             taskbar.ContextMenu.Items.Add(skin);
-            taskbar.ContextMenu.Items.Add(record);
-            taskbar.ContextMenu.Items.Add(new Separator());
             taskbar.ContextMenu.Items.Add(hotkey);
             taskbar.ContextMenu.Items.Add(startup);
             taskbar.ContextMenu.Items.Add(new Separator());
@@ -494,7 +434,7 @@ namespace ClipOne.view
             }
             File.WriteAllLines(defaultHtml, fileLines, Encoding.UTF8);
             webView1.Refresh();
-            ApplyData();
+          
 
 
 
@@ -539,29 +479,7 @@ namespace ClipOne.view
             }
         }
 
-
-
-
-        /// <summary>
-        /// 设置保存记录数
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void RecordSet_Click(object sender, EventArgs e)
-        {
-
-            MenuItem item = ((MenuItem)sender);
-            MenuItem p = (MenuItem)item.Parent;
-            foreach (MenuItem i in p.Items)
-            {
-                i.IsChecked = false;
-            }
-            item.IsChecked = true;
-            config.RecordCount = int.Parse((string)item.Header);
-            configService.SaveSettings();
-            
-
-        }
+ 
 
 
         /// <summary>
@@ -625,7 +543,7 @@ namespace ClipOne.view
                     Show();
                     Activate();
 
-                    ShowPage();
+                   
                 }
                 handled = true;
             }
@@ -639,135 +557,16 @@ namespace ClipOne.view
         /// <param name="str"></param>
         private void AddClip(ClipModel clip)
         {
-            if (dataService.Put(clip))
-            {
-                ApplyData();
-            }
+            string json = JsonConvert.SerializeObject(clip);
+            json = HttpUtility.UrlEncode(json);
+
+            webView1.InvokeScript("addData", json);
 
 
-        }
-        private void ApplyData()
-        {
-            var clips = dataService.Get();
-            Tuple<string, int> value = GenerateHtml(clips, string.Empty);
-            ApplyData(value.Item1, value.Item2);
 
         }
-        private void InitApplyData()
-        {
-            var clips = dataService.Get();
-            Tuple<string, int> value = GenerateHtml(clips, string.Empty);
-            InitApplyData(value.Item1, value.Item2);
 
-        }
-        private void InitApplyData(string html, int count)
-        {
-            html = HttpUtility.UrlEncode(html);
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                webView1.InvokeScript("applyData", new string[] { html, count.ToString() });
-
-            });
-        }
-        private void ApplyData(string html, int count)
-        {
-            html = HttpUtility.UrlEncode(html);
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                webView1.InvokeScriptAsync("applyData", new string[] { html, count.ToString() });
-   
-            });
-        }
-
-        private Tuple<string, int> GenerateHtml(List<ClipModel> clips, string searchValue)
-        {
-            string html = string.Empty;
-            int count = -1;
-            for (var i = 0; i < clips.Count; i++)
-            {
-                ClipModel clip = clips[i];
-                string num;
-                if (searchValue == string.Empty || clip.Type.ToLower() == searchValue.ToLower() || clip.Type != ClipService.IMAGE_TYPE && clip.ClipValue.ToLower().IndexOf(searchValue.ToLower()) >= 0)
-                {
-                    count++;
-                    if (count < 9)
-                    {
-                        num = "<u>" + (count + 1) + "</u>";
-                    }
-                    else if (count < 35)
-                    {
-                        num = "<u>" + NunberToChar(count + 1 - 9) + "</u>";
-                    }
-                    else
-                    {
-                        num = count.ToString();
-                    }
-
-                    string trs;
-                    if (clip.Type == ClipService.IMAGE_TYPE)
-                    {
-
-                        trs =
-                            " <tr style='cursor: default' index='" +
-                            i +
-                            "' id='tr" +
-                            i +
-                            "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' )'> <td  class='td_content' > <img class='image' src='data:image/png;base64," +
-                            clip.ClipValue +
-                            "' /> </td><td class='td_index'  >" +
-                            num +
-                            "</td> </tr>";
-
-                    }
-                    else
-                    {
-                        trs =
-                            " <tr style='cursor: default' index='" +
-                            i +
-                            "' id='tr" +
-                            i +
-                            "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' '> <td  class='td_content' >  " +
-                            clip.DisplayValue +
-                            " </td><td class='td_index'  >" +
-                            num +
-                            "</td> </tr>";
-                    }
-
-                    html += trs;
-                }
-            }
-
-
-            if (clips.Count == 0)
-            {
-                html = " <tr style='cursor: default'> <td  class='td_content' style='cursor: default;height:30px;' > 无记录 </td> </tr>";
-
-            }
-
-            return new Tuple<string, int>(html, count + 1);
-        }
-
-        private string NunberToChar(int number)
-        {
-            if (number >= 1 && number <= 26)
-            {
-                int num = number + 64;
-                System.Text.ASCIIEncoding asciiEncoding = new System.Text.ASCIIEncoding();
-                byte[] btNumber = new byte[] { (byte)num };
-                return asciiEncoding.GetString(btNumber);
-            }
-            return string.Empty;
-        }
-        /// <summary>
-        /// 显示窗口并列出所有条目
-        /// </summary>
-        private async void ShowPage()
-        {
-
-            await webView1.InvokeScriptAsync("show");
-            
-
-        }
+  
 
         /// <summary>
         /// 根据页面高度改变窗体高度
@@ -797,7 +596,7 @@ namespace ClipOne.view
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
 
-            dataService.Close();
+            
             webView1?.Close();
             webView1?.Dispose();
 
@@ -815,15 +614,15 @@ namespace ClipOne.view
         /// 将粘贴条目设置到剪切板
         /// </summary>
         /// <param name="id">索引</param>
-        public void SetToClipboard(int index)
+        public void SetToClipboard(string clipStr)
         {
 
             DiyHide();
             Task.Run(() =>
             {
-                ClipModel clip = dataService.GetAndTop(index);
-                ApplyData();
+                ClipModel clip = JsonConvert.DeserializeObject<ClipModel>(HttpUtility.UrlDecode(clipStr));
                 clipService.SetValueToClipboard(clip);
+
             });
 
 
@@ -832,25 +631,24 @@ namespace ClipOne.view
         /// 根据索引粘贴条目到活动窗口
         /// </summary>
         /// <param name="id">索引</param>
-        public void PasteValue(int index)
+        public void PasteValue(string clipStr)
         {
             DiyHide();
             Task.Run(() =>
             {
-                ClipModel clip = dataService.Get(index);
+                ClipModel clip = JsonConvert.DeserializeObject<ClipModel>(HttpUtility.UrlDecode(clipStr));
+
                 SinglePaste(clip);
-                dataService.Top(index);
-                ApplyData();
             });
 
 
         }
 
-        public void PasteValueWithoutTop(int index)
+        public void PasteValueWithoutTop(string clipStr)
         {
             DiyHide();
-
-            SinglePaste(dataService.Get(index));
+            ClipModel clip = JsonConvert.DeserializeObject<ClipModel>(HttpUtility.UrlDecode(clipStr));
+            SinglePaste(clip);
 
 
 
@@ -860,7 +658,7 @@ namespace ClipOne.view
         /// 粘贴条目到活动窗口 
         /// </summary>
         /// <param name="result">需要粘贴的值</param>
-        /// /// <param name="neadPause">是否需要延时，单条需要，批量不需要</param>
+        
         private void SetValueToClip(ClipModel result)
         {
 
@@ -871,7 +669,7 @@ namespace ClipOne.view
 
             }
             catch { }
-            //Thread.Sleep(50);
+            Thread.Sleep(50);
 
             KeyboardKit.Keyboard.Press(Key.LeftCtrl);
             KeyboardKit.Keyboard.Press(Key.V);
@@ -883,7 +681,7 @@ namespace ClipOne.view
 
         }
 
-        private void DiyHide()
+        private void DiyHide(bool resetPage=true)
         {
             if (activityWindow != IntPtr.Zero)
             {
@@ -891,6 +689,10 @@ namespace ClipOne.view
                 activityWindow = IntPtr.Zero;
             }
             this.Left = -10000;
+            if (resetPage) { 
+                webView1.InvokeScriptAsync("show");
+            }
+
         }
       
         private void Window_Deactivated(object sender, EventArgs e)
@@ -904,56 +706,22 @@ namespace ClipOne.view
         /// 批量粘贴
         /// </summary>
 
-        public void PasteValueList(List<int> indexes)
+        public void PasteValueList(string clipListStr)
         {
             DiyHide();
-            List<ClipModel> clipList = dataService.Get(indexes);
-            BatchPaste(clipList);
+            
 
             Task.Run(
                 () =>
                 {
-                    dataService.Top(indexes);
-                    ApplyData();
+                    List<ClipModel> clipList = JsonConvert.DeserializeObject<List<ClipModel>>(HttpUtility.UrlDecode(clipListStr));
+                    BatchPaste(clipList);
+
+
                 });
         }
-
-        public void PasteValueListWithoutTop(List<int> indexes)
-        {
-            DiyHide();
-            List<ClipModel> clipList = dataService.Get(indexes);
-
-            BatchPaste(clipList);
-        }
-
-        /// <summary>
-        /// 批量粘贴
-        /// </summary>
-
-        public void PasteValueRange(int startIndex, int endIndex)
-        {
-            DiyHide();
-            List<ClipModel> clipList = dataService.Get(startIndex, endIndex);
-            ApplyData();
-
-
-            BatchPaste(clipList);
-            Task.Run(
-               () =>
-               {
-                   dataService.Top(startIndex, endIndex);
-                   ApplyData();
-               });
-        }
-
-        public void PasteValueRangeWithoutTop(int startIndex, int endIndex)
-        {
-            DiyHide();
-            List<ClipModel> clipList = dataService.Get(startIndex, endIndex);
-
-            BatchPaste(clipList);
-        }
-
+ 
+ 
         /// <summary>
         /// 单个粘贴
         /// </summary>
