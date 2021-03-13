@@ -92,7 +92,6 @@
     </Compile>
     <Compile Include="service\ClipService.cs" />
     <Compile Include="service\ConfigService.cs" />
-    <Compile Include="service\DataService.cs" />
     <Compile Include="util\CursorHelp.cs" />
     <Compile Include="util\HotKeyManager.cs" />
     <Compile Include="util\HttpUtility.cs" />

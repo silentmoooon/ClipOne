@@ -1,3 +1,9 @@
+//所有记录
+var clipObj = [];
+
+//最大记录数
+var maxRecords = 300;
+
 //是否处于搜索模式
 var searchMode = false;
 
@@ -14,6 +20,12 @@ var isCtrlPressed = false;
 var multiIndexList = []
     //多记录粘贴时是否将粘贴记录发送到顶部,默认为true
 var multiSendToTop = true;
+
+//存储到localStorage间隔
+var storeInterval;
+ 
+//搜索值
+var searchValue = "";
 
 //记录行数
 var length = 0;
@@ -44,12 +56,21 @@ $(document).ready(function() {
         var value = $("#searchInput")
             .val()
             .toLowerCase();
-        search(value);
+        searchValue = value;
+        displayData();
         $(".tr_selected").removeClass("tr_selected");
         $("#tr0").addClass("tr_selected");
     });
    
-
+ 
+    var str = window.localStorage.getItem("data");
+    if (str != null) {
+        clipObj = JSON.parse(str);
+    }
+  
+    displayData();
+     
+    storeInterval = setInterval(saveData, 60000);
 
 
 });
@@ -185,16 +206,138 @@ function num2key(num) {
 }
 
 //显示记录
-function applyData(html, count) {
-    length = count;
-    html = decodeURIComponent(html.replace(/\+/g, "%20"));
-    $(".myTable").html(html);
+function displayData() {
+    var tbody = "";
 
-    $(".content").getNiceScroll().resize();
-    changeWindowHeight();
+    var matchCount = -1;
 
+    for (var i = 0; i < clipObj.length; i++) {
+        if (clipObj[i] == null) {
+            clipObj.splice(i, 1);
+            i--;
+        }
+        var trs = "";
+        var num = "";
+
+        if (
+            searchValue == "" ||
+            clipObj[i].Type == searchValue ||
+            clipObj[i].Type!="image" && clipObj[i].ClipValue.toLowerCase().indexOf(searchValue) >= 0
+        ) {
+            matchCount++;
+            if (matchCount < 9) {
+                num = "<u>" + (matchCount + 1) + "</u>";
+            } else if (matchCount < 35) {
+                num = "<u>" + num2key(matchCount + 1) + "</u>";
+            } else {
+                num = "" + (matchCount + 1);
+            }
+            if (clipObj[i].Type == "image") {
+
+                trs =
+                    " <tr style='cursor: default' index='" +
+                    i +
+                    "' id='tr" +
+                    matchCount +
+                    "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' )'> <td  class='td_content' > <img class='image' src='data:image/png;base64," +
+                    clipObj[i].ClipValue +
+                    "' /> </td><td class='td_index'  >" +
+                    num +
+                    "</td> </tr>";
+
+            } else {
+                trs =
+                    " <tr style='cursor: default' index='" +
+                    i +
+                    "' id='tr" +
+                    matchCount +
+                    "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' '> <td  class='td_content' >  " +
+                    clipObj[i].DisplayValue +
+                    " </td><td class='td_index'  >" +
+                    num +
+                    "</td> </tr>";
+            }
+        }
+        tbody += trs;
+    }
+
+    
+    if (matchCount == -1) {
+        tbody = " <tr style='cursor: default'> <td  class='td_content' style='cursor: default;height:30px;' > 无记录 </td> </tr>";
+       
+    }
+     $(".myTable").html(tbody);
+
+     $(".content").getNiceScroll().resize();
+     changeWindowHeight();
+ 
 
 }
+
+//设置保存最大记录数
+function setMaxRecords(records) {
+    if (records <= 0) return;
+    maxRecords = records;
+    if (clipObj.length > maxRecords) {
+        clipObj = clipObj.slice(0, maxRecords);
+        displayData();
+    }
+
+}
+
+//增加条目
+function addData(data) {
+    
+    data = decodeURIComponent(data.replace(/\+/g, "%20"));
+    var obj = JSON.parse(data);
+
+    if (obj == null) {
+        return;
+    }
+
+
+    for (var i = 0; i < clipObj.length; i++) {
+        if (clipObj[i].ClipValue == obj.ClipValue) {
+            clipObj.splice(i, 1);
+            break;
+        }
+    }
+
+    clipObj.splice(0, 0, obj);
+
+    if (clipObj.length > maxRecords) {
+        clipObj.splice(clipObj.length - 1, 1)[0];
+    }
+    displayData();
+   
+}
+
+
+//显示时初始化状态
+function show() {
+    rangeStartIndex = -1;
+    isShiftPressed = false;
+    isCtrlPressed = false;
+    if (searchMode) {
+        hideSearch();
+    }
+    scrollTop();
+
+    if (clipObj.length != 0) {
+
+        selectIndex = 1;
+
+        $(".tr_selected").removeClass("tr_selected");
+        $("#tr" + selectIndex).addClass("tr_selected");
+
+    }
+   
+    $(".content").getNiceScroll().resize();
+    changeWindowHeight();
+  
+}
+
+ 
 
 //粘贴选择项
 function mouseup(e) {
@@ -269,49 +412,106 @@ function show() {
 // 回调本地代码
 
 //粘贴单条,sednToTop为false则不改变顺序
+//粘贴单条
 function pasteValue(index, sendToTop) {
-    let command = "PasteValue";
-    if (!sendToTop) {
-        command += "WithoutTop";
+    var obj = clipObj[index];
+    if (sendToTop) {
+        clipObj.splice(index, 1)[0];
+        clipObj.splice(0, 0, obj);
     }
     window.external.notify(
-        command + "|" + index);
+        "PasteValue|" + encodeURIComponent(JSON.stringify(obj))
+    );
 
+    displayData();
 }
 
 
 //设置到剪切板但不粘贴
-function setToClipBoard(index) {
+
+function setToClipBoard(index, ) {
+    var obj = clipObj[index];
+    clipObj.splice(index, 1)[0];
+    clipObj.splice(0, 0, obj);
 
     window.external.notify(
-        "SetToClipBoard|" + index);
+        "SetToClipBoard|" + encodeURIComponent(JSON.stringify(obj))
+    );
+
+    displayData();
 }
 //粘贴多条
 function pasteMultiValue() {
-    let command = "PasteValueList";
-    if (!multiSendToTop) {
-        command += "WithoutTop";
-    }
+    var clipList = [];
+    var lastIndex = -1;
+    var diffLenth = 0;
+    multiIndexList.forEach(index => {
+
+        var result = clipObj[index];
+        if (multiSendToTop) {
+
+            if (lastIndex >= 0 && lastIndex > index) {
+                diffLenth++;
+                index = index + diffLenth;
+                result = clipObj[index];
+            }
+            clipObj.splice(index, 1)[0];
+            clipObj.splice(0, 0, result);
+        }
+        clipList.push(result);
+        lastIndex = index;
+    });
     window.external.notify(
-        command + "|" + encodeURIComponent(JSON.stringify(multiIndexList))
+        "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
     );
+    if (multiSendToTop) {
+        displayData();
+    }
 
 }
+
 //粘贴范围
 function pasteValueByRange(startIndex, endIndex, sendToTop) {
-    let command = "PasteValueRange";
-    if (!sendToTop) {
-        command += "WithoutTop";
+    var clipList = [];
+    if (endIndex > startIndex) {
+        for (var i = startIndex; i <= endIndex; i++) {
+            var result = clipObj[i];
+            if (sendToTop) {
+                clipObj.splice(i, 1)[0];
+                clipObj.splice(0, 0, result);
+            }
+            clipList.push(result);
+        }
+    } else if (endIndex < startIndex) {
+        for (var i = startIndex; i >= endIndex; i--) {
+            var result = clipObj[i];
+            if (sendToTop) {
+                clipObj.splice(i, 1)[0];
+            }
+            clipList.push(result);
+        }
+        if (sendToTop) {
+            clipList.forEach(value => {
+                clipObj.splice(0, 0, value);
+            });
+        }
+    } else {
+        pasteValue(startIndex, sendToTop);
+        return;
     }
 
     window.external.notify(
-        command + "|" + startIndex + "," + endIndex);
+        "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
+    );
+    if (multiSendToTop) {
+        displayData();
+    }
 
 }
 
 
 function del(index) {
-    window.external.notify("del|" + index);
+    clipObj.splice(index, 1)[0];
 }
 
 function search(value) {
@@ -324,12 +524,20 @@ function changeWindowHeight() {
     if ($(".content").height() <= 308) {
         $("body").css("height", 308);
     } else {
-        $("body").css("height", 617);
+        $("body").css("height", 618);
     }
     window.external.notify("ChangeWindowHeight|" + $(".content").height());
 }
 
+function saveData() {
+    window.localStorage.setItem("data", JSON.stringify(clipObj));
+}
+ 
+
 
 function clear() {
-    window.external.notify("clear|");
+    clipObj = [];
+    window.localStorage.clear();
+    displayData();
+    changeWindowHeight();
 }
