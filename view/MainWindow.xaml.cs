@@ -69,22 +69,21 @@ namespace ClipOne.view
         /// 当前应用句柄
         /// </summary>
         private IntPtr wpfHwnd = IntPtr.Zero;
-
-        private volatile bool loadDataToWeb = false;
-
+ 
         public MainWindow()
         {
             InitializeComponent();
 
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            activityWindow = WinAPIHelper.GetForegroundWindow();
 
+            
         }
 
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            
+           
+            Left = -10000;
             taskbar = (TaskbarIcon)FindResource("Taskbar");
 
             configService = new ConfigService();
@@ -99,16 +98,16 @@ namespace ClipOne.view
             InitialTray();
 
 
-            Task.Run(RegHotKey);
-
-            DiyHide(false);
+             Task.Run(RegHotKey);
+           
+        
 
         }
 
         private void RegHotKey()
         {
 
-            Thread.Sleep(1000);
+            Thread.Sleep(500);
             Application.Current.Dispatcher.Invoke(() =>
             {
                 //注册热键,如果注册热键失败则弹出热键设置界面
@@ -154,13 +153,19 @@ namespace ClipOne.view
             webView1.IsScriptNotifyAllowed = true;
 
             webView1.IsIndexedDBEnabled = true;
-            webView1.ScriptNotify += WebView1_ScriptNotify; ;             
+            webView1.ScriptNotify += WebView1_ScriptNotify; ;
+            webView1.NavigationCompleted += WebView1_NavigationCompleted;
 
             webView1.NavigateToLocal(defaultHtml);
 
 
         }
 
+        private void WebView1_NavigationCompleted(object sender, Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT.WebViewControlNavigationCompletedEventArgs e)
+        {
+            
+            DiyHide();
+        }
 
         private void WebView1_ScriptNotify(object sender, Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT.WebViewControlScriptNotifyEventArgs e)
         {
@@ -515,6 +520,8 @@ namespace ClipOne.view
 
                 if (hotkeyAtom == wParam.ToInt32())
                 {
+                    webView1.InvokeScriptAsync("show");
+
                     activityWindow = WinAPIHelper.GetForegroundWindow();
                     if (WinAPIHelper.GetCursorPos(out WinAPIHelper.POINT point))
                     {
@@ -633,6 +640,8 @@ namespace ClipOne.view
         /// <param name="id">索引</param>
         public void PasteValue(string clipStr)
         {
+           
+           
             DiyHide();
             Task.Run(() =>
             {
@@ -669,7 +678,7 @@ namespace ClipOne.view
 
             }
             catch { }
-            Thread.Sleep(50);
+            //Thread.Sleep(60);
 
             KeyboardKit.Keyboard.Press(Key.LeftCtrl);
             KeyboardKit.Keyboard.Press(Key.V);
@@ -681,24 +690,17 @@ namespace ClipOne.view
 
         }
 
-        private void DiyHide(bool resetPage=true)
+        private void DiyHide()
         {
-            if (activityWindow != IntPtr.Zero)
-            {
-                WinAPIHelper.SetForegroundWindow(activityWindow);
-                activityWindow = IntPtr.Zero;
-            }
-            this.Left = -10000;
-            if (resetPage) { 
-                webView1.InvokeScriptAsync("show");
-            }
+            Hide();
+             
 
         }
       
         private void Window_Deactivated(object sender, EventArgs e)
         {
-
-            DiyHide();
+             
+            this.Left = -10000;
 
         }
 
