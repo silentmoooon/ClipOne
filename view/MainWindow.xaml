@@ -6,17 +6,12 @@
         xmlns:Controls="clr-namespace:Microsoft.Toolkit.Wpf.UI.Controls;assembly=Microsoft.Toolkit.Wpf.UI.Controls.WebView"
     x:Class="ClipOne.view.MainWindow"
         mc:Ignorable="d"
-        Title="MainWindow"    Width="440"  MaxHeight="620"  Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None"  Background="Transparent"    ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False"    SourceInitialized="Window_SourceInitialized"  >
-    <!---->
-    <Border  Margin="0"  Background="Transparent">
-        <Border.Effect>
-            <DropShadowEffect Color="gray" BlurRadius="15" Direction="-90" RenderingBias="Quality" ShadowDepth="2"/>
-        </Border.Effect>
+        Title="MainWindow"     Width="420"  MaxHeight="580"  Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None"  Background="Transparent"    ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False"    SourceInitialized="Window_SourceInitialized"  >
 
-        <Controls:WebView Name="webView1"   Width="440"  />
-       
-
+    <Border  Margin="0"   BorderBrush="Transparent"  >
+        <Controls:WebView Name="webView1"   Width="420"  />
     </Border>
     
+
 
 </Window>

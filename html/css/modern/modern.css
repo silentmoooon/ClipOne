@@ -16,8 +16,8 @@ body {
     margin-top: 0px;
     margin-right: 0px;
     margin-bottom: 0px;
-    width: 441px;
-    max-height: 618px;
+    width: 418px;
+    max-height: 578px;
     background-color: #FFFFFF;
 }
 
@@ -27,14 +27,14 @@ body {
     margin: 0px;
     padding: 0px;
     width: 100%;
-    max-height: 620px;
+    max-height: 578px;
 }
 
 
 /*table*/
 
 .table_main {
-    width: 440px;
+    width: 418px;
     cursor: default;
     border-collapse: collapse;
     table-layout: fixed;
@@ -58,7 +58,7 @@ td {
 
 .td_content {
     cursor: default;
-    width: 398px;
+    width: 378px;
     margin-left: 0px !important;
     margin-right: 0px !important;
     padding-left: 3px !important;
@@ -86,7 +86,7 @@ img,
     width: auto;
     height: auto;
     max-height: 250px !important;
-    max-width: 390px !important;
+    max-width: 370px !important;
     vertical-align: middle;
     text-align: left;
     margin: 0px !important;
@@ -95,6 +95,7 @@ img,
 
 
 /*鼠标悬浮*/
+
 
 /*鼠标悬浮*/
 
@@ -107,7 +108,6 @@ tr:hover>td {
     background-color: #0078d7;
     color: #FFFFFF;
 }
-
 
 a {
     text-decoration: none

@@ -5,12 +5,10 @@
     font-size: 12px;
 }
 
- 
 
 /*body*/
 
 body {
-
     -ms-overflow-style: none;
     background-color: #FFFFFF;
     border: 1px solid #A9CBEE;
@@ -19,9 +17,8 @@ body {
     margin-top: 0px;
     margin-right: 0px;
     margin-bottom: 0px;
-    width: 438px;
-    max-height: 618px;
-    border-radius: 2px;
+    width: 418px;
+    max-height: 578px;
 }
 
 .content {
@@ -30,14 +27,14 @@ body {
     margin: 0px;
     padding: 0px;
     width: 100%;
-    max-height: 620px;
+    max-height: 578px;
 }
 
 
 /*table*/
 
 .table_main {
-    width: 438px;
+    width: 418px;
     cursor: default;
     border-collapse: collapse;
     table-layout: fixed;
@@ -59,7 +56,7 @@ td {
 
 .td_content {
     cursor: default;
-    width: 398px;
+    width: 378px;
     margin-left: 0px !important;
     margin-right: 0px !important;
     padding-left: 3px !important;
@@ -87,7 +84,7 @@ img,
     width: auto;
     height: auto;
     max-height: 250px !important;
-    max-width: 390px !important;
+    max-width: 370px !important;
     vertical-align: middle;
     text-align: left;
     margin: 0px !important;
@@ -107,13 +104,11 @@ tr:hover>td {
     color: #FFFFFF;
 }
 
-
 a {
     text-decoration: none
 }
 
 #searchDiv {
-
     position: absolute;
     top: 5px;
     right: 25px;
@@ -131,7 +126,6 @@ a {
 }
 
 #searchInput {
- 
     width: 150px;
     height: 25px;
     font-size: 14px;
