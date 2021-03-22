@@ -23,7 +23,7 @@ var multiSendToTop = true;
 
 //存储到localStorage间隔
 var storeInterval;
- 
+
 //搜索值
 var searchValue = "";
 
@@ -48,7 +48,7 @@ $(document).ready(function() {
         cursorcolor: "#808080"
     });
 
-     $("body").on("keydown", keyDown);
+    $("body").on("keydown", keyDown);
     $("body").on("keyup", keyUp);
 
     //查找
@@ -61,15 +61,15 @@ $(document).ready(function() {
         $(".tr_selected").removeClass("tr_selected");
         $("#tr0").addClass("tr_selected");
     });
-   
- 
+
+
     var str = window.localStorage.getItem("data");
     if (str != null) {
         clipObj = JSON.parse(str);
     }
-  
+
     displayData();
-     
+
     storeInterval = setInterval(saveData, 60000);
 
 
@@ -77,7 +77,7 @@ $(document).ready(function() {
 
 
 function keyDown(event) {
-   
+
     if (event.keyCode == 27) {
         //esc
         if (searchMode) {
@@ -91,7 +91,7 @@ function keyDown(event) {
         } else {
             pasteValue(selectIndex, true);
         }
-    }  else if (event.ctrlKey && event.keyCode == 70) {
+    } else if (event.ctrlKey && event.keyCode == 70) {
         toggleSearch();
     } else if (!searchMode) {
         if (event.shiftKey) {
@@ -124,7 +124,7 @@ function keyDown(event) {
 
             del(selectIndex);
         }
-       
+
     }
 }
 
@@ -222,7 +222,7 @@ function displayData() {
         if (
             searchValue == "" ||
             clipObj[i].Type == searchValue ||
-            clipObj[i].Type!="image" && clipObj[i].ClipValue.toLowerCase().indexOf(searchValue) >= 0
+            clipObj[i].Type != "image" && clipObj[i].ClipValue.toLowerCase().indexOf(searchValue) >= 0
         ) {
             matchCount++;
             if (matchCount < 9) {
@@ -261,16 +261,15 @@ function displayData() {
         tbody += trs;
     }
 
-    
+
     if (matchCount == -1) {
         tbody = " <tr style='cursor: default'> <td  class='td_content' style='cursor: default;height:30px;' > 无记录 </td> </tr>";
-       
-    }
-     $(".myTable").html(tbody);
 
-     $(".content").getNiceScroll().resize();
-     changeWindowHeight();
- 
+    }
+    $(".myTable").html(tbody);
+
+
+    $(".content").getNiceScroll().resize();
 
 }
 
@@ -287,7 +286,7 @@ function setMaxRecords(records) {
 
 //增加条目
 function addData(data) {
-    
+
     data = decodeURIComponent(data.replace(/\+/g, "%20"));
     var obj = JSON.parse(data);
 
@@ -309,7 +308,7 @@ function addData(data) {
         clipObj.splice(clipObj.length - 1, 1)[0];
     }
     displayData();
-   
+
 }
 
 
@@ -331,13 +330,13 @@ function show() {
         $("#tr" + selectIndex).addClass("tr_selected");
 
     }
-   
+
     $(".content").getNiceScroll().resize();
-    changeWindowHeight();
-  
+
+
 }
 
- 
+
 
 //粘贴选择项
 function mouseup(e) {
@@ -402,9 +401,10 @@ function show() {
         $("#tr" + selectIndex).addClass("tr_selected");
 
     }
-     $(".content")[0].focus();
+    $(".content")[0].focus();
     $(".content").getNiceScroll().resize();
-    changeWindowHeight();
+
+
 
 }
 
@@ -519,25 +519,15 @@ function search(value) {
 }
 
 
-//调整高度
-function changeWindowHeight() {
-    if ($(".content").height() <= 308) {
-        $("body").css("height", 308);
-    } else {
-        $("body").css("height", 618);
-    }
-    window.external.notify("ChangeWindowHeight|" + $(".content").height());
-}
-
 function saveData() {
     window.localStorage.setItem("data", JSON.stringify(clipObj));
 }
- 
+
 
 
 function clear() {
     clipObj = [];
     window.localStorage.clear();
     displayData();
-    changeWindowHeight();
+
 }

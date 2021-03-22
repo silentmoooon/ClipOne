@@ -483,12 +483,9 @@ namespace ClipOne.service
             string xmlStr = Encoding.UTF8.GetString(b);
             xmlStr = xmlStr.Substring(0, xmlStr.IndexOf("</QQRichEditFormat>") + "</QQRichEditFormat>".Length);
 
-
-
-
             XmlDocument document = new XmlDocument();
             document.LoadXml(xmlStr);
-            XmlNodeList nodeList = document.SelectNodes("QQRichEditFormat/EditElement[@type='1']|QQRichEditFormat/EditElement[@type='2']|QQRichEditFormat/EditElement[@type='5']");
+            XmlNodeList nodeList = document.SelectNodes("QQRichEditFormat/EditElement[@type='1']|QQRichEditFormat/EditElement[@type='2']|QQRichEditFormat/EditElement[@type='3']|QQRichEditFormat/EditElement[@type='5']");
 
             //如果只有一个图片且没有文字,则按图片处理
             if (GetOccurTimes(xmlStr, "filepath") == 1 && xmlStr.IndexOf("<![CDATA[") < 0)
