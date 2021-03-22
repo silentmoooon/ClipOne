@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="MainWindow"     Width="420"  MaxHeight="580"  Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None"  Background="Transparent"    ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False"    SourceInitialized="Window_SourceInitialized"  >
 
-    <Border  Margin="0"   BorderBrush="Transparent"  >
+    <Border  Margin="0"   Background="Transparent"  >
         <Controls:WebView Name="webView1"   Width="420"  />
     </Border>
     

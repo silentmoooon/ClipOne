@@ -89,36 +89,7 @@ namespace ClipOne.service
                 {
                     dataObject.SetData(DataFormats.FileDrop, new string[] { result.DisplayValue });
                 }
-                
-                
-                //为了性能考虑,暂时不增加可以直接粘贴到资源管理器的功能
-                //else
-                //{
-                //    string ext;
-                //    if (result.DisplayValue == null || result.DisplayValue == string.Empty)
-                //    {
-                //        ext = ".jpg";
-                //    }
-                //    else
-                //    {
-                //        ext = Path.GetExtension(result.DisplayValue).ToLower();
-                //    }
-
-                //    string savePath = Path.GetTempPath() + Guid.NewGuid().ToString() + ext;
-                //    //savePath= @"C:\users\xiecan\desktop\" + Guid.NewGuid().ToString() + ext;
-                //    File.WriteAllBytes(savePath, fileBytes);
-
-
-                //    var dataObject = new DataObject();
-                //    dataObject.SetData(DataFormats.Bitmap, bitImg);
-                //    dataObject.SetData(DataFormats.FileDrop, new string[] { savePath });
-                //    MemoryStream memo = new MemoryStream(4);
-                //    byte[] bytes = new byte[] { 5, 0, 0, 0 };
-                //    memo.Write(bytes, 0, bytes.Length);
-
-                //    dataObject.SetData("Preferred DropEffect", memo);
-                //    Clipboard.SetDataObject(dataObject, true);
-                //}
+               
 
             }
             else if (result.Type == HTML_TYPE)
@@ -158,17 +129,16 @@ namespace ClipOne.service
   
             }
             try {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    System.Windows.Forms.Clipboard.SetDataObject(dataObject, true);
-                    //Clipboard.SetDataObject(dataObject, true);
-                });
-            }catch(Exception e)
-            {
-                
+                //当有其他进程占用剪切板时,WPF的Clipboard会有BUG,winform的没有,所以暂时用winform的
+                System.Windows.Forms.Clipboard.SetDataObject(dataObject, true);
+                //Clipboard.SetDataObject(dataObject, true);
+
             }
-            //当有其他进程占用剪切板时,WPF的Clipboard会有BUG,winform的没有,所以暂时用winform的
-            //System.Windows.Forms.Clipboard.SetDataObject(data, true);
+            catch (Exception e)
+            {
+                Trace.WriteLine(e.Message);
+            }
+           
         }
 
 

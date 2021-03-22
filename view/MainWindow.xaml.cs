@@ -37,8 +37,8 @@ namespace ClipOne.view
 
         private IntPtr activityWindow=IntPtr.Zero;
 
-       
 
+        private volatile bool WatchStatus = true;
 
         /// <summary>
         /// css目录
@@ -90,18 +90,14 @@ namespace ClipOne.view
             config = configService.GetConfig();
             clipService = new ClipService(config);
            
-
             //初始化浏览器
             InitWebView();
            
             //初始化托盘图标
             InitialTray();
 
-
-             Task.Run(RegHotKey);
+            Task.Run(RegHotKey);
            
-        
-
         }
 
         private void RegHotKey()
@@ -151,15 +147,15 @@ namespace ClipOne.view
              
             webView1.IsJavaScriptEnabled = true;
             webView1.IsScriptNotifyAllowed = true;
-
             webView1.IsIndexedDBEnabled = true;
             webView1.ScriptNotify += WebView1_ScriptNotify; ;
             webView1.NavigationCompleted += WebView1_NavigationCompleted;
-
+            
             webView1.NavigateToLocal(defaultHtml);
 
 
         }
+
 
         private void WebView1_NavigationCompleted(object sender, Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT.WebViewControlNavigationCompletedEventArgs e)
         {
@@ -172,7 +168,7 @@ namespace ClipOne.view
             string[] args = e.Value.Split(new char[] { '|' }, 2);
             if (args[0] == "PasteValue")
             {
-
+                //Trace.WriteLine(args[1]);
                 PasteValue(args[1]);
 
 
@@ -203,11 +199,6 @@ namespace ClipOne.view
                 SetToClipboard(args[1]);
             }
              
-            else if (args[0] == "ChangeWindowHeight")
-            {
-                ChangeWindowHeight(double.Parse(args[1]));
-            }
-
 
             else if (args[0] == "esc")
             {
@@ -216,7 +207,7 @@ namespace ClipOne.view
             }
             else if (args[0].StartsWith("test"))
             {
-                Trace.WriteLine(args[1]);
+                 
             }
         }
 
@@ -401,7 +392,6 @@ namespace ClipOne.view
             item.IsChecked = true;
             config.SkinName = (string)item.Header;
             configService.SaveSettings();
-            //webView2.CoreWebView2.ExecuteScriptAsync("saveData()");
 
             string css = item.Tag.ToString();
             ChangeSkin(css);
@@ -502,16 +492,17 @@ namespace ClipOne.view
             if (msg == WM_CLIPBOARDUPDATE)
             {
 
+                if (WatchStatus) { 
+                    ClipModel clip = clipService.HandClip();
 
-                ClipModel clip = clipService.HandClip();
+                    if (string.IsNullOrWhiteSpace(clip.ClipValue))
+                    {
+                        handled = true;
+                        return IntPtr.Zero;
+                    }
 
-                if (string.IsNullOrWhiteSpace(clip.ClipValue))
-                {
-                    handled = true;
-                    return IntPtr.Zero;
+                    AddClip(clip);
                 }
-
-                AddClip(clip);
                 handled = true;
             }
             //触发显示界面快捷键
@@ -520,7 +511,7 @@ namespace ClipOne.view
 
                 if (hotkeyAtom == wParam.ToInt32())
                 {
-                    webView1.InvokeScriptAsync("show");
+                    
 
                     activityWindow = WinAPIHelper.GetForegroundWindow();
                     if (WinAPIHelper.GetCursorPos(out WinAPIHelper.POINT point))
@@ -549,8 +540,10 @@ namespace ClipOne.view
                     }
                     Show();
                     Activate();
+                    Topmost = true;
+                    webView1.Focus();
+                    webView1.InvokeScriptAsync("show");
 
-                   
                 }
                 handled = true;
             }
@@ -566,10 +559,8 @@ namespace ClipOne.view
         {
             string json = JsonConvert.SerializeObject(clip);
             json = HttpUtility.UrlEncode(json);
-
+             
             webView1.InvokeScript("addData", json);
-
-
 
         }
 
@@ -625,12 +616,9 @@ namespace ClipOne.view
         {
 
             DiyHide();
-            Task.Run(() =>
-            {
-                ClipModel clip = JsonConvert.DeserializeObject<ClipModel>(HttpUtility.UrlDecode(clipStr));
-                clipService.SetValueToClipboard(clip);
-
-            });
+            
+            ClipModel clip = JsonConvert.DeserializeObject<ClipModel>(HttpUtility.UrlDecode(clipStr));
+            clipService.SetValueToClipboard(clip);
 
 
         }
@@ -643,12 +631,11 @@ namespace ClipOne.view
            
            
             DiyHide();
-            Task.Run(() =>
-            {
-                ClipModel clip = JsonConvert.DeserializeObject<ClipModel>(HttpUtility.UrlDecode(clipStr));
+            
+            ClipModel clip = JsonConvert.DeserializeObject<ClipModel>(HttpUtility.UrlDecode(clipStr));
 
-                SinglePaste(clip);
-            });
+            SinglePaste(clip);
+           
 
 
         }
@@ -659,39 +646,21 @@ namespace ClipOne.view
             ClipModel clip = JsonConvert.DeserializeObject<ClipModel>(HttpUtility.UrlDecode(clipStr));
             SinglePaste(clip);
 
-
-
         }
 
-        /// <summary>
-        /// 粘贴条目到活动窗口 
-        /// </summary>
-        /// <param name="result">需要粘贴的值</param>
         
-        private void SetValueToClip(ClipModel result)
+        private void SendPasteKey()
         {
-
-
-            try
-            {
-                clipService.SetValueToClipboard(result);
-
-            }
-            catch { }
-            //Thread.Sleep(60);
-
             KeyboardKit.Keyboard.Press(Key.LeftCtrl);
             KeyboardKit.Keyboard.Press(Key.V);
 
             KeyboardKit.Keyboard.Release(Key.LeftCtrl);
             KeyboardKit.Keyboard.Release(Key.V);
-
-
-
         }
 
         private void DiyHide()
         {
+            Topmost = false;
             Hide();
              
 
@@ -699,8 +668,8 @@ namespace ClipOne.view
       
         private void Window_Deactivated(object sender, EventArgs e)
         {
-             
-            this.Left = -10000;
+
+            DiyHide();
 
         }
 
@@ -711,16 +680,11 @@ namespace ClipOne.view
         public void PasteValueList(string clipListStr)
         {
             DiyHide();
-            
 
-            Task.Run(
-                () =>
-                {
-                    List<ClipModel> clipList = JsonConvert.DeserializeObject<List<ClipModel>>(HttpUtility.UrlDecode(clipListStr));
-                    BatchPaste(clipList);
+            List<ClipModel> clipList = JsonConvert.DeserializeObject<List<ClipModel>>(HttpUtility.UrlDecode(clipListStr));
+            BatchPaste(clipList);
 
 
-                });
         }
  
  
@@ -732,9 +696,13 @@ namespace ClipOne.view
         {
             //设置剪切板前取消监听
             WinAPIHelper.RemoveClipboardFormatListener(wpfHwnd);
-            SetValueToClip(clip);
+            
+            clipService.SetValueToClipboard(clip);
+            Thread.Sleep(100);
+            SendPasteKey();
             //设置剪切板后恢复监听
             WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
+
 
         }
         /// <summary>
@@ -747,7 +715,6 @@ namespace ClipOne.view
             //设置剪切板前取消监听
             WinAPIHelper.RemoveClipboardFormatListener(wpfHwnd);
 
-
             for (int i = 0; i < clipList.Count; i++)
             {
 
@@ -756,11 +723,13 @@ namespace ClipOne.view
                 {
                     clip.ClipValue += "\n";
                 }
-                SetValueToClip(clip);
+                clipService.SetValueToClipboard(clip);
+                SendPasteKey();
                 Thread.Sleep(50);
             }
             //设置剪切板后恢复监听
             WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
+            
         }
 
 
