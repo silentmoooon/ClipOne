@@ -7,6 +7,9 @@ var maxRecords = 300;
 //是否处于搜索模式
 var searchMode = false;
 
+//搜索值
+var searchValue = "";
+
 //单记录粘贴index
 var selectIndex = 0;
 
@@ -23,9 +26,6 @@ var multiSendToTop = true;
 
 //存储到localStorage间隔
 var storeInterval;
-
-//搜索值
-var searchValue = "";
 
 //记录行数
 var length = 0;
@@ -154,7 +154,7 @@ function toggleSearch() {
 //显示搜索框
 function showSearch() {
     $("#searchDiv").css("display", "block");
-    $("#searchInput")[0].focus();
+    $("#searchInput").focus();
 
     searchMode = true;
 }
@@ -165,7 +165,8 @@ function hideSearch() {
 
     if ($("#searchInput").val() != "") {
         $("#searchInput").val("");
-        search("");
+        searchValue = "";
+        displayData();
     }
 }
 
@@ -331,8 +332,9 @@ function show() {
 
     }
 
-    $(".content").getNiceScroll().resize();
 
+    $(".content").getNiceScroll().resize();
+    $(".content")[0].focus();
 
 }
 
@@ -379,32 +381,6 @@ function mouseup(e) {
     } else if (event.button == 1) {
         setToClipBoard(e.getAttribute("index") / 1);
     }
-
-}
-
-//显示记录
-function show() {
-    rangeStartIndex = -1;
-    isShiftPressed = false;
-    isCtrlPressed = false;
-    if (searchMode) {
-        hideSearch();
-    }
-    scrollTop();
-
-
-    if (length != 0) {
-
-        selectIndex = 1;
-
-        $(".tr_selected").removeClass("tr_selected");
-        $("#tr" + selectIndex).addClass("tr_selected");
-
-    }
-    $(".content")[0].focus();
-    $(".content").getNiceScroll().resize();
-
-
 
 }
 
