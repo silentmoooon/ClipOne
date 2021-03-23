@@ -698,7 +698,7 @@ namespace ClipOne.view
             WinAPIHelper.RemoveClipboardFormatListener(wpfHwnd);
             
             clipService.SetValueToClipboard(clip);
-            Thread.Sleep(100);
+            //Thread.Sleep(100);
             SendPasteKey();
             //设置剪切板后恢复监听
             WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
