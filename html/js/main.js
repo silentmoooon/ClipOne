@@ -83,7 +83,7 @@ function keyDown(event) {
         if (searchMode) {
             hideSearch();
         }
-        window.external.notify("esc|1");
+        window.chrome.webview.postMessage("esc|1");
     } else if (event.keyCode == 13) {
         //回车直接粘贴当前选中项
         if (searchMode) {
@@ -240,7 +240,7 @@ function displayData() {
                     i +
                     "' id='tr" +
                     matchCount +
-                    "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' )'> <td  class='td_content' > <img class='image' src='data:image/png;base64," +
+                    "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)'> <td  class='td_content' > <img class='image' src='data:image/png;base64," +
                     clipObj[i].ClipValue +
                     "' /> </td><td class='td_index'  >" +
                     num +
@@ -252,7 +252,7 @@ function displayData() {
                     i +
                     "' id='tr" +
                     matchCount +
-                    "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' '> <td  class='td_content' >  " +
+                    "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' > <td  class='td_content' >  " +
                     clipObj[i].DisplayValue +
                     " </td><td class='td_index'  >" +
                     num +
@@ -343,6 +343,7 @@ function show() {
 //粘贴选择项
 function mouseup(e) {
     var event = window.event;
+
     if (event.button == 0 || event.button == 2) {
 
         if (isShiftPressed) {
@@ -395,7 +396,7 @@ function pasteValue(index, sendToTop) {
         clipObj.splice(index, 1)[0];
         clipObj.splice(0, 0, obj);
     }
-    window.external.notify(
+    window.chrome.webview.postMessage(
         "PasteValue|" + encodeURIComponent(JSON.stringify(obj))
     );
 
@@ -410,7 +411,7 @@ function setToClipBoard(index, ) {
     clipObj.splice(index, 1)[0];
     clipObj.splice(0, 0, obj);
 
-    window.external.notify(
+    window.chrome.webview.postMessage(
         "SetToClipBoard|" + encodeURIComponent(JSON.stringify(obj))
     );
 
@@ -437,7 +438,7 @@ function pasteMultiValue() {
         clipList.push(result);
         lastIndex = index;
     });
-    window.external.notify(
+    window.chrome.webview.postMessage(
         "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
     );
     if (multiSendToTop) {
@@ -476,7 +477,7 @@ function pasteValueByRange(startIndex, endIndex, sendToTop) {
         return;
     }
 
-    window.external.notify(
+    window.chrome.webview.postMessage(
         "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
     );
     if (multiSendToTop) {
@@ -491,7 +492,7 @@ function del(index) {
 }
 
 function search(value) {
-    window.external.notify("search|" + value);
+    window.chrome.webview.postMessage("search|" + value);
 }
 
 
