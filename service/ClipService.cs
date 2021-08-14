@@ -89,7 +89,7 @@ namespace ClipOne.service
                 {
                     dataObject.SetData(DataFormats.FileDrop, new string[] { result.DisplayValue });
                 }
-               
+
 
             }
             else if (result.Type == HTML_TYPE)
@@ -319,7 +319,7 @@ namespace ClipOne.service
         /// <param name="clip"></param>
         public void HandleHtml(ClipModel clip)
         {
-
+            
             string htmlStr = Clipboard.GetData(DataFormats.Html).ToString().Replace("&amp;", "&");
 
             string plainText = Clipboard.GetText();
@@ -348,6 +348,10 @@ namespace ClipOne.service
                 clip.PlainText = plainText;
 
                 clip.Type = HTML_TYPE;
+                if (!Clipboard.ContainsText()&& htmlStr.ToLower().Contains("gif"))
+                {
+                    clip.NeedOverride = true;
+                }
             }
             else
             {
