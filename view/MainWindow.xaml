@@ -9,7 +9,7 @@
         Title="MainWindow"  Width="420"  MaxHeight="580"  Closing="Window_Closing" Loaded="Window_Loaded" Deactivated="Window_Deactivated" AllowsTransparency="True" WindowStyle="None"     ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False"    SourceInitialized="Window_SourceInitialized"  >
 
     <Border  Margin="0"   Background="Transparent"  >
-        <wv2:WebView2 Name="webView1"   Width="420"  />
+        <wv2:WebView2 Name="webView1"   Width="420"   AllowDrop="True"/>
     </Border>
     
 

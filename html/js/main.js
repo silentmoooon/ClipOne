@@ -21,8 +21,7 @@ var rangeStartIndex = -1;
 var isCtrlPressed = false;
 //多记录粘贴列表
 var multiIndexList = []
-    //多记录粘贴时是否将粘贴记录发送到顶部,默认为true
-var multiSendToTop = true;
+
 
 //存储到localStorage间隔
 var storeInterval;
@@ -347,20 +346,16 @@ function mouseup(e) {
     if (event.button == 0 || event.button == 2) {
 
         if (isShiftPressed) {
-            var sendToTop = true;
-            if (event.button == 2) {
-                sendToTop = false;
-            }
+            
             //范围
             if (rangeStartIndex == -1) {
                 $("#" + e.id).addClass("tr_selected");
                 rangeStartIndex = e.getAttribute("index") / 1;
             } else {
-                pasteValueByRange(rangeStartIndex, e.getAttribute("index") / 1, sendToTop);
+                pasteValueByRange(rangeStartIndex, e.getAttribute("index") / 1);
             }
         } else if (isCtrlPressed) {
-            multiSendToTop = event.button == 0
-
+            
             var key = e.getAttribute("index") / 1;
             var keyIndex = multiIndexList.indexOf(key);
             if (keyIndex == -1) {
@@ -371,13 +366,8 @@ function mouseup(e) {
                 $("#" + e.id).removeClass("tr_selected");
             }
         } else {
-            //单条
-
-            var sendToTop = true;
-            if (event.button == 2) {
-                sendToTop = false;
-            }
-            pasteValue(e.getAttribute("index") / 1, sendToTop);
+           
+            pasteValue(e.getAttribute("index") / 1);
         }
     } else if (event.button == 1) {
         setToClipBoard(e.getAttribute("index") / 1);
@@ -390,12 +380,12 @@ function mouseup(e) {
 
 //粘贴单条,sednToTop为false则不改变顺序
 //粘贴单条
-function pasteValue(index, sendToTop) {
+function pasteValue(index) {
     var obj = clipObj[index];
-    if (sendToTop) {
-        clipObj.splice(index, 1)[0];
-        clipObj.splice(0, 0, obj);
-    }
+    
+    clipObj.splice(index, 1)[0];
+    clipObj.splice(0, 0, obj);
+    
     window.chrome.webview.postMessage(
         "PasteValue|" + encodeURIComponent(JSON.stringify(obj))
     );
@@ -406,7 +396,7 @@ function pasteValue(index, sendToTop) {
 
 //设置到剪切板但不粘贴
 
-function setToClipBoard(index, ) {
+function setToClipBoard(index ) {
     var obj = clipObj[index];
     clipObj.splice(index, 1)[0];
     clipObj.splice(0, 0, obj);
@@ -425,64 +415,64 @@ function pasteMultiValue() {
     multiIndexList.forEach(index => {
 
         var result = clipObj[index];
-        if (multiSendToTop) {
+       
 
-            if (lastIndex >= 0 && lastIndex > index) {
-                diffLenth++;
-                index = index + diffLenth;
-                result = clipObj[index];
-            }
-            clipObj.splice(index, 1)[0];
-            clipObj.splice(0, 0, result);
+        if (lastIndex >= 0 && lastIndex > index) {
+            diffLenth++;
+            index = index + diffLenth;
+            result = clipObj[index];
         }
+        clipObj.splice(index, 1)[0];
+        clipObj.splice(0, 0, result);
+        
         clipList.push(result);
         lastIndex = index;
     });
     window.chrome.webview.postMessage(
         "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
     );
-    if (multiSendToTop) {
-        displayData();
-    }
+
+    displayData();
+    
 
 }
 
 //粘贴范围
-function pasteValueByRange(startIndex, endIndex, sendToTop) {
+function pasteValueByRange(startIndex, endIndex) {
     var clipList = [];
     if (endIndex > startIndex) {
         for (var i = startIndex; i <= endIndex; i++) {
             var result = clipObj[i];
-            if (sendToTop) {
-                clipObj.splice(i, 1)[0];
-                clipObj.splice(0, 0, result);
-            }
+           
+            clipObj.splice(i, 1)[0];
+            clipObj.splice(0, 0, result);
+           
             clipList.push(result);
         }
     } else if (endIndex < startIndex) {
         for (var i = startIndex; i >= endIndex; i--) {
             var result = clipObj[i];
-            if (sendToTop) {
-                clipObj.splice(i, 1)[0];
-            }
+           
+            clipObj.splice(i, 1)[0];
+            
             clipList.push(result);
         }
-        if (sendToTop) {
-            clipList.forEach(value => {
-                clipObj.splice(0, 0, value);
-            });
-        }
+       
+        clipList.forEach(value => {
+            clipObj.splice(0, 0, value);
+        });
+        
     } else {
-        pasteValue(startIndex, sendToTop);
+        pasteValue(startIndex);
         return;
     }
 
     window.chrome.webview.postMessage(
         "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
     );
-    if (multiSendToTop) {
-        displayData();
-    }
+    
+    displayData();
+    
 
 }
 

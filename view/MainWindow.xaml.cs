@@ -130,11 +130,11 @@ namespace ClipOne.view
 
             HwndSource source = PresentationSource.FromVisual(this) as HwndSource;
             source.AddHook(WndProc);
-            wpfHwnd = (new WindowInteropHelper(this)).Handle;
+            wpfHwnd = new WindowInteropHelper(this).Handle;
             WinAPIHelper.AddClipboardFormatListener(wpfHwnd);
 
             int exStyle = (int)WinAPIHelper.GetWindowLong(wpfHwnd, -20);
-            exStyle |= (int)0x00000080;
+            exStyle |= 0x00000080;
             WinAPIHelper.SetWindowLong(wpfHwnd, -20, exStyle);
 
         }
@@ -146,6 +146,7 @@ namespace ClipOne.view
         {
 
             await webView1.EnsureCoreWebView2Async(null);
+             
             webView1.CoreWebView2.Settings.IsScriptEnabled = true;
             webView1.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
             
@@ -185,26 +186,14 @@ namespace ClipOne.view
 
 
             }
-            if (args[0] == "PasteValueWithoutTop")
-            {
-
-                PasteValueWithoutTop(args[1]);
-
-
-            }
+         
             else if (args[0] == "PasteValueList")
             {
 
                 PasteValueList(args[1]);
 
             }
-            else if (args[0] == "PasteValueListWithoutTop")
-            {
-
-                
-                PasteValueList(args[1]);
-
-            }
+           
             
             else if (args[0] == "SetToClipBoard")
             {
@@ -297,7 +286,7 @@ namespace ClipOne.view
             //退出
             exit.Click += (x, y) => {
                 webView1.CoreWebView2.ExecuteScriptAsync("saveData()");
-                Application.Current.Shutdown(); 
+                Application.Current.Shutdown();
             };
 
             hotkey.Click += Hotkey_Click;
@@ -315,7 +304,7 @@ namespace ClipOne.view
                 {
                     Tag = type
                 };
-                subFormat.Header = (Enum.GetName(typeof(ClipType), type));
+                subFormat.Header = Enum.GetName(typeof(ClipType), type);
                 if ((config.SupportFormat & type) != 0)
                 {
                     subFormat.IsChecked = true;
@@ -385,12 +374,12 @@ namespace ClipOne.view
             if (item.IsChecked)
             {
                 item.IsChecked = false;
-                config.SupportFormat &= ~((ClipType)item.Tag);
+                config.SupportFormat &= ~(ClipType)item.Tag;
             }
             else
             {
                 item.IsChecked = true;
-                config.SupportFormat |= ((ClipType)item.Tag);
+                config.SupportFormat |= (ClipType)item.Tag;
             }
             configService.SaveSettings();
         }
@@ -508,7 +497,8 @@ namespace ClipOne.view
             if (msg == WM_CLIPBOARDUPDATE)
             {
 
-                if (WatchStatus) { 
+                if (WatchStatus)
+                {
                     ClipModel clip = clipService.HandClip();
 
                     if (string.IsNullOrWhiteSpace(clip.ClipValue))
@@ -518,6 +508,22 @@ namespace ClipOne.view
                     }
 
                     AddClip(clip);
+                    if (clip.NeedOverride)
+                    {
+                        Task.Run(() =>
+                        {
+                            
+                            //设置剪切板前取消监听
+                            WatchStatus = false;
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+
+                                clipService.SetValueToClipboard(clip);
+                            });
+                            //设置剪切板后恢复监听
+                            WatchStatus = true;
+                        });
+                    }
                 }
                 handled = true;
             }

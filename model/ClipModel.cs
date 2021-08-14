@@ -26,6 +26,11 @@ namespace ClipOne.model
         /// </summary>
         public string PlainText { get; set; }
 
+        /// <summary>
+        /// 如果是复制的网页上的gif,则覆盖回剪切板,方便直接粘贴
+        /// </summary>
+        public bool NeedOverride { get; set; }
+
 
         public override bool Equals(object obj)
         {
