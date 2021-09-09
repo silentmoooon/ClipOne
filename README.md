@@ -37,4 +37,8 @@
 
 # 截图
 
-![截图](https://raw.githubusercontent.com/silentmoooon/ClipOne/master/image.jpg)
+![动画12](https://user-images.githubusercontent.com/9210514/132665430-e934c253-f2e8-4baa-b6ef-2e55ac18af57.gif)
+
+![动画13](https://user-images.githubusercontent.com/9210514/132665472-c8a917cb-6baf-4d17-97a5-f84f289291e8.gif)
+
+
