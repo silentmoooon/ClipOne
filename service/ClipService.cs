@@ -130,8 +130,8 @@ namespace ClipOne.service
             }
             try {
                 //当有其他进程占用剪切板时,WPF的Clipboard会有BUG,winform的没有,所以暂时用winform的
-                System.Windows.Forms.Clipboard.SetDataObject(dataObject, true);
-                //Clipboard.SetDataObject(dataObject, true);
+                //System.Windows.Forms.Clipboard.SetDataObject(dataObject, true);
+                Clipboard.SetDataObject(dataObject, true);
 
             }
             catch (Exception e)
