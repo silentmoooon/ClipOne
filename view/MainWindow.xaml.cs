@@ -2,7 +2,8 @@
 using ClipOne.model;
 using ClipOne.service;
 using ClipOne.util;
-using Hardcodet.Wpf.TaskbarNotification;
+using H.NotifyIcon;
+
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using System;
