@@ -2,7 +2,7 @@
 using ClipOne.service;
 using ClipOne.util;
 using ClipOne.view;
-using Hardcodet.Wpf.TaskbarNotification;
+
 using System;
 using System.Collections.Generic;
 using System.Configuration;

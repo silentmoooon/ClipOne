@@ -7,7 +7,7 @@
         <ContextMenu x:Shared="false" x:Key="SysTrayMenu"  >
             
         </ContextMenu>
-        <tb:TaskbarIcon x:Key="Taskbar" 
+        <tb:TaskbarIcon x:Key="Taskbar" Visibility="Visible"
                         IconSource="ClipOne.ico"   ContextMenu="{StaticResource SysTrayMenu}">
           
         </tb:TaskbarIcon>

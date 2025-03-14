@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30114.105
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35825.156 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClipOne", "ClipOne.csproj", "{F5D977B1-31F3-48D5-8656-56C9F15762BF}"
 EndProject
@@ -17,6 +17,7 @@ Global
 		{F5D977B1-31F3-48D5-8656-56C9F15762BF}.Debug|x64.ActiveCfg = Debug|x64
 		{F5D977B1-31F3-48D5-8656-56C9F15762BF}.Debug|x64.Build.0 = Debug|x64
 		{F5D977B1-31F3-48D5-8656-56C9F15762BF}.Release|Any CPU.ActiveCfg = Release|x64
+		{F5D977B1-31F3-48D5-8656-56C9F15762BF}.Release|Any CPU.Build.0 = Release|x64
 		{F5D977B1-31F3-48D5-8656-56C9F15762BF}.Release|x64.ActiveCfg = Release|x64
 		{F5D977B1-31F3-48D5-8656-56C9F15762BF}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
