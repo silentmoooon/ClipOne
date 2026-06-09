@@ -2,13 +2,11 @@
 using ClipOne.model;
 using ClipOne.service;
 using ClipOne.util;
-using H.NotifyIcon;
-
-using Microsoft.VisualBasic;
+ 
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+ 
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -16,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 
@@ -26,7 +25,7 @@ namespace ClipOne.view
     /// </summary>
     public partial class MainWindow : Window
     {
-        private TaskbarIcon taskbar;
+       
 
         private ConfigService configService;
 
@@ -85,7 +84,7 @@ namespace ClipOne.view
         {
            
             Left = -10000;
-            taskbar = (TaskbarIcon)FindResource("Taskbar");
+             
 
             configService = new ConfigService();
             config = configService.GetConfig();
@@ -347,19 +346,19 @@ namespace ClipOne.view
 
                 }
             }
-
-            ////关联菜单项至托盘
-
-            taskbar.ContextMenu.Items.Add(clear);
-            taskbar.ContextMenu.Items.Add(reload);
-            taskbar.ContextMenu.Items.Add(new Separator());
-            taskbar.ContextMenu.Items.Add(format);
-            taskbar.ContextMenu.Items.Add(skin);
-            taskbar.ContextMenu.Items.Add(hotkey);
-            taskbar.ContextMenu.Items.Add(startup);
-            taskbar.ContextMenu.Items.Add(new Separator());
-            taskbar.ContextMenu.Items.Add(devTools);
-            taskbar.ContextMenu.Items.Add(exit);
+            
+            //关联菜单项至托盘
+            taskbar1.ContextMenu = new ContextMenu();
+            taskbar1.ContextMenu.Items.Add(clear);
+            taskbar1.ContextMenu.Items.Add(reload);
+            taskbar1.ContextMenu.Items.Add(new Separator());
+            taskbar1.ContextMenu.Items.Add(format);
+            taskbar1.ContextMenu.Items.Add(skin);
+            taskbar1.ContextMenu.Items.Add(hotkey);
+            taskbar1.ContextMenu.Items.Add(startup);
+            taskbar1.ContextMenu.Items.Add(new Separator());
+            taskbar1.ContextMenu.Items.Add(devTools);
+            taskbar1.ContextMenu.Items.Add(exit);
 
         }
 
@@ -620,6 +619,7 @@ namespace ClipOne.view
             
             
             webView1?.Dispose();
+            taskbar1?.Dispose();
 
             if (wpfHwnd == IntPtr.Zero)
             {

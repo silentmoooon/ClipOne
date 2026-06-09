@@ -2,16 +2,17 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net9.0-windows</TargetFrameworks>
+<TargetFrameworks>net10.0-windows10.0.26100.0</TargetFrameworks>
     <UseWPF>true</UseWPF>
 <!--     <UseWindowsForms>true</UseWindowsForms> -->    
  <NoWin32Manifest>true</NoWin32Manifest>
     <Platforms>x64</Platforms>
     <ApplicationIcon>ClipOne.ico</ApplicationIcon>
-    <TargetFramework>net9.0-windows10.0.20348.0</TargetFramework>
-    <MinimumPlatformVersion>10.0.20348.0</MinimumPlatformVersion>
+<TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+<MinimumPlatformVersion>10.0.26100.0</MinimumPlatformVersion>
     <StartupObject>ClipOne.App</StartupObject>
     <IsPublishable>True</IsPublishable>
+<SupportedOSPlatformVersion>10.0.26100.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -58,10 +59,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="H.NotifyIcon.Wpf" Version="2.3.0" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.12.0" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3171-prerelease" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+<PackageReference Include="H.NotifyIcon" Version="2.4.1" />
+<PackageReference Include="H.NotifyIcon.Wpf" Version="2.4.1" />
+<PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3967.48" />
+<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+
   </ItemGroup>
 
   <ItemGroup>

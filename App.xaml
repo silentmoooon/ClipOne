@@ -4,13 +4,7 @@
              xmlns:tb="http://www.hardcodet.net/taskbar"
              StartupUri="view/MainWindow.xaml" DispatcherUnhandledException="Application_DispatcherUnhandledException"  ShutdownMode="OnExplicitShutdown" >
     <Application.Resources>
-        <ContextMenu x:Shared="false" x:Key="SysTrayMenu"  >
-            
-        </ContextMenu>
-        <tb:TaskbarIcon x:Key="Taskbar" Visibility="Visible"
-                        IconSource="ClipOne.ico"   ContextMenu="{StaticResource SysTrayMenu}">
-          
-        </tb:TaskbarIcon>
+        
      
 
     </Application.Resources>
