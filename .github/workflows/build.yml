@@ -26,7 +26,7 @@ jobs:
       run: dotnet build ClipOne.sln -c Release --no-restore
 
     - name: Publish Green Version
-      run: dotnet publish ClipOne.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish_output
+      run: dotnet publish ClipOne.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o publish_output
 
     - name: Create Zip Archive
       run: Compress-Archive -Path publish_output\* -DestinationPath ClipOne_Portable_Green.zip
