@@ -1,4 +1,4 @@
-﻿
+using Microsoft.Win32;
 using ClipOne.model;
 using ClipOne.service;
 using ClipOne.util;
@@ -17,6 +17,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Runtime.InteropServices;
 
 namespace ClipOne.view
 {
@@ -32,6 +33,7 @@ namespace ClipOne.view
         private Config config;
 
         private ClipService clipService;
+        private StorageService storageService;
 
       
 
@@ -89,12 +91,15 @@ namespace ClipOne.view
             configService = new ConfigService();
             config = configService.GetConfig();
             clipService = new ClipService(config);
+            storageService = new StorageService();
            
             //初始化浏览器
             InitWebView();
            
             //初始化托盘图标
             InitialTray();
+
+            ApplySkin();
 
             Task.Run(RegHotKey);
            
@@ -119,6 +124,11 @@ namespace ClipOne.view
 
         }
 
+        [DllImport("dwmapi.dll", CharSet = CharSet.Unicode, PreserveSig = false)]
+        internal static extern void DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int pvAttribute, uint cbAttribute);
+
+        private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+        private const int DWMWCP_ROUND = 2;
 
         /// <summary>
         /// 添加剪切板监听， 更改窗体属性,不在alt+tab中显示
@@ -137,6 +147,15 @@ namespace ClipOne.view
             exStyle |= 0x00000080;
             WinAPIHelper.SetWindowLong(wpfHwnd, -20, exStyle);
 
+            try
+            {
+                int cornerPreference = DWMWCP_ROUND;
+                DwmSetWindowAttribute(wpfHwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref cornerPreference, 4);
+            }
+            catch
+            {
+                // Ignore if not supported (e.g., Windows 10)
+            }
         }
 
         /// <summary>
@@ -146,7 +165,12 @@ namespace ClipOne.view
         {
 
             await webView1.EnsureCoreWebView2Async(null);
-             
+            
+            try
+            {
+                await webView1.CoreWebView2.Profile.ClearBrowsingDataAsync(Microsoft.Web.WebView2.Core.CoreWebView2BrowsingDataKinds.DiskCache);
+            } catch { }
+
             webView1.CoreWebView2.Settings.IsScriptEnabled = true;
             webView1.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
             
@@ -169,9 +193,9 @@ namespace ClipOne.view
 
         private void CoreWebView2_NavigationCompleted(object sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
         {
-
             DiyHide();
-
+            string historyJson = Newtonsoft.Json.JsonConvert.SerializeObject(storageService.GetHistory());
+            webView1.CoreWebView2.PostWebMessageAsJson("{\"type\": \"history\", \"data\": " + historyJson + "}");
         }
 
 
@@ -268,6 +292,7 @@ namespace ClipOne.view
             //清空记录
             clear.Click += (x, y) =>
             {
+                storageService.ClearHistory();
                 webView1.CoreWebView2.ExecuteScriptAsync("clear()");
 
 
@@ -277,15 +302,11 @@ namespace ClipOne.view
             //刷新页面,一般用于自定义html css js时
             reload.Click += (x, y) =>
             {
-                webView1.CoreWebView2.ExecuteScriptAsync("saveData()");
-
                 webView1.CoreWebView2.Reload();
-               
-
             };
             //退出
             exit.Click += (x, y) => {
-                webView1.CoreWebView2.ExecuteScriptAsync("saveData()");
+                taskbar1.Dispose();
                 Application.Current.Shutdown();
             };
 
@@ -325,28 +346,36 @@ namespace ClipOne.view
             if (Directory.Exists(CSS_DIR))
             {
                 string[] fileList = Directory.GetDirectories(CSS_DIR);
+                var baseSkins = fileList.Select(f => Path.GetFileName(f))
+                    .Select(n => n.EndsWith("-light") ? n.Substring(0, n.Length - 6) : (n.EndsWith("-dark") ? n.Substring(0, n.Length - 5) : n))
+                    .Distinct().ToList();
 
-                foreach (string file in fileList)
+                foreach (string skinName in baseSkins)
                 {
-
-                    string fileName = Path.GetFileName(file);
                     MenuItem subRecord = new MenuItem
                     {
-                        Header = fileName
+                        Header = skinName
                     };
-                    if (config.SkinName.Equals(fileName.ToLower()))
+                    if (config.SkinName.Equals(skinName, StringComparison.OrdinalIgnoreCase))
                     {
                         subRecord.IsChecked = true;
-
-
                     }
-                    subRecord.Tag = file;
+                    subRecord.Tag = skinName;
                     skin.Items.Add(subRecord);
                     subRecord.Click += SkinItem_Click;
-
                 }
             }
             
+            MenuItem themeMode = new MenuItem { Header = "主题模式" };
+            string[] modes = new[] { "System", "Light", "Dark" };
+            string[] modeHeaders = new[] { "跟随系统", "浅色", "深色" };
+            for(int i = 0; i < modes.Length; i++) {
+                MenuItem subMode = new MenuItem { Header = modeHeaders[i], Tag = modes[i] };
+                if (config.ThemeMode == modes[i]) subMode.IsChecked = true;
+                subMode.Click += ThemeMode_Click;
+                themeMode.Items.Add(subMode);
+            }
+
             //关联菜单项至托盘
             taskbar1.ContextMenu = new ContextMenu();
             taskbar1.ContextMenu.Items.Add(clear);
@@ -354,12 +383,24 @@ namespace ClipOne.view
             taskbar1.ContextMenu.Items.Add(new Separator());
             taskbar1.ContextMenu.Items.Add(format);
             taskbar1.ContextMenu.Items.Add(skin);
+            taskbar1.ContextMenu.Items.Add(themeMode);
             taskbar1.ContextMenu.Items.Add(hotkey);
             taskbar1.ContextMenu.Items.Add(startup);
             taskbar1.ContextMenu.Items.Add(new Separator());
             taskbar1.ContextMenu.Items.Add(devTools);
             taskbar1.ContextMenu.Items.Add(exit);
 
+        }
+
+        private void ThemeMode_Click(object sender, EventArgs e)
+        {
+            MenuItem item = (MenuItem)sender;
+            MenuItem p = (MenuItem)item.Parent;
+            foreach (MenuItem i in p.Items) i.IsChecked = false;
+            item.IsChecked = true;
+            config.ThemeMode = (string)item.Tag;
+            configService.SaveSettings();
+            ApplySkin();
         }
 
         /// <summary>
@@ -398,11 +439,52 @@ namespace ClipOne.view
             config.SkinName = (string)item.Header;
             configService.SaveSettings();
 
-            string css = item.Tag.ToString();
-            ChangeSkin(css);
+            ApplySkin();
 
         }
 
+        private bool IsSystemDarkMode()
+        {
+            try
+            {
+                using (var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
+                {
+                    var value = key?.GetValue("AppsUseLightTheme");
+                    return value != null && (int)value == 0;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public void ApplySkin()
+        {
+            string actualSkinName = config.SkinName;
+            string modeSuffix = "";
+            
+            if (config.ThemeMode == "Dark") modeSuffix = "-dark";
+            else if (config.ThemeMode == "Light") modeSuffix = "-light";
+            else modeSuffix = IsSystemDarkMode() ? "-dark" : "-light";
+
+            string cssPath = Path.Combine(CSS_DIR, actualSkinName + modeSuffix);
+            if (!Directory.Exists(cssPath))
+            {
+                // Fallback to exactly skin name
+                cssPath = Path.Combine(CSS_DIR, actualSkinName);
+                if (!Directory.Exists(cssPath))
+                {
+                    // Fallback to light
+                    cssPath = Path.Combine(CSS_DIR, actualSkinName + "-light");
+                }
+            }
+
+            if (Directory.Exists(cssPath))
+            {
+                ChangeSkin(cssPath);
+            }
+        }
 
         /// <summary>
         /// 通过修改index.html中引入的样式文件来换肤
@@ -412,7 +494,7 @@ namespace ClipOne.view
         {
 
             List<string> fileLines = File.ReadAllLines(defaultHtml).ToList();
-            for (int i = 0; i < fileLines.Count; i++)
+            while (fileLines.Count > 0)
             {
                 string str = fileLines.Last().Trim();
                 if (str == "" || str.StartsWith("<link"))
@@ -430,14 +512,14 @@ namespace ClipOne.view
             {
 
                 string str = file.Replace("\\", "/").Replace("html/", "");
-                fileLines.Add(" <link rel='stylesheet' type='text/css' href='" + str + "'/>");
+                fileLines.Add(" <link rel='stylesheet' type='text/css' href='" + str + "?v=" + DateTime.Now.Ticks + "'/>");
             }
             File.WriteAllLines(defaultHtml, fileLines, Encoding.UTF8);
-            webView1.CoreWebView2.Reload();
-          
-
-
-
+            
+            if (webView1 != null && webView1.CoreWebView2 != null)
+            {
+                webView1.CoreWebView2.Reload();
+            }
         }
 
         /// <summary>
@@ -579,11 +661,9 @@ namespace ClipOne.view
         /// <param name="str"></param>
         private void AddClip(ClipModel clip)
         {
+            storageService.AddClip(clip);
             string json = JsonConvert.SerializeObject(clip);
-            json = HttpUtility.UrlEncode(json);
-
-            webView1.CoreWebView2.ExecuteScriptAsync($"addData('{json}')");
-
+            webView1.CoreWebView2.PostWebMessageAsJson("{\"type\": \"add\", \"data\": " + json + "}");
         }
 
   

@@ -3,3 +3,9 @@ obj/
 bin/
 publish/
 .vs/
+temp_emoji/
+test_emoji.gif
+wechat_emojis.json
+debug.log
+error.log
+

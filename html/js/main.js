@@ -61,17 +61,17 @@ $(document).ready(function() {
         $("#tr0").addClass("tr_selected");
     });
 
-
-    var str = window.localStorage.getItem("data");
-    if (str != null) {
-        clipObj = JSON.parse(str);
-    }
+    window.chrome.webview.addEventListener('message', function(event) {
+        var msg = event.data;
+        if (msg.type === 'history') {
+            clipObj = msg.data;
+            displayData();
+        } else if (msg.type === 'add') {
+            addData(msg.data);
+        }
+    });
 
     displayData();
-
-    storeInterval = setInterval(saveData, 60000);
-
-
 });
 
 
@@ -246,13 +246,23 @@ function displayData() {
                     "</td> </tr>";
 
             } else {
+                let displayStr = clipObj[i].DisplayValue;
+                if (typeof wechatEmojis !== 'undefined') {
+                    displayStr = displayStr.replace(/\[.*?\]/g, function(match) {
+                        if (wechatEmojis[match]) {
+                            return "<img src='" + wechatEmojis[match] + "' style='width:20px;height:20px;vertical-align:-4px;margin:0 2px;' />";
+                        }
+                        return match;
+                    });
+                }
+                
                 trs =
                     " <tr style='cursor: default' index='" +
                     i +
                     "' id='tr" +
                     matchCount +
                     "' onmouseup ='mouseup(this)'  onmouseenter='trSelect(this)' > <td  class='td_content' >  " +
-                    clipObj[i].DisplayValue +
+                    displayStr +
                     " </td><td class='td_index'  >" +
                     num +
                     "</td> </tr>";
@@ -285,10 +295,7 @@ function setMaxRecords(records) {
 }
 
 //增加条目
-function addData(data) {
-
-    data = decodeURIComponent(data.replace(/\+/g, "%20"));
-    var obj = JSON.parse(data);
+function addData(obj) {
 
     if (obj == null) {
         return;
@@ -486,15 +493,11 @@ function search(value) {
 }
 
 
-function saveData() {
-    window.localStorage.setItem("data", JSON.stringify(clipObj));
-}
+
 
 
 
 function clear() {
     clipObj = [];
-    window.localStorage.clear();
     displayData();
-
 }

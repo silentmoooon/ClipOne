@@ -1,0 +1,146 @@
+/* 全局设置 */
+html {
+    background: transparent;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+}
+
+* {
+    font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
+b {
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-block;
+    margin-bottom: 4px;
+    color: #111111;
+}
+
+/* 主窗体背景 */
+body {
+    -ms-overflow-style: none;
+    overflow: hidden;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(243, 243, 243, 0.95);
+    color: #444444;
+}
+
+.content {
+    overflow-x: hidden;
+    overflow-y: auto;
+    margin: 0;
+    padding: 8px; /* 减少四周留白 */
+    width: 100%;
+    height: 100%;
+}
+
+.table_main {
+    width: 100%;
+    cursor: default;
+    border-collapse: separate;
+    border-spacing: 0 6px; 
+    table-layout: fixed;
+}
+
+tr {
+    background-color: transparent;
+}
+
+td {
+    background-color: rgba(255, 255, 255, 0.7);
+    border-top: 1px solid rgba(255, 255, 255, 1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    min-height: 48px;
+    height: auto;
+    overflow: hidden;
+    vertical-align: middle;
+    transition: all 0.15s ease-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+td:first-child {
+    border-left: 4px solid transparent; 
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+td:last-child {
+    border-right: 1px solid rgba(0, 0, 0, 0.02);
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+.td_content {
+    cursor: default;
+    padding: 10px 8px !important; /* 减少左右留白，为内容腾出空间 */
+    line-height: 1.5;
+    word-break: break-all;
+}
+
+.td_index {
+    width: 28px !important;
+    text-align: center !important;
+    padding-right: 0px !important; 
+    font-size: 13px; /* 更大更显眼 */
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.65); /* 更显眼 */
+}
+
+img, .image {
+    max-height: 140px !important;
+    max-width: 100% !important;
+    border-radius: 6px;
+    vertical-align: middle;
+    margin-top: 4px !important;
+}
+
+tr:hover > td {
+    background-color: #E6F3FF !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+tr:hover > td:first-child {
+    border-left: 4px solid #3DA3FB !important;
+}
+
+.tr_selected > td {
+    background-color: #E6F3FF !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.tr_selected > td:first-child {
+    border-left: 4px solid #3DA3FB !important; 
+}
+
+a { text-decoration: none; }
+
+#searchDiv {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    z-index: 1000;
+    width: 200px;
+    height: 32px;
+    padding: 0 14px;
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+}
+
+#searchInput {
+    width: 100%;
+    height: 100%;
+    font-size: 13px;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    color: #111111;
+}

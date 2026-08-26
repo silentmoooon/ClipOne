@@ -20,6 +20,7 @@
     <None Remove="html\css\classic\classic.css" />
     <None Remove="html\css\material\material.css" />
     <None Remove="html\css\modern\modern.css" />
+
     <None Remove="html\css\stand\stand.css" />
     <None Remove="html\css\striped\striped.css" />
     <None Remove="html\index.html" />
@@ -56,19 +57,30 @@
     <Content Include="html\js\main.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="html\js\wechat_emojis.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="html\css\fluent-light\fluent-light.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="html\css\fluent-dark\fluent-dark.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
 <PackageReference Include="H.NotifyIcon" Version="2.4.1" />
 <PackageReference Include="H.NotifyIcon.Wpf" Version="2.4.1" />
-<PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
-<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3967.48" />
+<PackageReference Include="HtmlAgilityPack" Version="1.13.0" />
+<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4129.50" />
 <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="ClipOne.ico" />
+    <Resource Include="ClipOne.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>
@@ -84,6 +96,12 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="clear.bat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

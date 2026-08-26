@@ -1,4 +1,4 @@
-﻿using ClipOne.util;
+using ClipOne.util;
 using System.Windows.Input;
 
 namespace ClipOne.model
@@ -8,7 +8,7 @@ namespace ClipOne.model
         /// <summary>
         /// 快捷键修饰键
         /// </summary>
-        public int HotkeyModifier { get; set; } = (int)HotKeyManager.KeyModifiers.Alt;
+        public int HotkeyModifier { get; set; } = (int)HotKeyManager.KeyModifiers.WindowsKey;
         /// <summary>
         /// 快捷键按键,默认为v
         /// </summary>
@@ -24,7 +24,12 @@ namespace ClipOne.model
         /// <summary>
         /// 默认皮肤
         /// </summary>
-        public string SkinName { get; set; } = "stand";
+        public string SkinName { get; set; } = "fluent";
+
+        /// <summary>
+        /// 主题模式 (Light, Dark, System)
+        /// </summary>
+        public string ThemeMode { get; set; } = "System";
 
 
         /// <summary>
