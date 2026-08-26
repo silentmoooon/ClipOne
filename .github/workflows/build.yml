@@ -25,12 +25,15 @@ jobs:
     - name: Build
       run: dotnet build ClipOne.sln -c Release --no-restore
 
-    - name: Publish
-      run: dotnet publish ClipOne.csproj -c Release -o publish_output
+    - name: Publish Green Version
+      run: dotnet publish ClipOne.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish_output
+
+    - name: Create Zip Archive
+      run: Compress-Archive -Path publish_output\* -DestinationPath ClipOne_Portable_Green.zip
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ClipOne-Release
-        path: publish_output/
+        name: ClipOne-Portable-Green
+        path: ClipOne_Portable_Green.zip
 
