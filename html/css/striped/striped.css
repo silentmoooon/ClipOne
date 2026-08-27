@@ -46,8 +46,8 @@ body {
     margin-top: 0px;
     margin-right: 0px;
     margin-bottom: 0px;
-    width: 418px;
-    max-height: 578px;
+    width: 100%;
+    max-height: 100%;
     background-color: #EbF1Fb;
 }
 
@@ -57,14 +57,14 @@ body {
     margin: 0px;
     padding: 0px;
     width: 100%;
-    max-height: 578px;
+    max-height: 100%;
 }
 
 
 /*table*/
 
 .table_main {
-    width: 418px;
+    width: 100%;
     cursor: default;
     border-collapse: collapse;
     table-layout: fixed;
@@ -104,7 +104,7 @@ td {
 
 .td_content {
     cursor: default;
-    width: 378px;
+    width: auto;
     margin-left: 0px !important;
     margin-right: 0px !important;
     padding-left: 3px !important;

@@ -3,9 +3,5 @@
   <PropertyGroup>
     <_LastSelectedProfileId>D:\dev\.personal\ClipOne\Properties\PublishProfiles\FolderProfile.pubxml</_LastSelectedProfileId>
   </PropertyGroup>
-  <ItemGroup>
-    <ApplicationDefinition Update="App.xaml">
-      <SubType>Designer</SubType>
-    </ApplicationDefinition>
-  </ItemGroup>
+  <ItemGroup />
 </Project>

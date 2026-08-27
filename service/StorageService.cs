@@ -1,13 +1,14 @@
 using ClipOne.model;
-using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 
 namespace ClipOne.service
 {
-    class StorageService
+    public class StorageService
     {
-        private readonly string historyPath = "config\\history.json";
+        private readonly string historyPath = Path.Combine("config", "history.json");
         private List<ClipModel> _history;
         private readonly int _maxRecords = 300;
 
@@ -26,7 +27,7 @@ namespace ClipOne.service
                 try
                 {
                     string json = File.ReadAllText(historyPath);
-                    _history = JsonConvert.DeserializeObject<List<ClipModel>>(json) ?? new List<ClipModel>();
+                    _history = JsonSerializer.Deserialize(json, ClipJsonContext.Default.ListClipModel) ?? new List<ClipModel>();
                 }
                 catch
                 {
@@ -42,9 +43,12 @@ namespace ClipOne.service
 
         public void AddClip(ClipModel clip)
         {
+            if (clip == null || string.IsNullOrWhiteSpace(clip.ClipValue))
+                return;
+
             // Remove duplicates
             _history.RemoveAll(c => c.ClipValue == clip.ClipValue);
-            
+
             // Add to front
             _history.Insert(0, clip);
 
@@ -53,7 +57,7 @@ namespace ClipOne.service
             {
                 _history = _history.GetRange(0, _maxRecords);
             }
-            
+
             SaveHistory();
         }
 
@@ -61,10 +65,13 @@ namespace ClipOne.service
         {
             try
             {
-                string json = JsonConvert.SerializeObject(_history);
+                string json = JsonSerializer.Serialize(_history, ClipJsonContext.Default.ListClipModel);
                 File.WriteAllText(historyPath, json);
             }
-            catch {}
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.WriteLine($"Failed to save history: {ex.Message}");
+            }
         }
 
         public void ClearHistory()

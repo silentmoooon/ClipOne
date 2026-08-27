@@ -16,6 +16,7 @@ var selectIndex = 0;
 //shift是否按下,用来处理范围粘贴
 var isShiftPressed = false;
 var rangeStartIndex = -1;
+var rangeEndIndex = -1;
 
 //alt是否按下,用来处理多记录粘贴
 var isCtrlPressed = false;
@@ -47,8 +48,9 @@ $(document).ready(function() {
         cursorcolor: "#808080"
     });
 
-    $("body").on("keydown", keyDown);
-    $("body").on("keyup", keyUp);
+    $(document).on("keydown", keyDown);
+    $(document).on("keyup", keyUp);
+    $(window).on("keyup", keyUp);
 
     //查找
     $("#searchInput").on("input", function(event) {
@@ -61,21 +63,88 @@ $(document).ready(function() {
         $("#tr0").addClass("tr_selected");
     });
 
+    // 初始化按键下拉框
+    for (var k = 65; k <= 90; k++) {
+        var char = String.fromCharCode(k);
+        $("#hkKeySelect").append("<option value='" + k + "'>" + char + "</option>");
+    }
+
+    $("#btnCancelHotkey").on("click", function() {
+        $("#hotkeyModal").css("display", "none");
+    });
+
+    $("#btnSaveHotkey").on("click", function() {
+        var mod = 0;
+        if ($("#hkWin").is(":checked")) mod |= 8;
+        if ($("#hkAlt").is(":checked")) mod |= 1;
+        if ($("#hkCtrl").is(":checked")) mod |= 2;
+        if ($("#hkShift").is(":checked")) mod |= 4;
+
+        if (mod === 0) {
+            alert("请至少选择一个修饰键 (Win / Alt / Ctrl / Shift)");
+            return;
+        }
+
+        var key = parseInt($("#hkKeySelect").val());
+        var dataStr = JSON.stringify({ Modifier: mod, Key: key });
+        window.chrome.webview.postMessage("SaveHotkey|" + encodeURIComponent(dataStr));
+        $("#hotkeyModal").css("display", "none");
+    });
+
     window.chrome.webview.addEventListener('message', function(event) {
         var msg = event.data;
+        if (typeof msg === 'string') {
+            try {
+                msg = JSON.parse(msg);
+            } catch (e) {
+                console.error("Failed to parse webview message:", e);
+            }
+        }
+        if (!msg || typeof msg !== 'object') return;
+
         if (msg.type === 'history') {
-            clipObj = msg.data;
+            clipObj = msg.data || [];
             displayData();
         } else if (msg.type === 'add') {
             addData(msg.data);
+        } else if (msg.type === 'hotkeySettings') {
+            openHotkeyModal(msg.data.Modifier, msg.data.Key);
+        } else if (msg.type === 'show') {
+            show();
+        } else if (msg.type === 'changeSkin') {
+            if (Array.isArray(msg.css)) {
+                $('link[rel="stylesheet"]').remove();
+                msg.css.forEach(function(href) {
+                    var link = $('<link>', {
+                        rel: 'stylesheet',
+                        type: 'text/css',
+                        href: href + '?v=' + new Date().getTime()
+                    });
+                    $('head').append(link);
+                });
+            }
         }
     });
 
     displayData();
 });
 
+function openHotkeyModal(mod, key) {
+    $("#hkWin").prop("checked", (mod & 8) !== 0);
+    $("#hkAlt").prop("checked", (mod & 1) !== 0);
+    $("#hkCtrl").prop("checked", (mod & 2) !== 0);
+    $("#hkShift").prop("checked", (mod & 4) !== 0);
+    $("#hkKeySelect").val(key || 86);
+    $("#hotkeyModal").css("display", "flex");
+}
 
 function keyDown(event) {
+    if ($("#hotkeyModal").is(":visible")) {
+        if (event.keyCode == 27) { // ESC inside modal
+            $("#hotkeyModal").css("display", "none");
+        }
+        return;
+    }
 
     if (event.keyCode == 27) {
         //esc
@@ -129,17 +198,27 @@ function keyDown(event) {
 
 
 function keyUp(event) {
-
-    if (event.key == "Shift") {
+    if (event.key == "Shift" || event.keyCode == 16) {
+        if (rangeStartIndex >= 0) {
+            if (rangeEndIndex >= 0 && rangeEndIndex !== rangeStartIndex) {
+                // 松开 Shift 时，以第 1 次点击（rangeStartIndex）和最后一次点击（rangeEndIndex）为准连续粘贴
+                pasteValueByRange(rangeStartIndex, rangeEndIndex);
+            } else {
+                // 仅点击了 1 项
+                pasteValue(rangeStartIndex);
+            }
+        }
         rangeStartIndex = -1;
+        rangeEndIndex = -1;
         isShiftPressed = false;
-    } else if (event.key == "Control") {
+        $(".tr_selected").removeClass("tr_selected");
+    } else if (event.key == "Control" || event.keyCode == 17) {
         if (multiIndexList.length > 0) {
             pasteMultiValue();
         }
-        multiIndexList = []
+        multiIndexList = [];
         isCtrlPressed = false;
-
+        $(".tr_selected").removeClass("tr_selected");
     }
 }
 
@@ -322,6 +401,7 @@ function addData(obj) {
 //显示时初始化状态
 function show() {
     rangeStartIndex = -1;
+    rangeEndIndex = -1;
     isShiftPressed = false;
     isCtrlPressed = false;
     if (searchMode) {
@@ -330,64 +410,68 @@ function show() {
     scrollTop();
 
     if (clipObj.length != 0) {
-
         selectIndex = 1;
-
         $(".tr_selected").removeClass("tr_selected");
         $("#tr" + selectIndex).addClass("tr_selected");
-
     }
-
 
     $(".content").getNiceScroll().resize();
     $(".content")[0].focus();
-
 }
-
-
 
 //粘贴选择项
 function mouseup(e) {
     var event = window.event;
+    var clickedIndex = e.getAttribute("index") / 1;
 
     if (event.button == 0 || event.button == 2) {
-
-        if (isShiftPressed) {
-            
-            //范围
-            if (rangeStartIndex == -1) {
+        if (event.shiftKey || isShiftPressed) {
+            isShiftPressed = true;
+            if (rangeStartIndex === -1) {
+                // 第 1 次点击：确定起始项
+                rangeStartIndex = clickedIndex;
+                rangeEndIndex = -1;
+                $(".tr_selected").removeClass("tr_selected");
                 $("#" + e.id).addClass("tr_selected");
-                rangeStartIndex = e.getAttribute("index") / 1;
             } else {
-                pasteValueByRange(rangeStartIndex, e.getAttribute("index") / 1);
+                // 后续多次点击：以第 1 次点击和本次最后一次点击为准，动态高亮其间的所有项（取消其余项的选中效果）
+                rangeEndIndex = clickedIndex;
+                var minIdx = Math.min(rangeStartIndex, rangeEndIndex);
+                var maxIdx = Math.max(rangeStartIndex, rangeEndIndex);
+                $(".tr_selected").removeClass("tr_selected");
+                for (var k = minIdx; k <= maxIdx; k++) {
+                    $("#tr" + k).addClass("tr_selected");
+                }
             }
-        } else if (isCtrlPressed) {
-            
-            var key = e.getAttribute("index") / 1;
-            var keyIndex = multiIndexList.indexOf(key);
+            // 按住 Shift 期间不执行粘贴，等松开 Shift 键 (keyUp) 时才执行！
+        } else if (event.ctrlKey || isCtrlPressed) {
+            var keyIndex = multiIndexList.indexOf(clickedIndex);
             if (keyIndex == -1) {
-                multiIndexList.push(key);
+                multiIndexList.push(clickedIndex);
                 $("#" + e.id).addClass("tr_selected");
             } else {
-                multiIndexList.splice(keyIndex, 1)
+                multiIndexList.splice(keyIndex, 1);
                 $("#" + e.id).removeClass("tr_selected");
             }
         } else {
-           
-            pasteValue(e.getAttribute("index") / 1);
+            rangeStartIndex = -1;
+            rangeEndIndex = -1;
+            selectIndex = clickedIndex;
+            pasteValue(clickedIndex);
         }
     } else if (event.button == 1) {
-        setToClipBoard(e.getAttribute("index") / 1);
+        rangeStartIndex = -1;
+        rangeEndIndex = -1;
+        setToClipBoard(clickedIndex);
     }
-
 }
 
 
 // 回调本地代码
 
-//粘贴单条,sednToTop为false则不改变顺序
 //粘贴单条
 function pasteValue(index) {
+    if (!clipObj || !clipObj[index]) return;
     var obj = clipObj[index];
     
     clipObj.splice(index, 1)[0];
@@ -400,10 +484,9 @@ function pasteValue(index) {
     displayData();
 }
 
-
 //设置到剪切板但不粘贴
-
-function setToClipBoard(index ) {
+function setToClipBoard(index) {
+    if (!clipObj || !clipObj[index]) return;
     var obj = clipObj[index];
     clipObj.splice(index, 1)[0];
     clipObj.splice(0, 0, obj);
@@ -414,75 +497,83 @@ function setToClipBoard(index ) {
 
     displayData();
 }
-//粘贴多条
+
+//粘贴多条 (Ctrl 多选)
 function pasteMultiValue() {
+    if (!multiIndexList || multiIndexList.length === 0) return;
     var clipList = [];
-    var lastIndex = -1;
-    var diffLenth = 0;
-    multiIndexList.forEach(index => {
-
-        var result = clipObj[index];
-       
-
-        if (lastIndex >= 0 && lastIndex > index) {
-            diffLenth++;
-            index = index + diffLenth;
-            result = clipObj[index];
+    multiIndexList.forEach(function(index) {
+        if (clipObj[index]) {
+            clipList.push(clipObj[index]);
         }
-        clipObj.splice(index, 1)[0];
-        clipObj.splice(0, 0, result);
-        
-        clipList.push(result);
-        lastIndex = index;
     });
-    window.chrome.webview.postMessage(
-        "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
-    );
 
-    displayData();
-    
+    if (clipList.length === 0) return;
 
-}
-
-//粘贴范围
-function pasteValueByRange(startIndex, endIndex) {
-    var clipList = [];
-    if (endIndex > startIndex) {
-        for (var i = startIndex; i <= endIndex; i++) {
-            var result = clipObj[i];
-           
-            clipObj.splice(i, 1)[0];
-            clipObj.splice(0, 0, result);
-           
-            clipList.push(result);
-        }
-    } else if (endIndex < startIndex) {
-        for (var i = startIndex; i >= endIndex; i--) {
-            var result = clipObj[i];
-           
-            clipObj.splice(i, 1)[0];
-            
-            clipList.push(result);
-        }
-       
-        clipList.forEach(value => {
-            clipObj.splice(0, 0, value);
-        });
-        
-    } else {
-        pasteValue(startIndex);
-        return;
+    var sortedDesc = multiIndexList.slice().sort(function(a, b) { return b - a; });
+    sortedDesc.forEach(function(idx) {
+        clipObj.splice(idx, 1);
+    });
+    for (var j = clipList.length - 1; j >= 0; j--) {
+        clipObj.unshift(clipList[j]);
     }
 
     window.chrome.webview.postMessage(
         "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
     );
-    
-    displayData();
-    
 
+    displayData();
 }
 
+//粘贴范围 (Shift 范围)
+function pasteValueByRange(startIndex, endIndex) {
+    if (!clipObj || clipObj.length === 0) return;
+
+    var start = Math.max(0, Math.min(startIndex, clipObj.length - 1));
+    var end = Math.max(0, Math.min(endIndex, clipObj.length - 1));
+
+    if (start === end) {
+        pasteValue(start);
+        return;
+    }
+
+    var clipList = [];
+    var indices = [];
+    if (start <= end) {
+        // 从前往后选：按正向顺序粘贴 (1 -> 2 -> 3)
+        for (var i = start; i <= end; i++) {
+            if (clipObj[i]) {
+                clipList.push(clipObj[i]);
+                indices.push(i);
+            }
+        }
+    } else {
+        // 从后往前选：按反向顺序粘贴 (5 -> 4 -> 3 -> 2 -> 1)
+        for (var i = start; i >= end; i--) {
+            if (clipObj[i]) {
+                clipList.push(clipObj[i]);
+                indices.push(i);
+            }
+        }
+    }
+
+    if (clipList.length === 0) return;
+
+    // 从后往前删除选中的索引，避免移位
+    var sortedDesc = indices.slice().sort(function(a, b) { return b - a; });
+    sortedDesc.forEach(function(idx) {
+        clipObj.splice(idx, 1);
+    });
+    for (var j = clipList.length - 1; j >= 0; j--) {
+        clipObj.unshift(clipList[j]);
+    }
+
+    window.chrome.webview.postMessage(
+        "PasteValueList|" + encodeURIComponent(JSON.stringify(clipList))
+    );
+
+    displayData();
+}
 
 function del(index) {
     clipObj.splice(index, 1)[0];

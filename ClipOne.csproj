@@ -2,18 +2,32 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-<TargetFrameworks>net10.0-windows10.0.26100.0</TargetFrameworks>
-    <UseWPF>true</UseWPF>
-<!--     <UseWindowsForms>true</UseWindowsForms> -->    
- <NoWin32Manifest>true</NoWin32Manifest>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <Platforms>x64</Platforms>
+    <Nullable>enable</Nullable>
+    <NoWin32Manifest>true</NoWin32Manifest>
     <ApplicationIcon>ClipOne.ico</ApplicationIcon>
-<TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
-<MinimumPlatformVersion>10.0.26100.0</MinimumPlatformVersion>
-    <StartupObject>ClipOne.App</StartupObject>
-    <IsPublishable>True</IsPublishable>
+    <MinimumPlatformVersion>10.0.26100.0</MinimumPlatformVersion>
     <SupportedOSPlatformVersion>10.0.26100.0</SupportedOSPlatformVersion>
-    <Version>4.9.9</Version>
+    <IsPublishable>True</IsPublishable>
+    <Version>5.0.0</Version>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <!-- 极限裁剪与 AOT 体积优化配置 -->
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>full</TrimMode>
+    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
+    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+    <IlcTrimMetadata>true</IlcTrimMetadata>
+    <IlcGenerateCompleteTypeMetadata>false</IlcGenerateCompleteTypeMetadata>
+    <DebuggerSupport>false</DebuggerSupport>
+    <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
+    <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
+    <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
+    <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
+    <!-- 不生成 PDB 符号文件，产物更干净 -->
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,13 +35,15 @@
     <None Remove="html\css\classic\classic.css" />
     <None Remove="html\css\material\material.css" />
     <None Remove="html\css\modern\modern.css" />
-
     <None Remove="html\css\stand\stand.css" />
     <None Remove="html\css\striped\striped.css" />
+    <None Remove="html\css\fluent-light\fluent-light.css" />
+    <None Remove="html\css\fluent-dark\fluent-dark.css" />
     <None Remove="html\index.html" />
     <None Remove="html\js\jquery-3.3.1.min.js" />
     <None Remove="html\js\jquery.nicescroll.min.js" />
     <None Remove="html\js\main.js" />
+    <None Remove="html\js\wechat_emojis.js" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,6 +62,12 @@
     <Content Include="html\css\striped\striped.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="html\css\fluent-light\fluent-light.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="html\css\fluent-dark\fluent-dark.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="html\index.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -61,42 +83,11 @@
     <Content Include="html\js\wechat_emojis.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="html\css\fluent-light\fluent-light.css">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="html\css\fluent-dark\fluent-dark.css">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 
   <ItemGroup>
-<PackageReference Include="H.NotifyIcon" Version="2.4.1" />
-<PackageReference Include="H.NotifyIcon.Wpf" Version="2.4.1" />
-<PackageReference Include="HtmlAgilityPack" Version="1.13.0" />
-<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4129.50" />
-<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-
-  </ItemGroup>
-
-  <ItemGroup>
-    <Resource Include="ClipOne.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <PackageReference Include="Photino.NET" Version="3.2.3" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.13.0" />
   </ItemGroup>
 
   <ItemGroup>

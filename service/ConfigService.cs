@@ -1,32 +1,44 @@
-﻿using ClipOne.model;
+using ClipOne.model;
 using Microsoft.Win32;
-using Newtonsoft.Json;
+using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text.Json;
 
 namespace ClipOne.service
 {
     public class ConfigService
     {
-
-
         private readonly Config config;
         /// <summary>
         /// 配置文件路径
         /// </summary>
-        private readonly string settingsPath = "config\\settings.json";
+        private readonly string settingsPath = Path.Combine("config", "settings.json");
 
         public ConfigService()
         {
             if (!File.Exists(settingsPath))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(settingsPath));
+                string? dir = Path.GetDirectoryName(settingsPath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
                 config = new Config();
+                SaveSettings();
             }
             else
             {
-                string json = File.ReadAllText(settingsPath);
-                config = JsonConvert.DeserializeObject<Config>(json);
+                try
+                {
+                    string json = File.ReadAllText(settingsPath);
+                    config = JsonSerializer.Deserialize(json, ClipJsonContext.Default.Config) ?? new Config();
+                }
+                catch
+                {
+                    config = new Config();
+                }
+
                 if (config.AutoStartup)
                 {
                     SetStartup(true);
@@ -34,40 +46,46 @@ namespace ClipOne.service
             }
         }
 
-
         /// <summary>
-        /// /加载设置项
+        /// 加载设置项
         /// </summary>
         public Config GetConfig()
         {
             return config;
         }
 
-
         /// <summary>
         /// 设置开机启动
         /// </summary>
         public void SetStartup(bool isAutoStartup)
         {
-
-            RegistryKey reg = Registry.CurrentUser.CreateSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
-
-            string exePath = Process.GetCurrentProcess().MainModule.FileName;
-            string exeName = Process.GetCurrentProcess().MainModule.ModuleName;
-            if (!isAutoStartup)
+            try
             {
-                if (reg.GetValue(exeName) != null)
-                {
+                using RegistryKey? reg = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run");
+                if (reg == null) return;
 
-                    reg.DeleteValue(exeName);
+                using Process currentProcess = Process.GetCurrentProcess();
+                string? exePath = currentProcess.MainModule?.FileName;
+                string exeName = currentProcess.MainModule?.ModuleName ?? "ClipOne";
+
+                if (string.IsNullOrEmpty(exePath)) return;
+
+                if (!isAutoStartup)
+                {
+                    if (reg.GetValue(exeName) != null)
+                    {
+                        reg.DeleteValue(exeName);
+                    }
+                }
+                else
+                {
+                    reg.SetValue(exeName, exePath);
                 }
             }
-            else
+            catch (Exception ex)
             {
-
-                reg.SetValue(exeName, exePath);
+                Trace.WriteLine($"Failed to set startup registry: {ex.Message}");
             }
-
         }
 
         /// <summary>
@@ -75,8 +93,20 @@ namespace ClipOne.service
         /// </summary>
         public void SaveSettings()
         {
-            string json = JsonConvert.SerializeObject(config);
-            File.WriteAllText(settingsPath, json);
+            try
+            {
+                string? dir = Path.GetDirectoryName(settingsPath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+                string json = JsonSerializer.Serialize(config, ClipJsonContext.Default.Config);
+                File.WriteAllText(settingsPath, json);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"Failed to save settings: {ex.Message}");
+            }
         }
     }
 }

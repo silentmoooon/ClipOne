@@ -1,354 +1,186 @@
-﻿using ClipOne.model;
+using ClipOne.model;
+using ClipOne.util;
 using HtmlAgilityPack;
 using System;
 using System.Diagnostics;
 using System.IO;
-
+using System.Runtime.InteropServices;
 using System.Text;
-using System.Windows;
-using System.Windows.Media.Imaging;
-using System.Xml;
 
 namespace ClipOne.service
 {
-    class ClipService
+    public class ClipService
     {
         private readonly Config config;
+
+        public const string IMAGE_TYPE = "image";
+        public const string HTML_TYPE = "html";
+        public const string FILE_TYPE = "file";
+        public const string QQ_RICH_TYPE = "QQ_Unicode_RichEdit_Format";
+        public const string WECHAT_TYPE = "WeChat_RichEdit_Format";
+        public const string TEXT_TYPE = "text";
+
+        private static readonly uint FORMAT_WECHAT = WinAPIHelper.RegisterClipboardFormat(WECHAT_TYPE);
+        private static readonly uint FORMAT_QQ = WinAPIHelper.RegisterClipboardFormat(QQ_RICH_TYPE);
+        private static readonly uint FORMAT_HTML = WinAPIHelper.RegisterClipboardFormat("HTML Format");
+        private static readonly uint FORMAT_DROPEFFECT = WinAPIHelper.RegisterClipboardFormat("Preferred DropEffect");
+
         public ClipService(Config config)
         {
             this.config = config;
         }
-        /// <summary>
-        /// 图片类型，通过在内容前面增加前缀来标识
-        /// </summary>
-        public const string IMAGE_TYPE = "image";
-        /// <summary>
-        /// html类型，通过在内容前面增加前缀来标识
-        /// </summary>
-        public const string HTML_TYPE = "html";
-
-
-        /// <summary>
-        /// 文件类型，通过在内容前面增加前缀来标识
-        /// </summary>
-        public const string FILE_TYPE = "file";
-
-        /// <summary>
-        /// QQ富文本类型
-        /// </summary>
-        public const string QQ_RICH_TYPE = "QQ_Unicode_RichEdit_Format";
-
-        /// <summary>
-        /// 微信富文本类型
-        /// </summary>
-        public const string WECHAT_TYPE = "WeChat_RichEdit_Format";
-
-        /// <summary>
-        /// 文本类型
-        /// </summary>
-        public const string TEXT_TYPE = "text";
-
-
-
-        /// <summary>
-        /// 设置条目到剪切板
-        /// </summary>
-        /// <param name="result"></param>
-        public void SetValueToClipboard(ClipModel result)
-        {
-            IDataObject dataObject;
-            if (result.Type == WECHAT_TYPE)
-            {
-                MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
-                dataObject = new DataObject();
-                dataObject.SetData(WECHAT_TYPE, ms);
-                dataObject.SetData(DataFormats.Text, result.PlainText);
-                dataObject.SetData(DataFormats.UnicodeText, result.PlainText);
-
-               
-
-            }
-            else if (result.Type == IMAGE_TYPE)
-            {
-
-                byte[] fileBytes = Convert.FromBase64String(result.ClipValue);
-                MemoryStream ms = new MemoryStream(fileBytes);
-                BitmapImage bitImg = new BitmapImage();
-                bitImg.BeginInit();
-                bitImg.StreamSource = ms;
-                bitImg.EndInit();
-
-                
-                dataObject = new DataObject();
-                dataObject.SetData(DataFormats.Bitmap, bitImg);
-                MemoryStream memo = new MemoryStream(4);
-                byte[] bytes = new byte[] { 5, 0, 0, 0 };
-                memo.Write(bytes, 0, bytes.Length);
-                dataObject.SetData("Preferred DropEffect", memo);
-                if (File.Exists(result.DisplayValue))
-                {
-                    dataObject.SetData(DataFormats.FileDrop, new string[] { result.DisplayValue });
-                }
-
-
-            }
-            else if (result.Type == HTML_TYPE)
-            {
-                dataObject = new DataObject();
-                dataObject.SetData(DataFormats.Html, result.ClipValue);
-                dataObject.SetData(DataFormats.Text, result.PlainText);
-                dataObject.SetData(DataFormats.UnicodeText, result.PlainText);
-                
-            }
-            else if (result.Type == QQ_RICH_TYPE)
-            {
-
-
-                MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(result.ClipValue));
-                dataObject = new DataObject();
-                dataObject.SetData(QQ_RICH_TYPE, ms);
-                dataObject.SetData(DataFormats.Text, result.PlainText);
-                dataObject.SetData(DataFormats.UnicodeText, result.PlainText);
- 
-            }
-            else if (result.Type == FILE_TYPE)
-            {
-
-                string[] tmp = result.ClipValue.Split(',');
-                dataObject = new DataObject(DataFormats.FileDrop, tmp);
-                MemoryStream memo = new MemoryStream(4);
-                byte[] bytes = new byte[] { 5, 0, 0, 0 };
-                memo.Write(bytes, 0, bytes.Length);
-                dataObject.SetData("Preferred DropEffect", memo);
- 
-            }
-            else
-            {
-
-                dataObject = new DataObject(DataFormats.Text, result.ClipValue);
-  
-            }
-            try {
-                //当有其他进程占用剪切板时,WPF的Clipboard会有BUG,winform的没有,所以暂时用winform的
-                //System.Windows.Forms.Clipboard.SetDataObject(dataObject, true);
-                Clipboard.SetDataObject(dataObject, true);
-
-            }
-            catch (Exception e)
-            {
-                Trace.WriteLine(e.Message);
-            }
-           
-        }
-
-
 
         public ClipModel HandClip()
         {
             ClipModel clip = new ClipModel();
-            //如果有极小概率会出现 OpenClipboard 失败的异常,所以增加重试
+
             for (int i = 0; i < 3; i++)
             {
+                if (!WinAPIHelper.OpenClipboard(IntPtr.Zero))
+                {
+                    System.Threading.Thread.Sleep(25);
+                    continue;
+                }
+
                 try
                 {
-                    //处理剪切板微信自定义格式
-                    if ((config.SupportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(WECHAT_TYPE))
+                    // 1. WeChat RichEdit Format
+                    if ((config.SupportFormat & ClipType.qq) != 0 && FORMAT_WECHAT != 0 && WinAPIHelper.IsClipboardFormatAvailable(FORMAT_WECHAT))
                     {
                         HandleWeChat(clip);
-
                     }
-
-                    //处理剪切板QQ自定义格式
-                    else if ((config.SupportFormat & ClipType.qq) != 0 && Clipboard.ContainsData(QQ_RICH_TYPE))
+                    // 2. QQ Unicode RichEdit Format
+                    else if ((config.SupportFormat & ClipType.qq) != 0 && FORMAT_QQ != 0 && WinAPIHelper.IsClipboardFormatAvailable(FORMAT_QQ))
                     {
-
                         HandleQQ(clip);
-
                     }
-
-                    //处理HTML类型
-                    else if ((config.SupportFormat & ClipType.html) != 0 && Clipboard.ContainsData(DataFormats.Html))
+                    // 3. HTML Format
+                    else if ((config.SupportFormat & ClipType.html) != 0 && FORMAT_HTML != 0 && WinAPIHelper.IsClipboardFormatAvailable(FORMAT_HTML))
                     {
-
                         HandleHtml(clip);
-
                     }
-                    //处理图片类型
-                    else if ((config.SupportFormat & ClipType.image) != 0 && (Clipboard.ContainsImage() || Clipboard.ContainsData(DataFormats.Dib)))
+                    // 4. Image (DIB / Bitmap)
+                    else if ((config.SupportFormat & ClipType.image) != 0 && (WinAPIHelper.IsClipboardFormatAvailable(WinAPIHelper.CF_DIB) || WinAPIHelper.IsClipboardFormatAvailable(WinAPIHelper.CF_DIBV5)))
                     {
                         HandleImage(clip);
-
                     }
-                    //处理剪切板文件
-                    else if ((config.SupportFormat & ClipType.file) != 0 && Clipboard.ContainsFileDropList())
+                    // 5. File Drop (HDROP)
+                    else if ((config.SupportFormat & ClipType.file) != 0 && WinAPIHelper.IsClipboardFormatAvailable(WinAPIHelper.CF_HDROP))
                     {
                         HandleFile(clip);
-
                     }
-                    //处理剪切板文字
-                    else if (Clipboard.ContainsText())
+                    // 6. Text (Unicode)
+                    else if (WinAPIHelper.IsClipboardFormatAvailable(WinAPIHelper.CF_UNICODETEXT) || WinAPIHelper.IsClipboardFormatAvailable(WinAPIHelper.CF_TEXT))
                     {
-
                         HandleText(clip);
-
                     }
+
                     return clip;
                 }
-                catch  
+                catch (Exception ex)
                 {
-                    
+                    Trace.WriteLine($"Error reading clipboard: {ex.Message}");
+                }
+                finally
+                {
+                    WinAPIHelper.CloseClipboard();
                 }
             }
+
             return clip;
         }
 
-
-        /// <summary>
-        /// 处理剪切板文字类型
-        /// </summary>
-        /// <param name="clip"></param>
         public void HandleText(ClipModel clip)
         {
-
-            string textStr = string.Empty;
-
-            try
-            {
-                textStr = Clipboard.GetText();
-
-            }
-            catch
-            {
-                if (Clipboard.ContainsData(DataFormats.UnicodeText))
-                {
-                    textStr = (string)Clipboard.GetData(DataFormats.UnicodeText);
-                }
-            }
-            if (textStr == string.Empty)
-            {
+            string text = GetClipboardUnicodeText();
+            if (string.IsNullOrEmpty(text))
                 return;
-            }
-            clip.ClipValue = textStr;
-            clip.DisplayValue = textStr.Replace("<", "&lt;").Replace(">", "&gt;");
+
             clip.Type = TEXT_TYPE;
-
-            string[] array = clip.DisplayValue.Split('\n');
-
-            string tempStr = array[0];
-            if (array.Length > 0)
-            {
-                for (int j = 1; j < array.Length; j++)
-                {
-                    if (j < 5)
-                    {
-                        tempStr += "<br>" + array[j];
-                    }
-                    else if (j == 5 && j < array.Length - 1)
-                    {
-                        tempStr += "<br>...";
-                        break;
-                    }
-                }
-            }
-
-            clip.DisplayValue = tempStr;
-            return;
-
-
-
-
-
+            clip.ClipValue = text;
+            clip.DisplayValue = FormatDisplayText(text);
         }
 
-        /// <summary>
-        /// 处理剪切板文件类型
-        /// </summary>
-        /// <param name="clip"></param>
         public void HandleFile(ClipModel clip)
         {
-
-            string[] files = (string[])Clipboard.GetData(DataFormats.FileDrop);
-            MemoryStream vMemoryStream = (MemoryStream)Clipboard.GetDataObject().GetData("Preferred DropEffect", true);
-
-            DragDropEffects vDragDropEffects = (DragDropEffects)vMemoryStream.ReadByte();
-
-            //如果是剪切类型,不加入
-            if ((vDragDropEffects & DragDropEffects.Move) == DragDropEffects.Move)
+            // Check Preferred DropEffect to ignore 'cut/move'
+            IntPtr hEffect = WinAPIHelper.GetClipboardData(FORMAT_DROPEFFECT);
+            if (hEffect != IntPtr.Zero)
             {
-                return;
+                IntPtr pEffect = WinAPIHelper.GlobalLock(hEffect);
+                if (pEffect != IntPtr.Zero)
+                {
+                    try
+                    {
+                        byte effect = Marshal.ReadByte(pEffect);
+                        // 2 = DROPEFFECT_MOVE
+                        if ((effect & 2) != 0)
+                        {
+                            return;
+                        }
+                    }
+                    finally
+                    {
+                        WinAPIHelper.GlobalUnlock(hEffect);
+                    }
+                }
             }
 
+            IntPtr hDrop = WinAPIHelper.GetClipboardData(WinAPIHelper.CF_HDROP);
+            if (hDrop == IntPtr.Zero) return;
 
+            uint fileCount = WinAPIHelper.DragQueryFileW(hDrop, 0xFFFFFFFF, null, 0);
+            if (fileCount == 0) return;
+
+            string[] files = new string[fileCount];
+            StringBuilder sb = new StringBuilder(1024);
+            for (uint i = 0; i < fileCount; i++)
+            {
+                sb.Clear();
+                WinAPIHelper.DragQueryFileW(hDrop, i, sb, 1024);
+                files[i] = sb.ToString();
+            }
 
             clip.Type = FILE_TYPE;
             clip.ClipValue = string.Join(",", files);
 
-
-
-            //组装显示内容，按文件名分行
-            string displayStr = "<b>" + files.Length + " file";
-            if (files.Length > 1)
-            {
-                displayStr += "s";
-            }
-            displayStr += "</b>";
-            int j = 0;
-            foreach (string str in files)
+            string displayStr = $"<b>{files.Length} file{(files.Length > 1 ? "s" : "")}</b>";
+            for (int j = 0; j < files.Length; j++)
             {
                 if (j < 5)
                 {
-                    displayStr += "<br>" + Path.GetFileName(str);
+                    displayStr += "<br>" + Path.GetFileName(files[j]);
                 }
                 else if (j == 5)
                 {
                     displayStr += "<br>...";
                     break;
                 }
-                j++;
             }
-
-
             clip.DisplayValue = displayStr;
-
         }
 
-
-        /// <summary>
-        /// 处理剪切板HTML类型
-        /// </summary>
-        /// <param name="clip"></param>
         public void HandleHtml(ClipModel clip)
         {
-            
-            string htmlStr = Clipboard.GetData(DataFormats.Html).ToString().Replace("&amp;", "&");
+            string htmlStr = GetClipboardHtmlText();
+            string plainText = GetClipboardUnicodeText();
 
-            string plainText = Clipboard.GetText();
-
-
-            //只有当html内容中有图片才当作html格式处理,否则做文本处理
-            if (GetOccurTimes(htmlStr.ToLower(), "<img") > GetOccurTimes(plainText.ToLower(), "<img"))
+            if (string.IsNullOrEmpty(htmlStr))
             {
+                HandleText(clip);
+                return;
+            }
 
+            // If html contains <img> tags, treat as rich HTML
+            if (GetOccurTimes(htmlStr.ToLowerInvariant(), "<img") > GetOccurTimes(plainText.ToLowerInvariant(), "<img"))
+            {
                 clip.ClipValue = htmlStr;
-
-                string startTag = "<!--StartFragment-->";
-                string endTag = "<!--EndFragment-->";
-                //QQ上的多了个空格
-                if (!htmlStr.Contains(startTag))
-                {
-                    startTag = "<!--StartFragment -->";
-                }
-
-                try
-                {
-                    htmlStr = htmlStr.Substring(htmlStr.IndexOf(startTag) + startTag.Length, htmlStr.IndexOf(endTag) - (htmlStr.IndexOf(startTag) + startTag.Length));
-                }
-                catch { }
-                clip.DisplayValue = htmlStr;
+                string fragment = ExtractHtmlFragment(htmlStr);
+                clip.DisplayValue = fragment;
                 clip.PlainText = plainText;
-
                 clip.Type = HTML_TYPE;
-                if (!Clipboard.ContainsText()&& htmlStr.ToLower().Contains("gif"))
+
+                if (string.IsNullOrEmpty(plainText) && htmlStr.ToLowerInvariant().Contains("gif"))
                 {
                     clip.NeedOverride = true;
                 }
@@ -356,191 +188,493 @@ namespace ClipOne.service
             else
             {
                 HandleText(clip);
-
             }
-
-
-
-
         }
 
-        /// <summary>
-        /// 处理剪切板图片类型
-        /// </summary>
-        /// <param name="clip"></param>
         public void HandleImage(ClipModel clip)
         {
-
-            string[] files = (string[])Clipboard.GetData(DataFormats.FileDrop);
-            string base64;
-            if (files != null && files.Length > 0 && File.Exists(files[0]))
+            IntPtr hMem = WinAPIHelper.GetClipboardData(WinAPIHelper.CF_DIB);
+            if (hMem == IntPtr.Zero)
             {
-                base64 = Convert.ToBase64String(File.ReadAllBytes(files[0]));
-                clip.DisplayValue = files[0];
+                hMem = WinAPIHelper.GetClipboardData(WinAPIHelper.CF_DIBV5);
             }
-            else
+
+            if (hMem == IntPtr.Zero) return;
+
+            IntPtr pDib = WinAPIHelper.GlobalLock(hMem);
+            if (pDib == IntPtr.Zero) return;
+
+            try
             {
-                BitmapSource bs = Clipboard.GetImage();
-                JpegBitmapEncoder jpegEncoder = new JpegBitmapEncoder();
-                jpegEncoder.Frames.Add(BitmapFrame.Create(bs));
-                MemoryStream ms = new MemoryStream();
-                jpegEncoder.Save(ms);
-                base64 = Convert.ToBase64String(ms.GetBuffer());
+                int dibSize = (int)WinAPIHelper.GlobalSize(hMem).ToUInt32();
+                if (dibSize <= 0) return;
+
+                byte[] dibBytes = new byte[dibSize];
+                Marshal.Copy(pDib, dibBytes, 0, dibSize);
+
+                byte[] bmpBytes = ConvertDibToBmp(dibBytes);
+                string base64 = Convert.ToBase64String(bmpBytes);
+
+                clip.Type = IMAGE_TYPE;
+                clip.DisplayValue = "image.jpg";
+                clip.ClipValue = base64;
             }
-            clip.Type = IMAGE_TYPE;
-            clip.DisplayValue = "image.jpg";
-            clip.ClipValue = base64;
-
-
-
+            finally
+            {
+                WinAPIHelper.GlobalUnlock(hMem);
+            }
         }
 
-        /// <summary>
-        /// 处理剪切板微信类型
-        /// </summary>
-        /// <param name="clip"></param>
         public void HandleWeChat(ClipModel clip)
         {
+            byte[]? bytes = GetClipboardRawBytes(FORMAT_WECHAT);
+            if (bytes == null || bytes.Length == 0) return;
 
-            MemoryStream stream = (MemoryStream)Clipboard.GetData(WECHAT_TYPE);
-            string plainText = Clipboard.GetText();
+            string xmlStr = Encoding.UTF8.GetString(bytes).TrimEnd('\0');
+            string plainText = GetClipboardUnicodeText();
+
             clip.PlainText = plainText;
-            byte[] b = stream.ToArray();
-            string xmlStr = Encoding.UTF8.GetString(b);
-
             clip.Type = WECHAT_TYPE;
             clip.ClipValue = xmlStr;
 
-            XmlDocument document = new XmlDocument();
-            document.LoadXml(xmlStr);
-            string displayValue = string.Empty;
-            string value = string.Empty;
-            bool onlyText = true;
-            foreach (XmlNode node in document.DocumentElement.ChildNodes)
+            try
             {
-                if (node.Name == "EditElement" && node.Attributes["type"].Value == "0") //文字类型
+                System.Xml.XmlDocument doc = new System.Xml.XmlDocument();
+                doc.LoadXml(xmlStr);
+
+                string displayValue = string.Empty;
+                string value = string.Empty;
+                bool onlyText = true;
+
+                if (doc.DocumentElement != null)
                 {
-                    displayValue += node.InnerText;
-                    value += node.InnerText;
-
-                }
-                else
-                {
-                    onlyText = false;
-                    displayValue += "[表情]";
-                    value += " ";
-                }
-            }
-            if (onlyText)
-            {
-                clip.Type = TEXT_TYPE;
-                clip.ClipValue = value;
-            }
-
-            clip.DisplayValue = displayValue;
-
-
-
-        }
-
-        /// <summary>
-        /// 处理剪切板QQ类型
-        /// </summary>
-        /// <param name="clip"></param>
-        public void HandleQQ(ClipModel clip)
-        {
-
-            MemoryStream stream = (MemoryStream)Clipboard.GetData(QQ_RICH_TYPE);
-            string plainText = Clipboard.GetText();
-            clip.PlainText = plainText;
-            byte[] b = stream.ToArray();
-            string xmlStr = Encoding.UTF8.GetString(b);
-            xmlStr = xmlStr.Substring(0, xmlStr.IndexOf("</QQRichEditFormat>") + "</QQRichEditFormat>".Length);
-
-            XmlDocument document = new XmlDocument();
-            document.LoadXml(xmlStr);
-            XmlNodeList nodeList = document.SelectNodes("QQRichEditFormat/EditElement[@type='1']|QQRichEditFormat/EditElement[@type='2']|QQRichEditFormat/EditElement[@type='3']|QQRichEditFormat/EditElement[@type='5']");
-
-            //如果只有一个图片且没有文字,则按图片处理
-            if (GetOccurTimes(xmlStr, "filepath") == 1 && xmlStr.IndexOf("<![CDATA[") < 0)
-            {
-                string filePath = nodeList[0].Attributes["filepath"].Value;
-
-                clip.Type = IMAGE_TYPE;
-                clip.DisplayValue = string.Empty;
-                clip.ClipValue = Convert.ToBase64String(File.ReadAllBytes(filePath.Replace("file:///", "")));
-                clip.PlainText = string.Empty;
-                return;
-            }
-
-            int ii = 0;
-            string htmlStr = Clipboard.GetData(DataFormats.Html).ToString();
-
-            string startTag;
-            if (htmlStr.IndexOf("<!--StartFragment-->") > 0)
-            {
-                startTag = "<!--StartFragment-->";
-            }
-            else
-            {
-                startTag = "<!--StartFragment -->";
-            }
-            string endTag = "<!--EndFragment-->";
-            htmlStr = htmlStr.Substring(htmlStr.IndexOf(startTag) + startTag.Length, htmlStr.IndexOf(endTag) - (htmlStr.IndexOf(startTag) + startTag.Length));
-
-            //如果有img标签
-            if (htmlStr.ToLower().IndexOf("<img") >= 0)
-            {
-
-                HtmlDocument doc = new HtmlDocument();
-                doc.LoadHtml(htmlStr);
-
-                var nodes = doc.DocumentNode.SelectNodes("//img");
-                if (nodes != null)
-                {
-                    foreach (HtmlNode node in doc.DocumentNode.SelectNodes("//img"))
+                    foreach (System.Xml.XmlNode node in doc.DocumentElement.ChildNodes)
                     {
-                        string filePath = string.Empty;
-                        string src = node.GetAttributeValue("src", string.Empty);
-                        if (src == "file:///")
+                        if (node.Name == "EditElement" && node.Attributes?["type"]?.Value == "0")
                         {
-                            filePath = nodeList[ii].Attributes["filepath"].Value;
+                            displayValue += node.InnerText;
+                            value += node.InnerText;
                         }
                         else
                         {
-                            filePath = src;
+                            onlyText = false;
+                            displayValue += "[表情]";
+                            value += " ";
                         }
+                    }
+                }
 
-                        Console.WriteLine(filePath);
-                        src = "data:image/png;base64," + Convert.ToBase64String(File.ReadAllBytes(filePath.Replace("file:///", "")));
+                if (onlyText && !string.IsNullOrEmpty(value))
+                {
+                    clip.Type = TEXT_TYPE;
+                    clip.ClipValue = value;
+                }
 
-                        node.SetAttributeValue("src", src);
+                clip.DisplayValue = displayValue;
+            }
+            catch
+            {
+                clip.DisplayValue = plainText;
+            }
+        }
 
-                        ii++;
+        public void HandleQQ(ClipModel clip)
+        {
+            byte[]? bytes = GetClipboardRawBytes(FORMAT_QQ);
+            if (bytes == null || bytes.Length == 0) return;
+
+            string xmlStr = Encoding.UTF8.GetString(bytes).TrimEnd('\0');
+            int closeIdx = xmlStr.IndexOf("</QQRichEditFormat>", StringComparison.OrdinalIgnoreCase);
+            if (closeIdx >= 0)
+            {
+                xmlStr = xmlStr.Substring(0, closeIdx + "</QQRichEditFormat>".Length);
+            }
+
+            string plainText = GetClipboardUnicodeText();
+            clip.PlainText = plainText;
+
+            try
+            {
+                System.Xml.XmlDocument doc = new System.Xml.XmlDocument();
+                doc.LoadXml(xmlStr);
+                var nodeList = doc.SelectNodes("QQRichEditFormat/EditElement[@type='1']|QQRichEditFormat/EditElement[@type='2']|QQRichEditFormat/EditElement[@type='3']|QQRichEditFormat/EditElement[@type='5']");
+
+                if (GetOccurTimes(xmlStr, "filepath") == 1 && xmlStr.IndexOf("<![CDATA[", StringComparison.OrdinalIgnoreCase) < 0 && nodeList != null && nodeList.Count > 0)
+                {
+                    string? filePath = nodeList[0]?.Attributes?["filepath"]?.Value?.Replace("file:///", "");
+                    if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                    {
+                        clip.Type = IMAGE_TYPE;
+                        clip.DisplayValue = string.Empty;
+                        clip.ClipValue = Convert.ToBase64String(File.ReadAllBytes(filePath));
+                        clip.PlainText = string.Empty;
+                        return;
+                    }
+                }
+
+                string htmlStr = GetClipboardHtmlText();
+                if (!string.IsNullOrEmpty(htmlStr))
+                {
+                    string fragment = ExtractHtmlFragment(htmlStr);
+                    if (fragment.ToLowerInvariant().Contains("<img"))
+                    {
+                        HtmlDocument hDoc = new HtmlDocument();
+                        hDoc.LoadHtml(fragment);
+                        var imgNodes = hDoc.DocumentNode.SelectNodes("//img");
+                        if (imgNodes != null && nodeList != null)
+                        {
+                            int ii = 0;
+                            foreach (var node in imgNodes)
+                            {
+                                string src = node.GetAttributeValue("src", string.Empty);
+                                string? filePath = src == "file:///" && ii < nodeList.Count ? nodeList[ii]?.Attributes?["filepath"]?.Value : src;
+                                if (!string.IsNullOrEmpty(filePath))
+                                {
+                                    filePath = filePath.Replace("file:///", "");
+                                    if (File.Exists(filePath))
+                                    {
+                                        src = "data:image/png;base64," + Convert.ToBase64String(File.ReadAllBytes(filePath));
+                                        node.SetAttributeValue("src", src);
+                                    }
+                                }
+                                ii++;
+                            }
+                            fragment = hDoc.DocumentNode.OuterHtml;
+                        }
+                    }
+                    clip.DisplayValue = fragment;
+                }
+                else
+                {
+                    clip.DisplayValue = plainText;
+                }
+
+                clip.Type = QQ_RICH_TYPE;
+                clip.ClipValue = xmlStr;
+            }
+            catch
+            {
+                clip.Type = QQ_RICH_TYPE;
+                clip.ClipValue = xmlStr;
+                clip.DisplayValue = plainText;
+            }
+        }
+
+        public void SetValueToClipboard(ClipModel result)
+        {
+            if (result == null) return;
+
+            for (int i = 0; i < 3; i++)
+            {
+                if (!WinAPIHelper.OpenClipboard(IntPtr.Zero))
+                {
+                    System.Threading.Thread.Sleep(25);
+                    continue;
+                }
+
+                try
+                {
+                    WinAPIHelper.EmptyClipboard();
+
+                    if (result.Type == WECHAT_TYPE)
+                    {
+                        SetClipboardRawBytes(FORMAT_WECHAT, Encoding.UTF8.GetBytes(result.ClipValue));
+                        if (!string.IsNullOrEmpty(result.PlainText))
+                        {
+                            SetClipboardUnicodeText(result.PlainText);
+                        }
+                    }
+                    else if (result.Type == QQ_RICH_TYPE)
+                    {
+                        SetClipboardRawBytes(FORMAT_QQ, Encoding.UTF8.GetBytes(result.ClipValue));
+                        if (!string.IsNullOrEmpty(result.PlainText))
+                        {
+                            SetClipboardUnicodeText(result.PlainText);
+                        }
+                    }
+                    else if (result.Type == HTML_TYPE)
+                    {
+                        SetClipboardRawBytes(FORMAT_HTML, Encoding.UTF8.GetBytes(result.ClipValue));
+                        if (!string.IsNullOrEmpty(result.PlainText))
+                        {
+                            SetClipboardUnicodeText(result.PlainText);
+                        }
+                    }
+                    else if (result.Type == IMAGE_TYPE)
+                    {
+                        byte[] bmpBytes = Convert.FromBase64String(result.ClipValue);
+                        byte[] dibBytes = ExtractDibFromBmp(bmpBytes);
+                        SetClipboardRawBytes(WinAPIHelper.CF_DIB, dibBytes);
+
+                        // Preferred DropEffect = 5 (Copy)
+                        SetClipboardRawBytes(FORMAT_DROPEFFECT, new byte[] { 5, 0, 0, 0 });
+
+                        if (!string.IsNullOrEmpty(result.DisplayValue) && File.Exists(result.DisplayValue))
+                        {
+                            SetClipboardFiles(new string[] { result.DisplayValue });
+                        }
+                    }
+                    else if (result.Type == FILE_TYPE)
+                    {
+                        string[] files = result.ClipValue.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                        SetClipboardFiles(files);
+                        SetClipboardRawBytes(FORMAT_DROPEFFECT, new byte[] { 5, 0, 0, 0 });
+                    }
+                    else
+                    {
+                        SetClipboardUnicodeText(result.ClipValue ?? string.Empty);
                     }
 
-                    htmlStr = doc.DocumentNode.OuterHtml;
-
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine($"Error setting clipboard: {ex.Message}");
+                }
+                finally
+                {
+                    WinAPIHelper.CloseClipboard();
                 }
             }
-            clip.Type = QQ_RICH_TYPE;
-            clip.ClipValue = xmlStr;
-
-            clip.DisplayValue = htmlStr;
-
-
-
         }
-        /// <summary>
-        /// 得到字符串B在当前字符串内出现的次数
-        /// </summary>
-        /// <param name="s"></param>
-        /// <param name="str"></param>
-        /// <returns></returns>
-        private int GetOccurTimes(string str, string value)
+
+        #region Helpers
+
+        private static string GetClipboardUnicodeText()
         {
+            IntPtr hMem = WinAPIHelper.GetClipboardData(WinAPIHelper.CF_UNICODETEXT);
+            if (hMem == IntPtr.Zero)
+            {
+                hMem = WinAPIHelper.GetClipboardData(WinAPIHelper.CF_TEXT);
+                if (hMem == IntPtr.Zero) return string.Empty;
+
+                IntPtr pStr = WinAPIHelper.GlobalLock(hMem);
+                if (pStr == IntPtr.Zero) return string.Empty;
+                try
+                {
+                    return Marshal.PtrToStringAnsi(pStr) ?? string.Empty;
+                }
+                finally
+                {
+                    WinAPIHelper.GlobalUnlock(hMem);
+                }
+            }
+
+            IntPtr pUni = WinAPIHelper.GlobalLock(hMem);
+            if (pUni == IntPtr.Zero) return string.Empty;
+            try
+            {
+                return Marshal.PtrToStringUni(pUni) ?? string.Empty;
+            }
+            finally
+            {
+                WinAPIHelper.GlobalUnlock(hMem);
+            }
+        }
+
+        private static string GetClipboardHtmlText()
+        {
+            byte[]? bytes = GetClipboardRawBytes(FORMAT_HTML);
+            if (bytes == null || bytes.Length == 0) return string.Empty;
+            return Encoding.UTF8.GetString(bytes).TrimEnd('\0');
+        }
+
+        private static byte[]? GetClipboardRawBytes(uint format)
+        {
+            if (format == 0) return null;
+            IntPtr hMem = WinAPIHelper.GetClipboardData(format);
+            if (hMem == IntPtr.Zero) return null;
+
+            IntPtr pMem = WinAPIHelper.GlobalLock(hMem);
+            if (pMem == IntPtr.Zero) return null;
+
+            try
+            {
+                int size = (int)WinAPIHelper.GlobalSize(hMem).ToUInt32();
+                if (size <= 0) return null;
+
+                byte[] bytes = new byte[size];
+                Marshal.Copy(pMem, bytes, 0, size);
+                return bytes;
+            }
+            finally
+            {
+                WinAPIHelper.GlobalUnlock(hMem);
+            }
+        }
+
+        private static void SetClipboardUnicodeText(string text)
+        {
+            if (text == null) text = string.Empty;
+            byte[] bytes = Encoding.Unicode.GetBytes(text + "\0");
+
+            IntPtr hMem = WinAPIHelper.GlobalAlloc(WinAPIHelper.GHND, (UIntPtr)bytes.Length);
+            if (hMem == IntPtr.Zero) return;
+
+            IntPtr pMem = WinAPIHelper.GlobalLock(hMem);
+            if (pMem != IntPtr.Zero)
+            {
+                Marshal.Copy(bytes, 0, pMem, bytes.Length);
+                WinAPIHelper.GlobalUnlock(hMem);
+                WinAPIHelper.SetClipboardData(WinAPIHelper.CF_UNICODETEXT, hMem);
+            }
+        }
+
+        private static void SetClipboardRawBytes(uint format, byte[] bytes)
+        {
+            if (format == 0 || bytes == null || bytes.Length == 0) return;
+
+            IntPtr hMem = WinAPIHelper.GlobalAlloc(WinAPIHelper.GHND, (UIntPtr)bytes.Length);
+            if (hMem == IntPtr.Zero) return;
+
+            IntPtr pMem = WinAPIHelper.GlobalLock(hMem);
+            if (pMem != IntPtr.Zero)
+            {
+                Marshal.Copy(bytes, 0, pMem, bytes.Length);
+                WinAPIHelper.GlobalUnlock(hMem);
+                WinAPIHelper.SetClipboardData(format, hMem);
+            }
+        }
+
+        private static void SetClipboardFiles(string[] files)
+        {
+            if (files == null || files.Length == 0) return;
+
+            StringBuilder sb = new StringBuilder();
+            foreach (string file in files)
+            {
+                sb.Append(file).Append('\0');
+            }
+            sb.Append('\0');
+
+            byte[] fileBytes = Encoding.Unicode.GetBytes(sb.ToString());
+            int structSize = Marshal.SizeOf<WinAPIHelper.DROPFILES>();
+            int totalSize = structSize + fileBytes.Length;
+
+            IntPtr hMem = WinAPIHelper.GlobalAlloc(WinAPIHelper.GHND, (UIntPtr)totalSize);
+            if (hMem == IntPtr.Zero) return;
+
+            IntPtr pMem = WinAPIHelper.GlobalLock(hMem);
+            if (pMem != IntPtr.Zero)
+            {
+                WinAPIHelper.DROPFILES df = new WinAPIHelper.DROPFILES
+                {
+                    pFiles = structSize,
+                    fWide = true
+                };
+                Marshal.StructureToPtr(df, pMem, false);
+                Marshal.Copy(fileBytes, 0, IntPtr.Add(pMem, structSize), fileBytes.Length);
+
+                WinAPIHelper.GlobalUnlock(hMem);
+                WinAPIHelper.SetClipboardData(WinAPIHelper.CF_HDROP, hMem);
+            }
+        }
+
+        private static byte[] ConvertDibToBmp(byte[] dibBytes)
+        {
+            if (dibBytes == null || dibBytes.Length < 40) return dibBytes ?? Array.Empty<byte>();
+
+            int biSize = BitConverter.ToInt32(dibBytes, 0);
+            short biBitCount = BitConverter.ToInt16(dibBytes, 14);
+            int biCompression = BitConverter.ToInt32(dibBytes, 16);
+            int biClrUsed = BitConverter.ToInt32(dibBytes, 32);
+
+            int colorTableEntries = 0;
+            if (biClrUsed != 0)
+            {
+                colorTableEntries = biClrUsed;
+            }
+            else if (biBitCount <= 8)
+            {
+                colorTableEntries = 1 << biBitCount;
+            }
+            else if ((biBitCount == 16 || biBitCount == 32) && biCompression == 3)
+            {
+                colorTableEntries = 3; // 3 DWORD masks
+            }
+
+            int colorTableSize = colorTableEntries * 4;
+            int offBits = 14 + biSize + colorTableSize;
+            int fileSize = 14 + dibBytes.Length;
+
+            byte[] bmp = new byte[fileSize];
+            // 'BM'
+            bmp[0] = 0x42;
+            bmp[1] = 0x4D;
+            // File size
+            BitConverter.GetBytes(fileSize).CopyTo(bmp, 2);
+            // Reserved
+            bmp[6] = bmp[7] = bmp[8] = bmp[9] = 0;
+            // OffBits
+            BitConverter.GetBytes(offBits).CopyTo(bmp, 10);
+            // DIB body
+            Buffer.BlockCopy(dibBytes, 0, bmp, 14, dibBytes.Length);
+
+            return bmp;
+        }
+
+        private static byte[] ExtractDibFromBmp(byte[] bmpBytes)
+        {
+            if (bmpBytes == null || bmpBytes.Length <= 14) return bmpBytes ?? Array.Empty<byte>();
+
+            if (bmpBytes[0] == 0x42 && bmpBytes[1] == 0x4D)
+            {
+                byte[] dib = new byte[bmpBytes.Length - 14];
+                Buffer.BlockCopy(bmpBytes, 14, dib, 0, dib.Length);
+                return dib;
+            }
+
+            return bmpBytes;
+        }
+
+        private static string ExtractHtmlFragment(string html)
+        {
+            string startTag = "<!--StartFragment-->";
+            string endTag = "<!--EndFragment-->";
+            if (!html.Contains(startTag))
+            {
+                startTag = "<!--StartFragment -->";
+            }
+
+            int startIdx = html.IndexOf(startTag, StringComparison.OrdinalIgnoreCase);
+            int endIdx = html.IndexOf(endTag, StringComparison.OrdinalIgnoreCase);
+
+            if (startIdx >= 0 && endIdx > startIdx)
+            {
+                return html.Substring(startIdx + startTag.Length, endIdx - (startIdx + startTag.Length)).Trim();
+            }
+
+            return html;
+        }
+
+        private static string FormatDisplayText(string text)
+        {
+            string escaped = text.Replace("<", "&lt;").Replace(">", "&gt;");
+            string[] lines = escaped.Split('\n');
+            if (lines.Length <= 1) return escaped;
+
+            StringBuilder sb = new StringBuilder(lines[0]);
+            for (int i = 1; i < lines.Length; i++)
+            {
+                if (i < 5)
+                {
+                    sb.Append("<br>").Append(lines[i]);
+                }
+                else if (i == 5 && i < lines.Length - 1)
+                {
+                    sb.Append("<br>...");
+                    break;
+                }
+            }
+            return sb.ToString();
+        }
+
+        private static int GetOccurTimes(string str, string value)
+        {
+            if (string.IsNullOrEmpty(str) || string.IsNullOrEmpty(value)) return 0;
             return (str.Length - str.Replace(value, "").Length) / value.Length;
         }
 
+        #endregion
     }
 }

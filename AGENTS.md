@@ -4,20 +4,22 @@ High-signal context for agents working in this repo.
 
 ## Project
 
-- **What**: Windows clipboard enhancer (WPF + WebView2 UI). Press a global hotkey (default `Alt+V`) to show a history popup and paste previous clips.
-- **Stack**: C# WPF on .NET 9 (`net9.0-windows10.0.20348.0`), x64 only.
-- **Entry point**: `App.xaml` → `view/MainWindow.xaml`.
+- **What**: Windows clipboard enhancer (Photino.NET + WebView2 UI). Press a global hotkey (default `Win+V` / `Alt+V`) to show a history popup and paste previous clips.
+- **Stack**: C# on .NET 10 (`net10.0-windows10.0.26100.0`), Native AOT, x64 only.
+- **Entry point**: `Program.cs`.
 
 ## Architecture
 
-- **Hybrid UI**: WPF window hosts a WebView2 control that renders `html/index.html`. The entire skin system is HTML/CSS/JS (jQuery-based), not XAML.
-- **C# ↔ JS bridge**: WebView2 message passing.
-  - C# receives via `CoreWebView2.WebMessageReceived` (see `MainWindow.xaml.cs`).
-  - C# calls JS via `ExecuteScriptAsync(...)`.
-  - Key message prefixes in JS: `PasteValue|`, `PasteValueList|`, `SetToClipBoard|`, `esc|`.
-- **Clipboard logic**: `service/ClipService.cs` handles QQ rich text, WeChat rich text, HTML, images (incl. GIF), files, and plain text. Uses Win32 clipboard APIs and retries on `OpenClipboard` failures.
-- **Config**: `service/ConfigService.cs` reads/writes `config/settings.json` at runtime (relative to working directory).
-- **Single instance**: Enforced in `App.xaml.cs` by counting processes with the same module name.
+- **Lightweight UI**: Photino.NET window hosts WebView2 control that renders `html/index.html`. No WPF or XAML.
+- **C# ↔ JS bridge**:
+  - Photino WebMessage passing: `window.RegisterWebMessageReceivedHandler` and `window.SendWebMessage`.
+  - JS messages: `PasteValue|`, `PasteValueList|`, `SetToClipBoard|`, `SaveHotkey|`, `esc|`.
+  - C# messages: `{"type": "history", "data": ...}`, `{"type": "add", "data": ...}`, `{"type": "hotkeySettings", "data": ...}`.
+- **Serialization**: Zero-reflection `System.Text.Json` source generator (`service/ClipJsonContext.cs`).
+- **Clipboard logic**: `service/ClipService.cs` handles QQ rich text, WeChat rich text, HTML, images (BMP/DIB base64), files, and plain text using native Win32/WinRT APIs.
+- **Tray & Hotkeys**: `util/TrayIconManager.cs` (native Win32 `Shell_NotifyIcon` + popup menu) and `util/HotKeyManager.cs` (`RegisterHotKey`).
+- **Config**: `service/ConfigService.cs` reads/writes `config/settings.json` via source-generated JSON serializer.
+- **Single instance**: Enforced in `Program.cs` via global named `Mutex`.
 
 ## Build / Run / Publish
 
@@ -29,30 +31,23 @@ dotnet build -c Release
 # Run (Debug)
 dotnet run
 
-# Publish (uses profile: Release/x64/ReadyToRun/win-x64, not self-contained)
-dotnet publish -c Release
+# Publish Native AOT Release
+dotnet publish -c Release -r win-x64
 ```
 
 - Output platform is **x64** only (`Platforms=x64`).
-- Publish profile: `Properties/PublishProfiles/FolderProfile.pubxml`.
+- Native AOT enabled (`PublishAot=true`).
 
 ## Important file behaviors
 
 - `html/index.html`, `html/js/*`, and `html/css/*` are copied to the output directory on every build (`CopyToOutputDirectory=Always`).
-- Skin switching (`ChangeSkin` in `MainWindow.xaml.cs`) **rewrites `html/index.html` on disk** to update the final `<link>` tag pointing to the selected CSS folder.
+- Skin switching (`ChangeSkin` in `Program.cs`) rewrites `html/index.html` on disk to update the final `<link>` tag pointing to the selected CSS folder.
 - `Environment.CurrentDirectory` is set to `AppDomain.CurrentDomain.BaseDirectory` on startup so relative paths resolve correctly.
-
-## Legacy / stale artifacts
-
-- `packages.config` and `App.config` still exist but reflect the old .NET Framework build. The real source of truth is the SDK-style `ClipOne.csproj` with `PackageReference`.
-- Do not treat `packages.config` as the dependency list.
 
 ## Dependencies
 
-- `H.NotifyIcon.Wpf` — tray icon
-- `Microsoft.Web.WebView2` — embedded browser
+- `Photino.NET` — lightweight cross-platform desktop browser window host
 - `HtmlAgilityPack` — parsing QQ rich-text HTML
-- `Newtonsoft.Json` — serialization
 
 ## No tests
 
