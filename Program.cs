@@ -160,6 +160,7 @@ namespace ClipOne
 
             _window = new PhotinoWindow()
                 .SetTitle("ClipOne")
+                .SetUseOsDefaultLocation(false)
                 .SetUseOsDefaultSize(false)
                 .SetSize(BaseWindowWidth, BaseWindowHeight)
                 .SetResizable(false)
@@ -245,9 +246,16 @@ namespace ClipOne
                         var clip = _clipService.HandClip();
                         if (!string.IsNullOrWhiteSpace(clip.ClipValue))
                         {
-                            _storageService.AddClip(clip);
-                            string json = JsonSerializer.Serialize(clip, ClipJsonContext.Default.ClipModel);
-                            _window.SendWebMessage("{\"type\": \"add\", \"data\": " + json + "}");
+                            bool replaced = _storageService.AddClip(clip);
+                            if (replaced)
+                            {
+                                SendHistoryToWeb();
+                            }
+                            else
+                            {
+                                string json = JsonSerializer.Serialize(clip, ClipJsonContext.Default.ClipModel);
+                                _window.SendWebMessage("{\"type\": \"add\", \"data\": " + json + "}");
+                            }
 
                             if (clip.NeedOverride)
                             {
@@ -358,7 +366,6 @@ namespace ClipOne
                 WinAPIHelper.SetForegroundWindow(_hWnd);
                 WinAPIHelper.SetActiveWindow(_hWnd);
 
-                SendHistoryToWeb();
                 _window.SendWebMessage("{\"type\": \"show\"}");
             }
         }
@@ -553,6 +560,10 @@ namespace ClipOne
 
             switch (command)
             {
+                case "ready":
+                    SendHistoryToWeb();
+                    break;
+
                 case "PasteValue":
                     DiyHide();
                     if (!string.IsNullOrEmpty(payload))

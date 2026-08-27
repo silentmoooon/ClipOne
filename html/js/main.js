@@ -127,6 +127,7 @@ $(document).ready(function() {
     });
 
     displayData();
+    window.chrome.webview.postMessage("ready|1");
 });
 
 function openHotkeyModal(mod, key) {

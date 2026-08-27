@@ -41,13 +41,40 @@ namespace ClipOne.service
             return _history;
         }
 
-        public void AddClip(ClipModel clip)
+        public bool AddClip(ClipModel clip)
         {
             if (clip == null || string.IsNullOrWhiteSpace(clip.ClipValue))
-                return;
+                return false;
+
+            bool replaced = false;
+
+            // Deduplicate: If an image is added and the immediately preceding clip was a temporary WeChat file clip of the same image or from WeChat cache, remove it
+            if (clip.Type == ClipService.IMAGE_TYPE && _history.Count > 0)
+            {
+                var last = _history[0];
+                if (last.Type == ClipService.FILE_TYPE)
+                {
+                    string lastVal = last.ClipValue.ToLowerInvariant();
+                    if (lastVal.Contains("wechat") || lastVal.Contains("tencent") || lastVal.Contains("wxid_") || lastVal.Contains("xwechat") ||
+                        lastVal.EndsWith(".png") || lastVal.EndsWith(".jpg") || lastVal.EndsWith(".jpeg") || lastVal.EndsWith(".bmp") || lastVal.EndsWith(".webp"))
+                    {
+                        _history.RemoveAt(0);
+                        replaced = true;
+                    }
+                }
+                else if (last.Type == ClipService.IMAGE_TYPE && !string.IsNullOrEmpty(last.DisplayValue) && !string.IsNullOrEmpty(clip.DisplayValue) && last.DisplayValue == clip.DisplayValue)
+                {
+                    _history.RemoveAt(0);
+                    replaced = true;
+                }
+            }
 
             // Remove duplicates
-            _history.RemoveAll(c => c.ClipValue == clip.ClipValue);
+            int removed = _history.RemoveAll(c => c.ClipValue == clip.ClipValue);
+            if (removed > 0)
+            {
+                replaced = true;
+            }
 
             // Add to front
             _history.Insert(0, clip);
@@ -59,6 +86,7 @@ namespace ClipOne.service
             }
 
             SaveHistory();
+            return replaced;
         }
 
         public void SaveHistory()

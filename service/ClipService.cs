@@ -141,6 +141,24 @@ namespace ClipOne.service
                 files[i] = sb.ToString();
             }
 
+            if (files.Length == 1 && File.Exists(files[0]))
+            {
+                string filePath = files[0];
+                string ext = Path.GetExtension(filePath).ToLowerInvariant();
+                string pathLower = filePath.ToLowerInvariant();
+                string fileName = Path.GetFileNameWithoutExtension(filePath);
+                bool isImageExt = ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".gif" || ext == ".webp";
+                bool isWeChatCache = pathLower.Contains("wechat") || pathLower.Contains("tencent") || pathLower.Contains("wxid_") || pathLower.Contains("xwechat") ||
+                    ((pathLower.Contains("temp") || pathLower.Contains("tmp")) && fileName.Length == 32);
+
+                if (isImageExt && isWeChatCache)
+                {
+                    // WeChat image copy: WeChat writes CF_HDROP first and CF_DIB immediately after.
+                    // Ignore the temporary file drop so HandleImage can cleanly capture CF_DIB.
+                    return;
+                }
+            }
+
             clip.Type = FILE_TYPE;
             clip.ClipValue = string.Join(",", files);
 
@@ -171,9 +189,16 @@ namespace ClipOne.service
                 return;
             }
 
-            // If html contains <img> tags, treat as rich HTML
+            // If html contains <img> tags, check if it's pure image or rich HTML
             if (GetOccurTimes(htmlStr.ToLowerInvariant(), "<img") > GetOccurTimes(plainText.ToLowerInvariant(), "<img"))
             {
+                // If there is no accompanying plain text (or whitespace only) and CF_DIB is available, treat as pure image
+                if (string.IsNullOrWhiteSpace(plainText) && (WinAPIHelper.IsClipboardFormatAvailable(WinAPIHelper.CF_DIB) || WinAPIHelper.IsClipboardFormatAvailable(WinAPIHelper.CF_DIBV5)))
+                {
+                    HandleImage(clip);
+                    return;
+                }
+
                 clip.ClipValue = htmlStr;
                 string fragment = ExtractHtmlFragment(htmlStr);
                 clip.DisplayValue = fragment;
@@ -629,22 +654,69 @@ namespace ClipOne.service
 
         private static string ExtractHtmlFragment(string html)
         {
-            string startTag = "<!--StartFragment-->";
-            string endTag = "<!--EndFragment-->";
-            if (!html.Contains(startTag))
+            if (string.IsNullOrWhiteSpace(html)) return string.Empty;
+
+            // 1. Try standard <!--StartFragment--> comments (case-insensitive, flexible spacing)
+            string[] startTags = new[] { "<!--StartFragment-->", "<!-- StartFragment -->", "<!--StartFragment -->", "<!-- StartFragment-->" };
+            int startComment = -1;
+            int startCommentLen = 0;
+            foreach (var tag in startTags)
             {
-                startTag = "<!--StartFragment -->";
+                int idx = html.IndexOf(tag, StringComparison.OrdinalIgnoreCase);
+                if (idx >= 0)
+                {
+                    startComment = idx;
+                    startCommentLen = tag.Length;
+                    break;
+                }
             }
 
-            int startIdx = html.IndexOf(startTag, StringComparison.OrdinalIgnoreCase);
-            int endIdx = html.IndexOf(endTag, StringComparison.OrdinalIgnoreCase);
-
-            if (startIdx >= 0 && endIdx > startIdx)
+            if (startComment >= 0)
             {
-                return html.Substring(startIdx + startTag.Length, endIdx - (startIdx + startTag.Length)).Trim();
+                string[] endTags = new[] { "<!--EndFragment-->", "<!-- EndFragment -->", "<!--EndFragment -->", "<!-- EndFragment-->" };
+                int endComment = -1;
+                foreach (var tag in endTags)
+                {
+                    int idx = html.IndexOf(tag, startComment + startCommentLen, StringComparison.OrdinalIgnoreCase);
+                    if (idx >= 0)
+                    {
+                        endComment = idx;
+                        break;
+                    }
+                }
+
+                if (endComment > startComment)
+                {
+                    return html.Substring(startComment + startCommentLen, endComment - (startComment + startCommentLen)).Trim();
+                }
             }
 
-            return html;
+            // 2. Try byte offset extraction if raw bytes available
+            byte[]? rawBytes = GetClipboardRawBytes(FORMAT_HTML);
+            if (rawBytes != null && rawBytes.Length > 0)
+            {
+                string headerStr = Encoding.ASCII.GetString(rawBytes, 0, Math.Min(rawBytes.Length, 512));
+                var matchStart = System.Text.RegularExpressions.Regex.Match(headerStr, @"StartFragment:(\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                var matchEnd = System.Text.RegularExpressions.Regex.Match(headerStr, @"EndFragment:(\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                if (matchStart.Success && matchEnd.Success &&
+                    int.TryParse(matchStart.Groups[1].Value, out int startOffset) &&
+                    int.TryParse(matchEnd.Groups[1].Value, out int endOffset) &&
+                    startOffset >= 0 && endOffset > startOffset && endOffset <= rawBytes.Length)
+                {
+                    string fragment = Encoding.UTF8.GetString(rawBytes, startOffset, endOffset - startOffset).Trim();
+                    if (!string.IsNullOrEmpty(fragment))
+                    {
+                        return fragment;
+                    }
+                }
+            }
+
+            // 3. Fallback: Strip CF_HTML header lines and inline headers
+            string cleaned = System.Text.RegularExpressions.Regex.Replace(html, @"^(Version:\d+\.\d+|StartHTML:\d+|EndHTML:\d+|StartFragment:\d+|EndFragment:\d+|StartSelection:\d+|EndSelection:\d+|SourceURL:.*?)\r?\n?", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Trim();
+            cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"^(Version:\d+\.\d+|StartHTML:\d+|EndHTML:\d+|StartFragment:\d+|EndFragment:\d+|StartSelection:\d+|EndSelection:\d+)\s*", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
+
+            return cleaned;
         }
 
         private static string FormatDisplayText(string text)
