@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -12,7 +12,8 @@
 <MinimumPlatformVersion>10.0.26100.0</MinimumPlatformVersion>
     <StartupObject>ClipOne.App</StartupObject>
     <IsPublishable>True</IsPublishable>
-<SupportedOSPlatformVersion>10.0.26100.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion>10.0.26100.0</SupportedOSPlatformVersion>
+    <Version>4.9.9</Version>
   </PropertyGroup>
 
   <ItemGroup>

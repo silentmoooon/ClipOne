@@ -7,3 +7,9 @@
 # picking either side (task state lives in task.json, not index.md). See
 # .trellis/spec/cli/backend/directory-structure.md for details.
 .trellis/workspace/*/journal-*.md merge=union
+
+# Exclude .trellis and .agent from GitHub Linguist language statistics
+.trellis/** linguist-vendored
+.trellis/** linguist-detectable=false
+.agent/** linguist-vendored
+.agent/** linguist-detectable=false
