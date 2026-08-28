@@ -1,4 +1,13 @@
 /* Material 主题 */
+:root {
+    --bg-body: #FAFAFA;
+    --tray-accent: #F44336;
+    --tray-hover-bg: rgba(244, 67, 54, 0.1);
+    --tray-hover-text: #F44336;
+    --btn-primary-bg: #F44336;
+    --btn-primary-hover: #D32F2F;
+}
+
 * {
     font-family: "Microsoft Yahei", "微软雅黑";
     font-size: 12px;
@@ -49,14 +58,4 @@ tr:hover > td {
 
 a {
     text-decoration: none;
-}
-
-#searchDiv {
-    background-color: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-#searchInput {
-    color: #111111;
 }

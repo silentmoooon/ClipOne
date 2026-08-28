@@ -50,13 +50,3 @@ tr:hover > td {
 a {
     text-decoration: none;
 }
-
-#searchDiv {
-    background-color: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-#searchInput {
-    color: #111111;
-}

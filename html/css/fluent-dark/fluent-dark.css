@@ -1,4 +1,45 @@
 /* Fluent 深色主题 */
+:root {
+    --bg-body: rgba(28, 28, 28, 0.95);
+    --text-main: #FFFFFF;
+    --text-muted: #AAAAAA;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-window: rgba(255, 255, 255, 0.1);
+    
+    /* 模态弹窗 */
+    --modal-overlay: rgba(0, 0, 0, 0.65);
+    --modal-bg: #2b2b2b;
+    --modal-text: #f0f0f0;
+    --modal-border: rgba(255, 255, 255, 0.15);
+    --modal-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    --modal-input-bg: #3a3a3a;
+    --modal-input-border: #555555;
+    --modal-input-text: #ffffff;
+    
+    /* 按钮 */
+    --btn-cancel-bg: #444444;
+    --btn-cancel-text: #ffffff;
+    --btn-cancel-border: #666666;
+    --btn-cancel-hover: #555555;
+    --btn-primary-bg: #0078d4;
+    --btn-primary-text: #ffffff;
+    --btn-primary-hover: #106ebe;
+
+    /* 托盘菜单 */
+    --tray-bg: rgba(36, 36, 36, 0.98);
+    --tray-text: #f0f0f0;
+    --tray-hover-bg: rgba(255, 255, 255, 0.1);
+    --tray-hover-text: #ffffff;
+    --tray-divider: rgba(255, 255, 255, 0.12);
+    --tray-accent: #4cc2ff;
+
+    /* 搜索框 */
+    --search-bg: rgba(45, 45, 45, 0.95);
+    --search-border: rgba(255, 255, 255, 0.15);
+    --search-text: #ffffff;
+    --search-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 * {
     font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei", sans-serif;
     font-size: 13px;
@@ -13,7 +54,7 @@ b {
 }
 
 body {
-    background-color: rgba(28, 28, 28, 0.95); 
+    background-color: var(--bg-body); 
     color: #CCCCCC;
 }
 
@@ -91,38 +132,3 @@ tr:hover > td:first-child {
 }
 
 a { text-decoration: none; }
-
-#searchDiv {
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    z-index: 1000;
-    width: 200px;
-    height: 32px;
-    padding: 0 10px;
-    background-color: rgba(45, 45, 45, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    display: flex;
-    align-items: center;
-}
-
-#searchInput {
-    width: 100%;
-    height: 100%;
-    font-size: 13px;
-    border: none;
-    outline: none;
-    background-color: transparent;
-    color: #FFFFFF;
-}
-
-.tray-menu-item:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    color: #FFFFFF !important;
-}
-.tray-menu-item:hover .tray-icon,
-.tray-menu-item:hover .tray-arrow {
-    opacity: 1;
-}

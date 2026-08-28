@@ -1,4 +1,4 @@
-/* 全局字体与窗体背景 */
+/* Stand 主题 */
 * {
     font-family: "Microsoft Yahei", "微软雅黑";
     font-size: 12px;
@@ -13,7 +13,6 @@ body {
     border-collapse: collapse;
 }
 
-/* 表格边框与内容 */
 td {
     border-bottom: 1px solid #A9CBEE;
     min-height: 25px;
@@ -38,7 +37,6 @@ td {
     padding: 0px !important;
 }
 
-/* 鼠标悬浮与选中 */
 tr:hover > td {
     background-color: #0078d7;
     color: #FFFFFF;
@@ -51,14 +49,4 @@ tr:hover > td {
 
 a {
     text-decoration: none;
-}
-
-#searchDiv {
-    background-color: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-#searchInput {
-    color: #111111;
 }

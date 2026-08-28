@@ -10,7 +10,7 @@
     <MinimumPlatformVersion>10.0.26100.0</MinimumPlatformVersion>
     <SupportedOSPlatformVersion>10.0.26100.0</SupportedOSPlatformVersion>
     <IsPublishable>True</IsPublishable>
-    <Version>6.1.0</Version>
+    <Version>6.2.0</Version>
     <PublishAot>true</PublishAot>
     <InvariantGlobalization>false</InvariantGlobalization>
     <!-- 极限裁剪与 AOT 体积优化配置 -->
@@ -41,7 +41,6 @@
     <None Remove="html\css\fluent-light\fluent-light.css" />
     <None Remove="html\css\fluent-dark\fluent-dark.css" />
     <None Remove="html\index.html" />
-    <None Remove="html\js\jquery-3.3.1.min.js" />
     <None Remove="html\js\main.js" />
     <None Remove="html\js\wechat_emojis.js" />
   </ItemGroup>
@@ -72,9 +71,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="html\index.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="html\js\jquery-3.3.1.min.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="html\js\main.js">

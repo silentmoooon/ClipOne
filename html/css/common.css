@@ -1,6 +1,49 @@
-/* 全局基础与重置 */
+/* 全局基础变量与重置 (默认 Light/Stand 基准) */
+:root {
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", "Microsoft YaHei", sans-serif;
+    --bg-body: #ffffff;
+    --text-main: #222222;
+    --text-muted: #666666;
+    --border-color: rgba(0, 0, 0, 0.12);
+    --border-window: #A9CBEE;
+    
+    /* 模态弹窗 */
+    --modal-overlay: rgba(0, 0, 0, 0.4);
+    --modal-bg: #ffffff;
+    --modal-text: #222222;
+    --modal-border: rgba(0, 0, 0, 0.12);
+    --modal-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    --modal-input-bg: #f6f6f6;
+    --modal-input-border: #d0d0d0;
+    --modal-input-text: #222222;
+    
+    /* 按钮 */
+    --btn-cancel-bg: #eeeeee;
+    --btn-cancel-text: #333333;
+    --btn-cancel-border: #cccccc;
+    --btn-cancel-hover: #e0e0e0;
+    --btn-primary-bg: #0078d4;
+    --btn-primary-text: #ffffff;
+    --btn-primary-hover: #106ebe;
+
+    /* 托盘菜单 */
+    --tray-bg: rgba(255, 255, 255, 0.98);
+    --tray-text: #222222;
+    --tray-hover-bg: rgba(0, 120, 212, 0.1);
+    --tray-hover-text: #0078d4;
+    --tray-divider: rgba(0, 0, 0, 0.1);
+    --tray-accent: #0078d4;
+
+    /* 搜索框 */
+    --search-bg: #ffffff;
+    --search-border: rgba(0, 0, 0, 0.15);
+    --search-text: #111111;
+    --search-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 * {
     box-sizing: border-box;
+    font-family: var(--font-family);
 }
 
 html, body {
@@ -11,6 +54,8 @@ html, body {
     overflow: hidden;
     -ms-overflow-style: none;
     user-select: none;
+    background-color: var(--bg-body);
+    color: var(--text-main);
 }
 
 /* 滚动容器与硬件加速 */
@@ -86,6 +131,9 @@ img, .image {
     border-radius: 6px;
     display: flex;
     align-items: center;
+    background-color: var(--search-bg);
+    border: 1px solid var(--search-border);
+    box-shadow: var(--search-shadow);
 }
 
 #searchInput {
@@ -95,6 +143,7 @@ img, .image {
     border: none;
     outline: none;
     background-color: transparent;
+    color: var(--search-text);
     padding: 0;
     margin: 0;
     line-height: normal;
@@ -115,6 +164,8 @@ img, .image {
     flex-direction: column;
     user-select: none;
     z-index: 99998;
+    background-color: var(--tray-bg);
+    color: var(--tray-text);
 }
 
 .tray-menu-container {
@@ -136,10 +187,12 @@ img, .image {
     gap: 8px;
     transition: all 0.12s ease;
     user-select: none;
+    color: var(--tray-text);
 }
 
 .tray-menu-item:hover {
-    background-color: rgba(128, 128, 128, 0.15);
+    background-color: var(--tray-hover-bg);
+    color: var(--tray-hover-text);
 }
 
 .tray-icon {
@@ -172,7 +225,7 @@ img, .image {
 .tray-divider {
     height: 1px;
     margin: 3px 4px;
-    background: rgba(128, 128, 128, 0.2);
+    background: var(--tray-divider);
     border: none;
     flex-shrink: 0;
 }
@@ -180,7 +233,7 @@ img, .image {
 .tray-submenu {
     margin-left: 14px;
     padding: 2px 0 2px 6px;
-    border-left: 2px solid rgba(128, 128, 128, 0.2);
+    border-left: 2px solid var(--tray-divider);
     display: flex;
     flex-direction: column;
     gap: 1px;
@@ -195,7 +248,8 @@ img, .image {
 }
 
 .tray-sub-item:hover {
-    background-color: rgba(128, 128, 128, 0.18);
+    background-color: var(--tray-hover-bg);
+    color: var(--tray-hover-text);
 }
 
 .tray-radio-indicator {
@@ -211,8 +265,8 @@ img, .image {
 }
 
 .tray-radio-indicator.checked {
-    border-color: #0078d4;
-    background-color: #0078d4;
+    border-color: var(--tray-accent);
+    background-color: var(--tray-accent);
 }
 
 .tray-radio-indicator.checked::after {
@@ -226,10 +280,118 @@ img, .image {
 .tray-check-indicator {
     font-size: 13px;
     font-weight: bold;
-    color: #0078d4;
+    color: var(--tray-accent);
     margin-left: auto;
 }
 
 .tray-check-indicator.checked::after {
     content: '✓';
+}
+
+/* 热键设置弹窗 */
+.hotkey-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--modal-overlay);
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(2px);
+}
+
+.hotkey-card {
+    background: var(--modal-bg);
+    color: var(--modal-text);
+    border: 1px solid var(--modal-border);
+    border-radius: 8px;
+    padding: 18px 16px;
+    width: 270px;
+    box-shadow: var(--modal-shadow);
+    display: flex;
+    flex-direction: column;
+}
+
+.hotkey-title {
+    margin: 0 0 14px 0;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.hotkey-modifiers {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    padding: 0 4px;
+}
+
+.hotkey-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.hotkey-key-row {
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.hotkey-key-label {
+    font-size: 12px;
+}
+
+.hotkey-select {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    background: var(--modal-input-bg);
+    color: var(--modal-input-text);
+    border: 1px solid var(--modal-input-border);
+    outline: none;
+    cursor: pointer;
+}
+
+.hotkey-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.hotkey-btn {
+    padding: 5px 16px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.hotkey-btn-cancel {
+    border: 1px solid var(--btn-cancel-border);
+    background: var(--btn-cancel-bg);
+    color: var(--btn-cancel-text);
+}
+
+.hotkey-btn-cancel:hover {
+    background: var(--btn-cancel-hover);
+}
+
+.hotkey-btn-save {
+    border: none;
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    font-weight: 500;
+}
+
+.hotkey-btn-save:hover {
+    background: var(--btn-primary-hover);
 }
