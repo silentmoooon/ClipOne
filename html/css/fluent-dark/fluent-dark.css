@@ -117,3 +117,12 @@ a { text-decoration: none; }
     background-color: transparent;
     color: #FFFFFF;
 }
+
+.tray-menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #FFFFFF !important;
+}
+.tray-menu-item:hover .tray-icon,
+.tray-menu-item:hover .tray-arrow {
+    opacity: 1;
+}

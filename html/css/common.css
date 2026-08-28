@@ -99,3 +99,137 @@ img, .image {
     margin: 0;
     line-height: normal;
 }
+
+/* 现代 Web 托盘菜单 */
+.tray-menu-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+    z-index: 99998;
+}
+
+.tray-menu-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.tray-menu-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 30px;
+    min-height: 30px;
+    padding: 0 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    gap: 8px;
+    transition: all 0.12s ease;
+    user-select: none;
+}
+
+.tray-menu-item:hover {
+    background-color: rgba(128, 128, 128, 0.15);
+}
+
+.tray-icon {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+.tray-text {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12.5px;
+}
+
+.tray-arrow {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    opacity: 0.6;
+    transition: transform 0.2s ease;
+}
+
+.tray-arrow.expanded {
+    transform: rotate(90deg);
+}
+
+.tray-divider {
+    height: 1px;
+    margin: 3px 4px;
+    background: rgba(128, 128, 128, 0.2);
+    border: none;
+    flex-shrink: 0;
+}
+
+.tray-submenu {
+    margin-left: 14px;
+    padding: 2px 0 2px 6px;
+    border-left: 2px solid rgba(128, 128, 128, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.tray-sub-item {
+    height: 26px;
+    min-height: 26px;
+    font-size: 12px;
+    padding: 0 6px;
+    border-radius: 5px;
+}
+
+.tray-sub-item:hover {
+    background-color: rgba(128, 128, 128, 0.18);
+}
+
+.tray-radio-indicator {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(128, 128, 128, 0.5);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.tray-radio-indicator.checked {
+    border-color: #0078d4;
+    background-color: #0078d4;
+}
+
+.tray-radio-indicator.checked::after {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #ffffff;
+}
+
+.tray-check-indicator {
+    font-size: 13px;
+    font-weight: bold;
+    color: #0078d4;
+    margin-left: auto;
+}
+
+.tray-check-indicator.checked::after {
+    content: '✓';
+}

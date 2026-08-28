@@ -10,6 +10,14 @@ namespace ClipOne.service
         public int Key { get; set; }
     }
 
+    public class TrayMenuDto
+    {
+        public List<string> Skins { get; set; } = new();
+        public string CurrentSkin { get; set; } = "";
+        public string CurrentThemeMode { get; set; } = "";
+        public bool AutoStartup { get; set; }
+    }
+
     [JsonSourceGenerationOptions(
         WriteIndented = true,
         PropertyNamingPolicy = JsonKnownNamingPolicy.Unspecified,
@@ -21,6 +29,7 @@ namespace ClipOne.service
     [JsonSerializable(typeof(ClipModel[]))]
     [JsonSerializable(typeof(HotkeyDto))]
     [JsonSerializable(typeof(List<string>))]
+    [JsonSerializable(typeof(TrayMenuDto))]
     public partial class ClipJsonContext : JsonSerializerContext
     {
     }

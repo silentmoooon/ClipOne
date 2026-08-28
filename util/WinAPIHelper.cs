@@ -86,8 +86,13 @@ namespace ClipOne.util
         public static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
 
         // DWM
+        public const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
+        public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
         public const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
         public const int DWMWCP_ROUND = 2;
+
+        public const uint MF_BYCOMMAND = 0x00000000;
+        public const uint MF_BYPOSITION = 0x00000400;
 
         public const uint SPI_GETWORKAREA = 0x0030;
 
@@ -195,6 +200,9 @@ namespace ClipOne.util
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool DestroyWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool CheckMenuRadioItem(IntPtr hMenu, uint first, uint last, uint check, uint flags);
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool IsChild(IntPtr hWndParent, IntPtr hWnd);

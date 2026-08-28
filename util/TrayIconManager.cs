@@ -90,6 +90,7 @@ namespace ClipOne.util
         private readonly Action _onOpenHotkeySettings;
         private readonly Action _onToggleDevTools;
         private readonly Action _onExit;
+        private readonly Action<int, int>? _onShowContextMenu;
 
         private NOTIFYICONDATA _nid;
         private IntPtr _hIcon = IntPtr.Zero;
@@ -106,7 +107,8 @@ namespace ClipOne.util
             Action onApplySkin,
             Action onOpenHotkeySettings,
             Action onToggleDevTools,
-            Action onExit)
+            Action onExit,
+            Action<int, int>? onShowContextMenu = null)
         {
             _hWnd = hWnd;
             _configService = configService;
@@ -118,6 +120,7 @@ namespace ClipOne.util
             _onOpenHotkeySettings = onOpenHotkeySettings;
             _onToggleDevTools = onToggleDevTools;
             _onExit = onExit;
+            _onShowContextMenu = onShowContextMenu;
 
             InitializeTray();
         }
@@ -177,6 +180,14 @@ namespace ClipOne.util
 
         public void ShowContextMenu(int x, int y)
         {
+            if (_onShowContextMenu != null)
+            {
+                _onShowContextMenu(x, y);
+                return;
+            }
+
+            DarkModeHelper.ApplyTheme(_hWnd, _config.ThemeMode);
+
             IntPtr hMenu = CreatePopupMenu();
             if (hMenu == IntPtr.Zero) return;
 
@@ -207,21 +218,27 @@ namespace ClipOne.util
                     .ThenBy(n => n)
                     .ToList();
 
+                uint firstSkinId = cmdId;
+                uint selectedSkinId = 0;
                 foreach (string skinName in baseSkins)
                 {
                     uint idSkin = cmdId++;
-                    uint flags = MF_STRING;
                     if (_config.SkinName.Equals(skinName, StringComparison.OrdinalIgnoreCase))
                     {
-                        flags |= MF_CHECKED;
+                        selectedSkinId = idSkin;
                     }
-                    AppendMenuW(hSkinMenu, flags, (UIntPtr)idSkin, skinName);
+                    AppendMenuW(hSkinMenu, MF_STRING, (UIntPtr)idSkin, skinName);
                     actionMap[idSkin] = () =>
                     {
                         _config.SkinName = skinName;
                         _configService.SaveSettings();
                         _onApplySkin();
                     };
+                }
+                uint lastSkinId = cmdId - 1;
+                if (selectedSkinId != 0 && lastSkinId >= firstSkinId)
+                {
+                    WinAPIHelper.CheckMenuRadioItem(hSkinMenu, firstSkinId, lastSkinId, selectedSkinId, WinAPIHelper.MF_BYCOMMAND);
                 }
             }
             AppendMenuW(hMenu, MF_POPUP, (UIntPtr)hSkinMenu.ToInt64(), "皮肤");
@@ -230,19 +247,28 @@ namespace ClipOne.util
             IntPtr hThemeMenu = CreatePopupMenu();
             string[] modes = new[] { "System", "Light", "Dark" };
             string[] modeHeaders = new[] { "跟随系统", "浅色", "深色" };
+            uint firstThemeId = cmdId;
+            uint selectedThemeId = 0;
             for (int i = 0; i < modes.Length; i++)
             {
                 uint idTheme = cmdId++;
                 string mode = modes[i];
-                uint flags = MF_STRING;
-                if (_config.ThemeMode == mode) flags |= MF_CHECKED;
-                AppendMenuW(hThemeMenu, flags, (UIntPtr)idTheme, modeHeaders[i]);
+                if (_config.ThemeMode == mode)
+                {
+                    selectedThemeId = idTheme;
+                }
+                AppendMenuW(hThemeMenu, MF_STRING, (UIntPtr)idTheme, modeHeaders[i]);
                 actionMap[idTheme] = () =>
                 {
                     _config.ThemeMode = mode;
                     _configService.SaveSettings();
                     _onApplySkin();
                 };
+            }
+            uint lastThemeId = cmdId - 1;
+            if (selectedThemeId != 0 && lastThemeId >= firstThemeId)
+            {
+                WinAPIHelper.CheckMenuRadioItem(hThemeMenu, firstThemeId, lastThemeId, selectedThemeId, WinAPIHelper.MF_BYCOMMAND);
             }
             AppendMenuW(hMenu, MF_POPUP, (UIntPtr)hThemeMenu.ToInt64(), "主题模式");
 

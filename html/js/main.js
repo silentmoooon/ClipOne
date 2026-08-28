@@ -83,6 +83,34 @@ $(document).ready(function() {
         $("#hotkeyModal").css("display", "none");
     });
 
+    function updateTrayMenuSize() {
+        setTimeout(function() {
+            var h = $(".tray-menu-container").outerHeight(true) + 8;
+            window.chrome.webview.postMessage("ResizeTrayMenu|" + h);
+        }, 170);
+    }
+
+    // 托盘菜单交互
+    $("#trayItemSkin").on("click", function(e) {
+        e.stopPropagation();
+        $("#skinSubmenu").slideToggle(150, updateTrayMenuSize);
+        $(this).find(".tray-arrow").toggleClass("expanded");
+    });
+
+    $("#trayItemTheme").on("click", function(e) {
+        e.stopPropagation();
+        $("#themeSubmenu").slideToggle(150, updateTrayMenuSize);
+        $(this).find(".tray-arrow").toggleClass("expanded");
+    });
+
+    $(document).on("click", ".tray-menu-item[data-action]", function(e) {
+        e.stopPropagation();
+        var action = $(this).attr("data-action");
+        if (action) {
+            window.chrome.webview.postMessage("TrayAction|" + action);
+        }
+    });
+
     window.chrome.webview.addEventListener('message', function(event) {
         var msg = event.data;
         if (typeof msg === 'string') {
@@ -103,6 +131,8 @@ $(document).ready(function() {
             openHotkeyModal(msg.data.Modifier, msg.data.Key);
         } else if (msg.type === 'show') {
             show();
+        } else if (msg.type === 'showTrayMenu') {
+            showTrayMenu(msg.data);
         } else if (msg.type === 'changeSkin') {
             if (Array.isArray(msg.css)) {
                 $('link[rel="stylesheet"]:not([href*="common.css"])').remove();
@@ -122,6 +152,47 @@ $(document).ready(function() {
     displayData();
     window.chrome.webview.postMessage("ready|1");
 });
+
+function showTrayMenu(data) {
+    if (!data) return;
+
+    var skins = data.Skins || data.skins || [];
+    var currentSkin = data.CurrentSkin || data.currentSkin || "";
+    var currentThemeMode = data.CurrentThemeMode || data.currentThemeMode || "System";
+    var autoStartup = (data.AutoStartup !== undefined) ? data.AutoStartup : data.autoStartup;
+    
+    // 重置子菜单折叠状态
+    $("#skinSubmenu").hide();
+    $("#themeSubmenu").hide();
+    $(".tray-arrow").removeClass("expanded");
+
+    // 渲染皮肤子菜单
+    if (Array.isArray(skins)) {
+        var html = "";
+        skins.forEach(function(skin) {
+            var isChecked = skin.toLowerCase() === currentSkin.toLowerCase();
+            html += '<div class="tray-menu-item tray-sub-item" data-action="setSkin|' + skin + '">' +
+                '<span class="tray-radio-indicator ' + (isChecked ? 'checked' : '') + '"></span>' +
+                '<span class="tray-text">' + skin + '</span>' +
+                '</div>';
+        });
+        $("#skinSubmenu").html(html);
+    }
+
+    // 渲染主题模式选中状态
+    var modeLower = currentThemeMode.toLowerCase();
+    $("#radioThemeSystem").toggleClass("checked", modeLower === "system");
+    $("#radioThemeLight").toggleClass("checked", modeLower === "light");
+    $("#radioThemeDark").toggleClass("checked", modeLower === "dark");
+
+    // 渲染开机自启
+    $("#trayStartupCheck").toggleClass("checked", !!autoStartup);
+
+    // 隐藏剪贴板内容，展示托盘菜单
+    hideSearch();
+    $(".content").css("display", "none");
+    $("#trayMenuModal").css("display", "flex");
+}
 
 // 顶底丝滑弹性阻尼回弹 (Rubber-band Bounce)
 var bounceOffset = 0;
@@ -433,6 +504,9 @@ function addData(obj) {
 
 //显示时初始化状态
 function show() {
+    $("#trayMenuModal").css("display", "none");
+    $(".content").css("display", "block");
+
     rangeStartIndex = -1;
     rangeEndIndex = -1;
     isShiftPressed = false;

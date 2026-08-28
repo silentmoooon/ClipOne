@@ -119,3 +119,12 @@ a { text-decoration: none; }
     background-color: transparent;
     color: #111111;
 }
+
+.tray-menu-item:hover {
+    background-color: #E6F3FF !important;
+    color: #0078d4 !important;
+}
+.tray-menu-item:hover .tray-icon,
+.tray-menu-item:hover .tray-arrow {
+    opacity: 1;
+}

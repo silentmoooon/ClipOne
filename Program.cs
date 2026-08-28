@@ -43,8 +43,12 @@ namespace ClipOne
         // Base window dimensions at 96 DPI (100%). Will be scaled for high-DPI displays.
         private const int BaseWindowWidth = 418;
         private const int BaseWindowHeight = 580;
+        private const int BaseTrayMenuWidth = 190;
+        private const int BaseTrayMenuHeight = 260;
         private static int _windowWidth = BaseWindowWidth;
         private static int _windowHeight = BaseWindowHeight;
+        private static int _trayCursorX = 0;
+        private static int _trayCursorY = 0;
 
         private static volatile bool _devToolsOpen = false;
 
@@ -159,6 +163,10 @@ namespace ClipOne
                 onExit: () =>
                 {
                     _window?.Close();
+                },
+                onShowContextMenu: (x, y) =>
+                {
+                    ShowWebTrayMenu(x, y);
                 }
             );
 
@@ -388,6 +396,63 @@ namespace ClipOne
 
                 _window.SendWebMessage("{\"type\": \"show\"}");
             }
+        }
+
+        private static void ShowWebTrayMenu(int cursorX, int cursorY)
+        {
+            if (_window == null || _hWnd == IntPtr.Zero || _config == null) return;
+
+            _trayCursorX = cursorX;
+            _trayCursorY = cursorY;
+            _activityWindow = WinAPIHelper.GetForegroundWindow();
+
+            List<string> skins = new List<string>();
+            if (Directory.Exists(CssDir))
+            {
+                string[] dirs = Directory.GetDirectories(CssDir);
+                skins = dirs.Select(f => Path.GetFileName(f) ?? "")
+                    .Where(n => !string.IsNullOrEmpty(n))
+                    .Select(n => n.EndsWith("-light") ? n.Substring(0, n.Length - 6) : (n.EndsWith("-dark") ? n.Substring(0, n.Length - 5) : n))
+                    .Distinct()
+                    .OrderBy(n => n.Equals("fluent", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                    .ThenBy(n => n)
+                    .ToList();
+            }
+
+            var menuData = new TrayMenuDto
+            {
+                Skins = skins,
+                CurrentSkin = _config.SkinName,
+                CurrentThemeMode = _config.ThemeMode,
+                AutoStartup = _config.AutoStartup
+            };
+
+            string json = JsonSerializer.Serialize(menuData, ClipJsonContext.Default.TrayMenuDto);
+            _window.SendWebMessage("{\"type\": \"showTrayMenu\", \"data\": " + json + "}");
+
+            uint dpi = WinAPIHelper.GetDpiForWindow(_hWnd);
+            if (dpi == 0) dpi = 96;
+
+            int width = (int)(BaseTrayMenuWidth * dpi / 96);
+            int height = (int)(BaseTrayMenuHeight * dpi / 96);
+
+            var workArea = WinAPIHelper.GetWorkArea();
+
+            int posX = cursorX - (width / 2);
+            int posY = cursorY - height - 8;
+
+            if (posX + width > workArea.Right) posX = workArea.Right - width - 6;
+            if (posY + height > workArea.Bottom) posY = cursorY - height - 6;
+            if (posY < workArea.Top) posY = cursorY + 6;
+            if (posX < workArea.Left) posX = workArea.Left + 6;
+
+            WinAPIHelper.SetWindowPos(_hWnd, WinAPIHelper.HWND_TOPMOST, posX, posY, width, height,
+                WinAPIHelper.SWP_NOACTIVATE | WinAPIHelper.SWP_SHOWWINDOW);
+
+            WinAPIHelper.SetLayeredWindowAttributes(_hWnd, 0, 255, WinAPIHelper.LWA_ALPHA);
+
+            WinAPIHelper.SetForegroundWindow(_hWnd);
+            WinAPIHelper.SetActiveWindow(_hWnd);
         }
 
         private static void DiyHide()
@@ -663,6 +728,98 @@ namespace ClipOne
                 case "esc":
                     DiyHide();
                     break;
+
+                case "TrayAction":
+                    if (!string.IsNullOrEmpty(payload))
+                    {
+                        string[] actParts = payload.Split(new[] { '|' }, 2);
+                        string act = actParts[0];
+                        string actArg = actParts.Length > 1 ? actParts[1] : string.Empty;
+
+                        switch (act)
+                        {
+                            case "clear":
+                                DiyHide();
+                                _storageService?.ClearHistory();
+                                _window?.SendWebMessage("{\"type\": \"history\", \"data\": []}");
+                                break;
+
+                            case "reload":
+                                DiyHide();
+                                string fullHtml = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, DefaultHtml);
+                                _window?.Load(fullHtml);
+                                break;
+
+                            case "setSkin":
+                                if (!string.IsNullOrEmpty(actArg) && _config != null && _configService != null)
+                                {
+                                    _config.SkinName = actArg;
+                                    _configService.SaveSettings();
+                                    ApplySkin();
+                                }
+                                DiyHide();
+                                break;
+
+                            case "setTheme":
+                                if (!string.IsNullOrEmpty(actArg) && _config != null && _configService != null)
+                                {
+                                    _config.ThemeMode = actArg;
+                                    _configService.SaveSettings();
+                                    ApplySkin();
+                                }
+                                DiyHide();
+                                break;
+
+                            case "openHotkey":
+                                DiyHide();
+                                ShowHotkeySettingsModal();
+                                break;
+
+                            case "toggleStartup":
+                                if (_config != null && _configService != null)
+                                {
+                                    _config.AutoStartup = !_config.AutoStartup;
+                                    _configService.SetStartup(_config.AutoStartup);
+                                    _configService.SaveSettings();
+                                }
+                                DiyHide();
+                                break;
+
+                            case "toggleDevTools":
+                                DiyHide();
+                                OpenDevTools();
+                                break;
+
+                            case "exit":
+                                _window?.Close();
+                                break;
+                        }
+                    }
+                    break;
+
+                case "ResizeTrayMenu":
+                    if (int.TryParse(payload, out int logicalHeight) && logicalHeight > 80 && _hWnd != IntPtr.Zero)
+                    {
+                        uint dpi = WinAPIHelper.GetDpiForWindow(_hWnd);
+                        if (dpi == 0) dpi = 96;
+
+                        int width = (int)(BaseTrayMenuWidth * dpi / 96);
+                        int height = (int)(logicalHeight * dpi / 96);
+
+                        var workArea = WinAPIHelper.GetWorkArea();
+
+                        int posX = _trayCursorX - (width / 2);
+                        int posY = _trayCursorY - height - 8;
+
+                        if (posX + width > workArea.Right) posX = workArea.Right - width - 6;
+                        if (posY + height > workArea.Bottom) posY = _trayCursorY - height - 6;
+                        if (posY < workArea.Top) posY = _trayCursorY + 6;
+                        if (posX < workArea.Left) posX = workArea.Left + 6;
+
+                        WinAPIHelper.SetWindowPos(_hWnd, WinAPIHelper.HWND_TOPMOST, posX, posY, width, height,
+                            WinAPIHelper.SWP_NOACTIVATE | WinAPIHelper.SWP_SHOWWINDOW);
+                    }
+                    break;
             }
         }
 
@@ -699,20 +856,6 @@ namespace ClipOne
             if (_msgWindow != null) WinAPIHelper.AddClipboardFormatListener(_msgWindow.Handle);
         }
 
-        private static bool IsSystemDarkMode()
-        {
-            try
-            {
-                using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
-                var value = key?.GetValue("AppsUseLightTheme");
-                return value != null && (int)value == 0;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         public static void ApplySkin()
         {
             if (_config == null) return;
@@ -721,8 +864,13 @@ namespace ClipOne
             {
                 "Dark" => "-dark",
                 "Light" => "-light",
-                _ => IsSystemDarkMode() ? "-dark" : "-light"
+                _ => DarkModeHelper.IsSystemDarkTheme() ? "-dark" : "-light"
             };
+
+            if (_msgWindow != null)
+            {
+                DarkModeHelper.ApplyTheme(_msgWindow.Handle, _config.ThemeMode);
+            }
 
             string baseHtmlDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "html");
             string cssDir = Path.Combine(baseHtmlDir, "css");
