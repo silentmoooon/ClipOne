@@ -41,7 +41,6 @@
     <None Remove="html\css\fluent-dark\fluent-dark.css" />
     <None Remove="html\index.html" />
     <None Remove="html\js\jquery-3.3.1.min.js" />
-    <None Remove="html\js\jquery.nicescroll.min.js" />
     <None Remove="html\js\main.js" />
     <None Remove="html\js\wechat_emojis.js" />
   </ItemGroup>
@@ -72,9 +71,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="html\js\jquery-3.3.1.min.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="html\js\jquery.nicescroll.min.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="html\js\main.js">

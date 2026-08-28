@@ -40,14 +40,6 @@ document.oncontextmenu = function(e) {
 };
 
 $(document).ready(function() {
-    $(".content").niceScroll(".table_main", {
-        cursorborder: "",
-        cursoropacitymin: 0,
-        cursoropacitymax: 0.7,
-        cursorwidth: "2px",
-        cursorcolor: "#808080"
-    });
-
     $(document).on("keydown", keyDown);
     $(document).on("keyup", keyUp);
     $(window).on("keyup", keyUp);
@@ -266,18 +258,16 @@ function scrollTop() {
 }
 
 function scrollDown() {
-    var div = $(".content");
-    var tr = $("#tr" + selectIndex);
-    if (tr.offset().top + tr.height() > div.height()) {
-        div.scrollTop(tr.height() + div.scrollTop());
+    var tr = document.getElementById("tr" + selectIndex);
+    if (tr) {
+        tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
 
 function scrollUp() {
-    var div = $(".content");
-    var tr = $("#tr" + selectIndex);
-    if (tr.offset().top < 0) {
-        div.scrollTop(div.scrollTop() - tr.height());
+    var tr = document.getElementById("tr" + selectIndex);
+    if (tr) {
+        tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
 //数字转换成字母
@@ -354,13 +344,8 @@ function displayData() {
 
     if (matchCount == -1) {
         tbody = " <tr style='cursor: default'> <td  class='td_content' style='cursor: default;height:30px;' > 无记录 </td> </tr>";
-
     }
     $(".myTable").html(tbody);
-
-
-    $(".content").getNiceScroll().resize();
-
 }
 
 //设置保存最大记录数
@@ -416,7 +401,6 @@ function show() {
         $("#tr" + selectIndex).addClass("tr_selected");
     }
 
-    $(".content").getNiceScroll().resize();
     $(".content")[0].focus();
 }
 
