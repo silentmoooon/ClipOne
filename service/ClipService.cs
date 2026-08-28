@@ -45,27 +45,27 @@ namespace ClipOne.service
                 try
                 {
                     // 1. WeChat RichEdit Format
-                    if ((config.SupportFormat & ClipType.qq) != 0 && FORMAT_WECHAT != 0 && WinAPIHelper.IsClipboardFormatAvailable(FORMAT_WECHAT))
+                    if (FORMAT_WECHAT != 0 && WinAPIHelper.IsClipboardFormatAvailable(FORMAT_WECHAT))
                     {
                         HandleWeChat(clip);
                     }
                     // 2. QQ Unicode RichEdit Format
-                    else if ((config.SupportFormat & ClipType.qq) != 0 && FORMAT_QQ != 0 && WinAPIHelper.IsClipboardFormatAvailable(FORMAT_QQ))
+                    else if (FORMAT_QQ != 0 && WinAPIHelper.IsClipboardFormatAvailable(FORMAT_QQ))
                     {
                         HandleQQ(clip);
                     }
                     // 3. HTML Format
-                    else if ((config.SupportFormat & ClipType.html) != 0 && FORMAT_HTML != 0 && WinAPIHelper.IsClipboardFormatAvailable(FORMAT_HTML))
+                    else if (FORMAT_HTML != 0 && WinAPIHelper.IsClipboardFormatAvailable(FORMAT_HTML))
                     {
                         HandleHtml(clip);
                     }
                     // 4. Image (DIB / Bitmap)
-                    else if ((config.SupportFormat & ClipType.image) != 0 && (WinAPIHelper.IsClipboardFormatAvailable(WinAPIHelper.CF_DIB) || WinAPIHelper.IsClipboardFormatAvailable(WinAPIHelper.CF_DIBV5)))
+                    else if (WinAPIHelper.IsClipboardFormatAvailable(WinAPIHelper.CF_DIB) || WinAPIHelper.IsClipboardFormatAvailable(WinAPIHelper.CF_DIBV5))
                     {
                         HandleImage(clip);
                     }
                     // 5. File Drop (HDROP)
-                    else if ((config.SupportFormat & ClipType.file) != 0 && WinAPIHelper.IsClipboardFormatAvailable(WinAPIHelper.CF_HDROP))
+                    else if (WinAPIHelper.IsClipboardFormatAvailable(WinAPIHelper.CF_HDROP))
                     {
                         HandleFile(clip);
                     }

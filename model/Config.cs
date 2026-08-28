@@ -33,10 +33,5 @@ namespace ClipOne.model
         /// 自定义同步目录路径 (为空时默认使用应用所在目录下的 data/ 文件夹)
         /// </summary>
         public string SyncFolder { get; set; } = string.Empty;
-
-        /// <summary>
-        /// 默认支持格式
-        /// </summary>
-        public ClipType SupportFormat { get; set; } = ClipType.qq | ClipType.html | ClipType.image | ClipType.file | ClipType.text;
     }
 }

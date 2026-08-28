@@ -195,42 +195,7 @@ namespace ClipOne.util
 
             AppendMenuW(hMenu, MF_SEPARATOR, UIntPtr.Zero, string.Empty);
 
-            // 3. 格式子菜单
-            IntPtr hFormatMenu = CreatePopupMenu();
-            foreach (ClipType type in Enum.GetValues<ClipType>())
-            {
-                uint idFmt = cmdId++;
-                string name = Enum.GetName(type) ?? type.ToString();
-                uint flags = MF_STRING;
-                if ((_config.SupportFormat & type) != 0)
-                {
-                    flags |= MF_CHECKED;
-                }
-                if (type == ClipType.text)
-                {
-                    flags |= MF_DISABLED | MF_GRAYED;
-                }
-                AppendMenuW(hFormatMenu, flags, (UIntPtr)idFmt, name);
-
-                if (type != ClipType.text)
-                {
-                    actionMap[idFmt] = () =>
-                    {
-                        if ((_config.SupportFormat & type) != 0)
-                        {
-                            _config.SupportFormat &= ~type;
-                        }
-                        else
-                        {
-                            _config.SupportFormat |= type;
-                        }
-                        _configService.SaveSettings();
-                    };
-                }
-            }
-            AppendMenuW(hMenu, MF_POPUP, (UIntPtr)hFormatMenu.ToInt64(), "格式");
-
-            // 4. 皮肤子菜单
+            // 3. 皮肤子菜单
             IntPtr hSkinMenu = CreatePopupMenu();
             if (Directory.Exists(CSS_DIR))
             {
