@@ -197,7 +197,9 @@ function keyDown(event) {
         } else {
             pasteValue(selectIndex, true);
         }
-    } else if (event.ctrlKey && event.keyCode == 70) {
+    } else if (event.ctrlKey && (event.keyCode == 70 || event.key === 'f' || event.key === 'F')) {
+        event.preventDefault();
+        event.stopPropagation();
         toggleSearch();
     } else if (!searchMode) {
         if (event.shiftKey) {

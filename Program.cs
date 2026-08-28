@@ -308,11 +308,21 @@ namespace ClipOne
                     int wa = (int)(wParam.ToInt64() & 0xFFFF);
                     if (wa == WA_INACTIVE)
                     {
+                        IntPtr other = lParam;
+                        if (other != IntPtr.Zero && (other == _hWnd || WinAPIHelper.IsChild(_hWnd, other)))
+                        {
+                            break;
+                        }
                         CheckAndHideOnFocusLoss();
                     }
                     break;
 
                 case (uint)WinAPIHelper.WM_KILLFOCUS:
+                    IntPtr newFocus = wParam;
+                    if (newFocus != IntPtr.Zero && (newFocus == _hWnd || WinAPIHelper.IsChild(_hWnd, newFocus)))
+                    {
+                        break;
+                    }
                     CheckAndHideOnFocusLoss();
                     break;
             }
@@ -323,6 +333,12 @@ namespace ClipOne
         private static void CheckAndHideOnFocusLoss()
         {
             if (_devToolsOpen)
+            {
+                return;
+            }
+
+            IntPtr fg = WinAPIHelper.GetForegroundWindow();
+            if (fg != IntPtr.Zero && (fg == _hWnd || WinAPIHelper.IsChild(_hWnd, fg)))
             {
                 return;
             }

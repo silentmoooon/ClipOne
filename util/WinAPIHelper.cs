@@ -196,6 +196,9 @@ namespace ClipOne.util
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool DestroyWindow(IntPtr hWnd);
 
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool IsChild(IntPtr hWndParent, IntPtr hWnd);
+
         #endregion
 
         #region Shell32 APIs
