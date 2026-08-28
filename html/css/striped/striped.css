@@ -1,72 +1,17 @@
-/*全局字体*/
-
+/* Striped 主题 */
 * {
     font-family: "Microsoft Yahei", "微软雅黑";
     font-size: 12px;
 }
 
-
-/* 滚动条*/
-
-::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-}
-
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(128, 128, 128, 0.35);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(128, 128, 128, 0.65);
-}
-
-
-/*body*/
-
 body {
     border: 1px solid #A9CBEE;
-    overflow: hidden;
-    margin-left: 0px;
-    margin-top: 0px;
-    margin-right: 0px;
-    margin-bottom: 0px;
-    width: 100%;
-    max-height: 100%;
     background-color: #EbF1Fb;
 }
 
-.content {
-    overflow-x: hidden;
-    overflow-y: auto;
-    scroll-behavior: smooth;
-    overscroll-behavior: contain;
-    will-change: scroll-position;
-    transform: translateZ(0);
-    margin: 0px;
-    padding: 0px;
-    width: 100%;
-    max-height: 100%;
-}
-
-
-/*table*/
-
 .table_main {
-    width: 100%;
-    cursor: default;
     border-collapse: collapse;
-    table-layout: fixed;
     border-spacing: 0;
-}
-
-.table_main tr {
-    contain: layout paint;
 }
 
 .table_main th,
@@ -74,8 +19,8 @@ body {
     padding: 4px 5px;
 }
 
-.table_main tbody>tr:nth-child(odd)>td,
-.table_main tbody>tr:nth-child(odd)>th {
+.table_main tbody > tr:nth-child(odd) > td,
+.table_main tbody > tr:nth-child(odd) > th {
     background-color: #f9f9f9;
 }
 
@@ -86,19 +31,10 @@ body {
     vertical-align: top;
 }
 
-
-/*表格边框*/
-
 td {
     border-bottom: 1px solid #ddd;
     min-height: 25px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
-
-
-/*内容表格*/
 
 .td_content {
     cursor: default;
@@ -111,9 +47,6 @@ td {
     padding-bottom: 8px;
 }
 
-
-/*索引表格*/
-
 .td_index {
     width: 25px !important;
     vertical-align: middle !important;
@@ -122,34 +55,16 @@ td {
     padding: 0px !important;
 }
 
-
-/*图片*/
-
-img,
-.image {
-    width: auto;
-    height: auto;
-    max-height: 250px !important;
-    max-width: 370px !important;
-    vertical-align: middle;
-    text-align: left;
-    margin: 0px !important;
-    padding: 0px !important;
-}
-
-
-/*鼠标悬浮*/
-
-tr:hover>td {
+tr:hover > td {
     background-color: #ACBAD4 !important;
 }
 
-.tr_selected>td {
+.tr_selected > td {
     background-color: #ACBAD4 !important;
 }
 
 a {
-    text-decoration: none
+    text-decoration: none;
 }
 
 #searchDiv {
@@ -173,10 +88,7 @@ a {
     width: 150px;
     height: 25px;
     font-size: 14px;
-    border-top-width: 0px;
-    border-left-width: 0px;
-    border-right-width: 0px;
-    border-bottom-width: 0px;
+    border: none;
     outline: none;
     background-color: transparent;
 }

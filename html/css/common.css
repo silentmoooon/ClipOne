@@ -1,0 +1,75 @@
+/* 全局基础与重置 */
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    -ms-overflow-style: none;
+    user-select: none;
+}
+
+/* 滚动容器与硬件加速 */
+.content {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    overscroll-behavior: none;
+    will-change: scroll-position;
+    transform: translateZ(0);
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    max-height: 100vh;
+}
+
+/* 现代极细原生平滑滚动条 */
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.3);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(128, 128, 128, 0.65);
+}
+
+/* 表格布局与渲染隔离 */
+.table_main {
+    width: 100%;
+    cursor: default;
+    table-layout: fixed;
+    will-change: transform;
+}
+
+.table_main tr {
+    contain: layout paint;
+}
+
+td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+img, .image {
+    width: auto;
+    height: auto;
+    max-height: 250px !important;
+    max-width: 370px !important;
+    vertical-align: middle;
+}

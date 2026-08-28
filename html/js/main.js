@@ -105,7 +105,7 @@ $(document).ready(function() {
             show();
         } else if (msg.type === 'changeSkin') {
             if (Array.isArray(msg.css)) {
-                $('link[rel="stylesheet"]').remove();
+                $('link[rel="stylesheet"]:not([href*="common.css"])').remove();
                 msg.css.forEach(function(href) {
                     var link = $('<link>', {
                         rel: 'stylesheet',
@@ -118,9 +118,54 @@ $(document).ready(function() {
         }
     });
 
+    initBounceScroll();
     displayData();
     window.chrome.webview.postMessage("ready|1");
 });
+
+// 顶底丝滑弹性阻尼回弹 (Rubber-band Bounce)
+var bounceOffset = 0;
+var bounceTimer = null;
+var isBouncing = false;
+
+function initBounceScroll() {
+    var content = document.querySelector(".content");
+    var table = document.getElementById("table_main");
+    if (!content || !table) return;
+
+    content.addEventListener("wheel", function(e) {
+        var atTop = content.scrollTop <= 0;
+        var atBottom = content.scrollTop + content.clientHeight >= content.scrollHeight - 1;
+
+        if ((atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)) {
+            var direction = e.deltaY < 0 ? 1 : -1;
+            var added = Math.min(Math.abs(e.deltaY) * 0.18, 10);
+            bounceOffset = Math.max(-36, Math.min(36, bounceOffset + direction * added));
+
+            table.style.transition = "none";
+            table.style.transform = "translate3d(0," + bounceOffset + "px, 0)";
+            isBouncing = true;
+
+            clearTimeout(bounceTimer);
+            bounceTimer = setTimeout(function() {
+                table.style.transition = "transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)";
+                table.style.transform = "translate3d(0, 0px, 0)";
+                bounceOffset = 0;
+                setTimeout(function() {
+                    if (bounceOffset === 0) {
+                        table.style.transition = "";
+                        isBouncing = false;
+                    }
+                }, 400);
+            }, 60);
+        } else if (isBouncing && bounceOffset !== 0) {
+            table.style.transition = "transform 0.25s ease-out";
+            table.style.transform = "translate3d(0, 0px, 0)";
+            bounceOffset = 0;
+            isBouncing = false;
+        }
+    }, { passive: true });
+}
 
 function openHotkeyModal(mod, key) {
     $("#hkWin").prop("checked", (mod & 8) !== 0);

@@ -1,15 +1,7 @@
-/* 全局设置 */
-html {
-    background: transparent;
-    box-sizing: border-box;
-    width: 100%;
-    height: 100%;
-}
-
+/* Fluent 深色主题 */
 * {
     font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei", sans-serif;
     font-size: 13px;
-    box-sizing: border-box;
 }
 
 b {
@@ -20,57 +12,18 @@ b {
     color: #FFFFFF;
 }
 
-/* 主窗体背景 */
 body {
-    -ms-overflow-style: none;
-    overflow: hidden;
-    margin: 0;
-    width: 100%;
-    height: 100%;
     background-color: rgba(28, 28, 28, 0.95); 
     color: #CCCCCC;
 }
 
 .content {
-    overflow-x: hidden;
-    overflow-y: auto;
-    scroll-behavior: smooth;
-    overscroll-behavior: contain;
-    will-change: scroll-position;
-    transform: translateZ(0);
-    margin: 0;
-    padding: 8px; /* 减少四周留白 */
-    width: 100%;
-    height: 100%;
-}
-
-.content::-webkit-scrollbar {
-    width: 4px;
-}
-
-.content::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.content::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-}
-
-.content::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.4);
+    padding: 8px;
 }
 
 .table_main {
-    width: 100%;
-    cursor: default;
     border-collapse: separate;
     border-spacing: 0 6px; 
-    table-layout: fixed;
-}
-
-.table_main tr {
-    contain: layout paint;
 }
 
 tr {
@@ -84,7 +37,6 @@ td {
     border-bottom: 1px solid rgba(0, 0, 0, 0.3);
     min-height: 48px;
     height: auto;
-    overflow: hidden;
     vertical-align: middle;
     transition: all 0.15s ease-out;
 }
@@ -94,6 +46,7 @@ td:first-child {
     border-top-left-radius: 6px;
     border-bottom-left-radius: 6px;
 }
+
 td:last-child {
     border-right: 1px solid rgba(255, 255, 255, 0.04);
     border-top-right-radius: 6px;
@@ -102,7 +55,7 @@ td:last-child {
 
 .td_content {
     cursor: default;
-    padding: 10px 8px !important; /* 减少左右留白，为内容腾出空间 */
+    padding: 10px 8px !important;
     line-height: 1.5;
     word-break: break-all;
 }
@@ -111,16 +64,13 @@ td:last-child {
     width: 28px !important;
     text-align: center !important;
     padding-right: 0px !important; 
-    font-size: 13px; /* 更大更显眼 */
+    font-size: 13px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.7); /* 更显眼 */
+    color: rgba(255, 255, 255, 0.7);
 }
 
 img, .image {
-    max-height: 140px !important;
-    max-width: 100% !important;
     border-radius: 6px;
-    vertical-align: middle;
     margin-top: 4px !important;
 }
 

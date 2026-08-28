@@ -32,6 +32,7 @@
 
   <ItemGroup>
     <None Remove="ClipOne.ico" />
+    <None Remove="html\css\common.css" />
     <None Remove="html\css\classic\classic.css" />
     <None Remove="html\css\material\material.css" />
     <None Remove="html\css\modern\modern.css" />
@@ -46,6 +47,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="html\css\common.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="html\css\classic\classic.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
