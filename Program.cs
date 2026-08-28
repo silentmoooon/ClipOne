@@ -116,7 +116,11 @@ namespace ClipOne
 
             _configService = new ConfigService();
             _config = _configService.GetConfig();
-            _storageService = new StorageService();
+            _storageService = new StorageService(_configService);
+            _storageService.OnHistoryChanged += () =>
+            {
+                SendHistoryToWeb();
+            };
             _clipService = new ClipService(_config);
 
             ApplySkin();
@@ -623,6 +627,20 @@ namespace ClipOne
                                 HotKeyManager.RegisterHotKey(_msgWindow.Handle, _hotkeyAtom, _config.HotkeyModifier, _config.HotkeyKey);
                             }
                         }
+                    }
+                    break;
+
+                case "del":
+                    if (!string.IsNullOrEmpty(payload) && _storageService != null)
+                    {
+                        _storageService.DeleteClipById(payload);
+                    }
+                    break;
+
+                case "delIndex":
+                    if (int.TryParse(payload, out int delIdx) && _storageService != null)
+                    {
+                        _storageService.DeleteClip(delIdx);
                     }
                     break;
 

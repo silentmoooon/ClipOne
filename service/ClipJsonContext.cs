@@ -18,6 +18,7 @@ namespace ClipOne.service
     [JsonSerializable(typeof(Config))]
     [JsonSerializable(typeof(ClipModel))]
     [JsonSerializable(typeof(List<ClipModel>))]
+    [JsonSerializable(typeof(ClipModel[]))]
     [JsonSerializable(typeof(HotkeyDto))]
     [JsonSerializable(typeof(List<string>))]
     public partial class ClipJsonContext : JsonSerializerContext

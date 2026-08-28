@@ -577,7 +577,14 @@ function pasteValueByRange(startIndex, endIndex) {
 }
 
 function del(index) {
-    clipObj.splice(index, 1)[0];
+    if (!clipObj || index < 0 || index >= clipObj.length) return;
+    var deletedItem = clipObj.splice(index, 1)[0];
+    if (deletedItem && deletedItem.Id) {
+        window.chrome.webview.postMessage("del|" + deletedItem.Id);
+    } else {
+        window.chrome.webview.postMessage("delIndex|" + index);
+    }
+    displayData();
 }
 
 function search(value) {
