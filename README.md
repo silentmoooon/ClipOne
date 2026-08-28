@@ -90,13 +90,19 @@ ClipOne 内置了多款精心设计的样式，支持通过托盘菜单随时切
 
 ---
 
-## 💻 编译与构建
+## 💻 运行与构建
 
-### 运行环境要求
-- Windows 10 (1803 / 20H2+) 或 Windows 11 (x64)
+### 1. 运行环境要求（终端用户）
+- **操作系统**：Windows 10 (1803 / 20H2+) 或 Windows 11 (仅支持 64 位 x64)
+- **.NET 运行时**：**无需安装**（Native AOT 已直接编译为原生机器码）
+- **组件要求**：系统需内置或安装有 [Microsoft Edge WebView2 运行时](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)（Win10 20H2+ 及 Win11 已默认内置）
+
+### 2. 编译环境要求（开发者）
+- Windows 10 / 11 (x64)
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- Visual Studio 2022+（安装了“使用 C++ 的桌面开发”工作负载，用于 Native AOT 链接器）
 
-### 常用命令
+### 3. 常用构建命令
 
 ```powershell
 # 1. 还原与编译
