@@ -202,7 +202,10 @@ namespace ClipOne.util
                 string[] fileList = Directory.GetDirectories(CSS_DIR);
                 var baseSkins = fileList.Select(f => Path.GetFileName(f))
                     .Select(n => n.EndsWith("-light") ? n.Substring(0, n.Length - 6) : (n.EndsWith("-dark") ? n.Substring(0, n.Length - 5) : n))
-                    .Distinct().ToList();
+                    .Distinct()
+                    .OrderBy(n => n.Equals("fluent", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                    .ThenBy(n => n)
+                    .ToList();
 
                 foreach (string skinName in baseSkins)
                 {
