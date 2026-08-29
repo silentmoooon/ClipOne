@@ -136,7 +136,7 @@ namespace ClipOne
             _hotkeyAtom = HotKeyManager.GlobalAddAtom(HotkeyAtomStr);
             if (_config != null)
             {
-                HotKeyManager.RegisterHotKey(_msgWindow.Handle, _hotkeyAtom, _config.HotkeyModifier, _config.HotkeyKey);
+                HotKeyManager.Register(_msgWindow.Handle, _hotkeyAtom, _config.HotkeyModifier, _config.HotkeyKey);
             }
 
             // Initialize Tray on the message window
@@ -237,7 +237,7 @@ namespace ClipOne
             if (_msgWindow != null)
             {
                 WinAPIHelper.RemoveClipboardFormatListener(_msgWindow.Handle);
-                HotKeyManager.UnregisterHotKey(_msgWindow.Handle, _hotkeyAtom);
+                HotKeyManager.Unregister(_msgWindow.Handle, _hotkeyAtom);
                 HotKeyManager.GlobalDeleteAtom(HotkeyAtomStr);
                 _msgWindow.Dispose();
                 _msgWindow = null;
@@ -695,8 +695,8 @@ namespace ClipOne
                         var dto = JsonSerializer.Deserialize(decoded, ClipJsonContext.Default.HotkeyDto);
                         if (dto != null && dto.Modifier > 0 && dto.Key > 0)
                         {
-                            HotKeyManager.UnregisterHotKey(_msgWindow.Handle, _hotkeyAtom);
-                            bool registered = HotKeyManager.RegisterHotKey(_msgWindow.Handle, _hotkeyAtom, dto.Modifier, dto.Key);
+                            HotKeyManager.Unregister(_msgWindow.Handle, _hotkeyAtom);
+                            bool registered = HotKeyManager.Register(_msgWindow.Handle, _hotkeyAtom, dto.Modifier, dto.Key);
                             if (registered)
                             {
                                 _config.HotkeyModifier = dto.Modifier;
@@ -705,7 +705,7 @@ namespace ClipOne
                             }
                             else
                             {
-                                HotKeyManager.RegisterHotKey(_msgWindow.Handle, _hotkeyAtom, _config.HotkeyModifier, _config.HotkeyKey);
+                                HotKeyManager.Register(_msgWindow.Handle, _hotkeyAtom, _config.HotkeyModifier, _config.HotkeyKey);
                             }
                         }
                     }
