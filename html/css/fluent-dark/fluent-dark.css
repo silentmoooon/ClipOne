@@ -79,7 +79,7 @@ td {
     min-height: 48px;
     height: auto;
     vertical-align: middle;
-    transition: all 0.15s ease-out;
+    transition: background-color 0.15s ease-out, color 0.15s ease-out, border-color 0.15s ease-out, box-shadow 0.15s ease-out;
 }
 
 td:first-child {

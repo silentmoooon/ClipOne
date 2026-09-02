@@ -62,7 +62,6 @@ html, body {
 .content {
     overflow-x: hidden;
     overflow-y: auto;
-    scroll-behavior: smooth;
     overscroll-behavior: none;
     will-change: scroll-position;
     transform: translateZ(0);

@@ -93,11 +93,18 @@ namespace ClipOne
         private const uint INPUT_KEYBOARD = 1;
         private const uint KEYEVENTF_KEYUP = 0x0002;
         private const ushort VK_F12 = 0x7B;
+        private static int _showToken = 0;
 
         [STAThread]
         public static void Main(string[] args)
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+            // Configure WebView2 to avoid throttling background rendering and occlusion
+            Environment.SetEnvironmentVariable(
+                "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
+                "--disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-features=CalculateNativeWinOcclusion"
+            );
 
             // Global exception logging
             AppDomain.CurrentDomain.UnhandledException += (s, e) =>
@@ -384,18 +391,31 @@ namespace ClipOne
                 if (x < workArea.Left) x = workArea.Left;
                 if (y < workArea.Top) y = workArea.Top;
 
-                // Move to position first (still transparent), then fade in
+                // Move to position first while remaining transparent (alpha=0)
                 WinAPIHelper.SetWindowPos(_hWnd, WinAPIHelper.HWND_TOPMOST, x, y, width, height,
                     WinAPIHelper.SWP_NOACTIVATE | WinAPIHelper.SWP_SHOWWINDOW);
 
-                // Restore full opacity — WebView2 has been rendering all along so content is ready
-                WinAPIHelper.SetLayeredWindowAttributes(_hWnd, 0, 255, WinAPIHelper.LWA_ALPHA);
-
-                WinAPIHelper.SetForegroundWindow(_hWnd);
-                WinAPIHelper.SetActiveWindow(_hWnd);
-
+                // Notify webview to reset state, render DOM and signal back
                 _window.SendWebMessage("{\"type\": \"show\"}");
+
+                // Fallback timer (35ms) to ensure window is displayed even if web message is delayed
+                int currentToken = Interlocked.Increment(ref _showToken);
+                Task.Delay(35).ContinueWith(_ =>
+                {
+                    if (Volatile.Read(ref _showToken) == currentToken)
+                    {
+                        MakeWindowVisible();
+                    }
+                });
             }
+        }
+
+        private static void MakeWindowVisible()
+        {
+            if (_hWnd == IntPtr.Zero) return;
+            WinAPIHelper.SetLayeredWindowAttributes(_hWnd, 0, 255, WinAPIHelper.LWA_ALPHA);
+            WinAPIHelper.SetForegroundWindow(_hWnd);
+            WinAPIHelper.SetActiveWindow(_hWnd);
         }
 
         private static void ShowWebTrayMenu(int cursorX, int cursorY)
@@ -461,11 +481,17 @@ namespace ClipOne
 
             if (_hWnd != IntPtr.Zero)
             {
-                // Make transparent and move off-screen. Do NOT call SW_HIDE — it pauses WebView2.
+                // Invalidate any pending show token
+                Interlocked.Increment(ref _showToken);
+
+                // Notify webview to reset state in background
+                _window?.SendWebMessage("{\"type\": \"hide\"}");
+
+                // Make transparent and move off-screen while keeping valid dimensions. Do NOT call SW_HIDE — it pauses WebView2.
                 WinAPIHelper.SetLayeredWindowAttributes(_hWnd, 0, 0, WinAPIHelper.LWA_ALPHA);
                 WinAPIHelper.SetWindowPos(_hWnd, WinAPIHelper.HWND_TOPMOST,
-                    -10000, -10000, 0, 0,
-                    WinAPIHelper.SWP_NOSIZE | WinAPIHelper.SWP_NOACTIVATE);
+                    -10000, -10000, _windowWidth, _windowHeight,
+                    WinAPIHelper.SWP_NOACTIVATE);
 
                 if (_activityWindow != IntPtr.Zero)
                 {
@@ -647,6 +673,10 @@ namespace ClipOne
             {
                 case "ready":
                     SendHistoryToWeb();
+                    break;
+
+                case "shown":
+                    MakeWindowVisible();
                     break;
 
                 case "PasteValue":

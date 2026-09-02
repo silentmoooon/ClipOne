@@ -221,6 +221,9 @@ const ClipApp = {
             case "show":
                 this.show();
                 break;
+            case "hide":
+                this.hide();
+                break;
             case "showTrayMenu":
                 this.showTrayMenu(msg.data);
                 break;
@@ -619,7 +622,7 @@ const ClipApp = {
     },
 
     /**
-     * 窗口显示时状态初始化
+     * 窗口显示时状态初始化与渲染就绪同步
      */
     show() {
         if (this.dom.trayMenuModal) this.dom.trayMenuModal.style.display = "none";
@@ -637,6 +640,35 @@ const ClipApp = {
         if (this.dom.content) {
             this.dom.content.scrollTop = 0;
             this.dom.content.focus();
+        }
+
+        if (this.state.clips.length > 0) {
+            this.updateSelection(0, false);
+        }
+
+        // 双帧等待确保 Compositor 已提交渲染后再通知 C# 掀开透明度
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                this.postMessage("shown|1");
+            });
+        });
+    },
+
+    /**
+     * 窗口隐藏时在后台静默重置状态
+     */
+    hide() {
+        this.state.rangeStartVIndex = -1;
+        this.state.rangeEndVIndex = -1;
+        this.state.isShiftPressed = false;
+        this.state.isCtrlPressed = false;
+
+        if (this.state.searchMode) {
+            this.hideSearch();
+        }
+
+        if (this.dom.content) {
+            this.dom.content.scrollTop = 0;
         }
 
         if (this.state.clips.length > 0) {
