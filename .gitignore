@@ -9,3 +9,8 @@ wechat_emojis.json
 debug.log
 error.log
 
+# >>> Comet managed project state >>>
+!/.comet/
+/.comet/*
+!/.comet/config.yaml
+# <<< Comet managed project state <<<

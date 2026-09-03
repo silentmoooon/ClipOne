@@ -267,6 +267,24 @@ namespace ClipOne.service
                 System.Xml.XmlDocument doc = new System.Xml.XmlDocument();
                 doc.LoadXml(xmlStr);
 
+                var imgNodes = doc.SelectNodes("WeChatRichEditFormat/EditElement[@filepath]");
+                if (GetOccurTimes(xmlStr, "filepath") == 1 && xmlStr.IndexOf("<![CDATA[", StringComparison.OrdinalIgnoreCase) < 0 && imgNodes != null && imgNodes.Count > 0)
+                {
+                    string? singleFilePath = imgNodes[0]?.Attributes?["filepath"]?.Value?.Replace("file:///", "").Replace("file://", "");
+                    if (!string.IsNullOrEmpty(singleFilePath) && File.Exists(singleFilePath))
+                    {
+                        string ext = Path.GetExtension(singleFilePath).ToLowerInvariant();
+                        if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".gif" || ext == ".webp")
+                        {
+                            clip.Type = IMAGE_TYPE;
+                            clip.DisplayValue = string.Empty;
+                            clip.ClipValue = Convert.ToBase64String(File.ReadAllBytes(singleFilePath));
+                            clip.PlainText = string.Empty;
+                            return;
+                        }
+                    }
+                }
+
                 string displayValue = string.Empty;
                 string value = string.Empty;
                 bool onlyText = true;
@@ -277,14 +295,43 @@ namespace ClipOne.service
                     {
                         if (node.Name == "EditElement" && node.Attributes?["type"]?.Value == "0")
                         {
-                            displayValue += node.InnerText;
-                            value += node.InnerText;
+                            string text = node.InnerText;
+                            displayValue += FormatDisplayText(text);
+                            value += text;
                         }
                         else
                         {
                             onlyText = false;
-                            displayValue += "[表情]";
-                            value += " ";
+                            string? filePath = node.Attributes?["filepath"]?.Value?.Replace("file:///", "").Replace("file://", "");
+                            if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                            {
+                                string ext = Path.GetExtension(filePath).ToLowerInvariant();
+                                bool isImage = ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".gif" || ext == ".webp";
+                                if (isImage)
+                                {
+                                    string mime = ext switch
+                                    {
+                                        ".jpg" or ".jpeg" => "image/jpeg",
+                                        ".gif" => "image/gif",
+                                        ".bmp" => "image/bmp",
+                                        ".webp" => "image/webp",
+                                        _ => "image/png"
+                                    };
+                                    string base64 = Convert.ToBase64String(File.ReadAllBytes(filePath));
+                                    displayValue += $"<img class=\"image\" loading=\"lazy\" src=\"data:{mime};base64,{base64}\" style=\"display:block;margin:4px 0;\" />";
+                                    value += " ";
+                                }
+                                else
+                                {
+                                    displayValue += $"[{Path.GetFileName(filePath)}]";
+                                    value += " ";
+                                }
+                            }
+                            else
+                            {
+                                displayValue += "[表情]";
+                                value += " ";
+                            }
                         }
                     }
                 }
@@ -293,9 +340,12 @@ namespace ClipOne.service
                 {
                     clip.Type = TEXT_TYPE;
                     clip.ClipValue = value;
+                    clip.DisplayValue = FormatDisplayText(value);
                 }
-
-                clip.DisplayValue = displayValue;
+                else
+                {
+                    clip.DisplayValue = displayValue;
+                }
             }
             catch
             {
@@ -403,6 +453,7 @@ namespace ClipOne.service
 
                     if (result.Type == WECHAT_TYPE)
                     {
+                        EnsureWeChatFilesExist(result.ClipValue, result.DisplayValue);
                         SetClipboardRawBytes(FORMAT_WECHAT, Encoding.UTF8.GetBytes(result.ClipValue));
                         if (!string.IsNullOrEmpty(result.PlainText))
                         {
@@ -745,6 +796,39 @@ namespace ClipOne.service
         {
             if (string.IsNullOrEmpty(str) || string.IsNullOrEmpty(value)) return 0;
             return (str.Length - str.Replace(value, "").Length) / value.Length;
+        }
+
+        private static void EnsureWeChatFilesExist(string xmlStr, string displayValue)
+        {
+            if (string.IsNullOrEmpty(xmlStr) || string.IsNullOrEmpty(displayValue) || !displayValue.Contains("data:image/"))
+                return;
+
+            try
+            {
+                var doc = new System.Xml.XmlDocument();
+                doc.LoadXml(xmlStr);
+                var imgNodes = doc.SelectNodes("//EditElement[@filepath]");
+                if (imgNodes == null || imgNodes.Count == 0) return;
+
+                var matches = System.Text.RegularExpressions.Regex.Matches(displayValue, @"data:image/[^;]+;base64,([A-Za-z0-9+/=]+)");
+                for (int i = 0; i < imgNodes.Count && i < matches.Count; i++)
+                {
+                    string? filePath = imgNodes[i]?.Attributes?["filepath"]?.Value?.Replace("file:///", "").Replace("file://", "");
+                    if (!string.IsNullOrEmpty(filePath) && !File.Exists(filePath))
+                    {
+                        string dir = Path.GetDirectoryName(filePath) ?? "";
+                        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                        {
+                            Directory.CreateDirectory(dir);
+                        }
+                        string base64 = matches[i].Groups[1].Value;
+                        File.WriteAllBytes(filePath, Convert.FromBase64String(base64));
+                    }
+                }
+            }
+            catch
+            {
+            }
         }
 
         #endregion

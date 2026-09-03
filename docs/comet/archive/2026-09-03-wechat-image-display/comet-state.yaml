@@ -1,0 +1,157 @@
+schema: comet.native.v4
+name: wechat-image-display
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: wechat-format
+    operation: create
+    source: specs/wechat-format/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: 当从微信复制包含图片与文字的混合内容时，ClipOne 剪贴板历史列表中该条目真实展示图片与文字，而非 `[表情]`。"
+    result: passed
+    reason:
+      text: 微信图文混合内容正确解析出图片并转为Base64内嵌展示，不含有[表情]字样
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: 当在 ClipOne 中选中该图文混合记录并粘贴回微信输入框时，能够完整还原图片与文字。"
+    result: passed
+    reason:
+      text: 保持WECHAT_TYPE并保留完整xmlStr及PlainText，粘贴回微信能够还原图文
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "A3: 当从微信仅复制单张图片时，ClipOne 将其识别为图片类型并正常展示与粘贴。"
+    result: passed
+    reason:
+      text: 单张微信图片正确映射为image类型，支持标准卡片展示与跨应用粘贴
+      truncated: false
+  - id: A4
+    source: specs/wechat-format/spec.md
+    text: 复制微信图文混合内容并在剪贴板历史中呈现 GIVEN 微信输入框中包含图片及附带文字（可含微信表情代码） WHEN
+      用户复制该图文混合内容触发剪贴板更新 THEN ClipOne 将其识别为微信富文本类型（`WeChat_RichEdit_Format`） AND
+      ClipOne 将其中的图片元素转换为 Base64 嵌入的 HTML `<img>` 标签 AND
+      剪贴板历史列表中该条目完整展示图片与文字，而非展示为 `[表情]` AND 保留原始 XML 格式供后续无损粘贴还原
+    result: passed
+    reason:
+      text: 微信富文本规格中的图文混合场景完全满足
+      truncated: false
+  - id: A5
+    source: specs/wechat-format/spec.md
+    text: 粘贴微信图文混合内容回微信 GIVEN 剪贴板历史中已保存微信图文混合条目 WHEN 用户选中该条目并执行粘贴 THEN ClipOne 将原始
+      `WeChat_RichEdit_Format` 数据及 UnicodeText 写入 Windows 系统剪贴板 AND
+      粘贴到微信输入框时能够正确还原图片与文字
+    result: passed
+    reason:
+      text: 微信富文本规格中的粘贴还原场景完全满足
+      truncated: false
+  - id: A6
+    source: specs/wechat-format/spec.md
+    text: 复制微信纯单张图片 GIVEN 微信中仅复制了一张图片且无伴随文字 WHEN ClipOne 处理该剪贴板事件 THEN ClipOne
+      将其识别为通用图片类型（`image`） AND 在剪贴板历史中以标准图片卡片呈现 AND 允许粘贴至任意支持位图的应用程序
+    result: passed
+    reason:
+      text: 微信富文本规格中的纯单图识别场景完全满足
+      truncated: false
+builder_handoff:
+  candidate_id: 72cfa06e-b457-4d74-b8c3-8f310d9b7058
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:d8fcb713-c16e-40d4-9883-68109da733de
+  iteration: 1
+  summary:
+    text: 修复微信图文混合复制与纯图片复制时图片显示为[表情]的问题，嵌入真实图片Base64并在粘贴时保持无损还原
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+  checks:
+    - name:
+        text: dotnet-build
+        truncated: false
+      result: passed
+      note:
+        text: 0 warning, 0 error
+        truncated: false
+    - name:
+        text: parsing-verification-script
+        truncated: false
+      result: passed
+      note:
+        text: Verified mixed, single-image, and pure text cases with real WeChat data
+        truncated: false
+  checks_truncated: false
+  known_limits: []
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: Verified WeChat XML parsing, base64 image data-uri embedding,
+        FormatDisplayText escaping, and EnsureWeChatFilesExist logic
+      truncated: false
+    reviewer_execution_ref: review-exec-001
+  submitted_at: 2026-09-03T03:59:33.715Z
+blockers: []
+verification:
+  candidate_id: 72cfa06e-b457-4d74-b8c3-8f310d9b7058
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:b6f8ab22-8301-41be-9ad4-00880ebd9f0d
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks: []
+  summary:
+    text: 微信富文本XML解析、单图转换与图文混合Base64展示及无损粘贴验证全部通过
+    truncated: false
+  risks: []
+  risks_truncated: false
+  completed_at: 2026-09-03T04:00:05.453Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 微信富文本XML解析、单图转换与图文混合Base64展示及无损粘贴验证全部通过
+      truncated: false
+    completed_at: 2026-09-03T04:00:05.453Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-03T03:51:56.534Z
