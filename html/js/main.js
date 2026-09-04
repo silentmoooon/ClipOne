@@ -8,6 +8,8 @@ const ClipApp = {
     state: {
         clips: [],            // 完整剪贴板列表 ClipModel[]
         maxRecords: 300,      // 最大保存条目数
+        pageSize: 25,         // 单批渲染条目数 (分批懒加载)
+        renderedCount: 25,    // 当前已渲染到 DOM 的条目数
         searchMode: false,    // 搜索模式开关
         searchValue: "",      // 当前搜索关键词
         selectIndex: 0,       // 当前选中的项在当前可见列表中的索引 (0-based)
@@ -174,6 +176,18 @@ const ClipApp = {
                 const tr = e.target.closest("tr[data-vindex]");
                 if (!tr) return;
                 this.handleRowMouseUp(e, tr);
+            });
+        }
+
+        // 滚动近底自动加载下一批 (DOM 懒加载)
+        if (this.dom.content) {
+            this.dom.content.addEventListener("scroll", () => {
+                if (this.state.renderedCount < this.state.filteredIndices.length) {
+                    const { scrollTop, scrollHeight, clientHeight } = this.dom.content;
+                    if (scrollHeight - scrollTop - clientHeight < 150) {
+                        this.loadMore();
+                    }
+                }
             });
         }
 
@@ -425,6 +439,14 @@ const ClipApp = {
         let next = this.state.selectIndex + delta;
         if (next < 0) next = 0;
         if (next >= total) next = total - 1;
+
+        if (next >= this.state.renderedCount) {
+            while (next >= this.state.renderedCount && this.state.renderedCount < total) {
+                this.state.renderedCount = Math.min(total, this.state.renderedCount + this.state.pageSize);
+            }
+            this.displayData(false);
+        }
+
         this.updateSelection(next, true);
     },
 
@@ -432,6 +454,13 @@ const ClipApp = {
      * 更新选中项状态并滚动到可视区域
      */
     updateSelection(newIndex, autoScroll = true) {
+        if (newIndex >= this.state.renderedCount && this.state.filteredIndices && this.state.filteredIndices.length > 0) {
+            this.state.renderedCount = Math.min(
+                this.state.filteredIndices.length,
+                Math.ceil((newIndex + 1) / this.state.pageSize) * this.state.pageSize
+            );
+            this.displayData(false);
+        }
         this.state.selectIndex = newIndex;
         this.highlightRow(newIndex);
         if (autoScroll) {
@@ -518,74 +547,86 @@ const ClipApp = {
     },
 
     /**
-     * 渲染剪贴板记录列表
+     * 渲染剪贴板记录列表 (分批按需渲染以极大优化 DOM 与显存占用)
      */
-    displayData() {
+    displayData(reset = true) {
         if (!this.dom.tbody) return;
+        if (reset) {
+            this.state.renderedCount = this.state.pageSize;
+        }
+
         const clips = this.state.clips;
         const search = this.state.searchValue;
         const filtered = [];
-        let html = "";
 
         for (let i = 0; i < clips.length; i++) {
             const item = clips[i];
             if (!item) continue;
 
-            // 过滤判断
+            // 过滤判断 (支持类型过滤、内容过滤与显示文本过滤)
             const isMatch =
                 search === "" ||
                 item.Type === search ||
-                (item.Type !== "image" && item.ClipValue && item.ClipValue.toLowerCase().includes(search));
+                (item.Type !== "image" && item.ClipValue && item.ClipValue.toLowerCase().includes(search)) ||
+                (item.DisplayValue && item.DisplayValue.toLowerCase().includes(search));
 
             if (isMatch) {
-                const vIndex = filtered.length;
                 filtered.push(i);
-
-                let numBadge = "";
-                if (vIndex < 9) {
-                    numBadge = `<u>${vIndex + 1}</u>`;
-                } else if (vIndex < 35) {
-                    numBadge = `<u>${String.fromCharCode(55 + (vIndex + 1))}</u>`;
-                } else {
-                    numBadge = `${vIndex + 1}`;
-                }
-
-                if (item.Type === "image") {
-                    const val = item.ClipValue || "";
-                    let imgSrc = "";
-                    if (val.startsWith("assets/") || val.startsWith("assets\\")) {
-                        imgSrc = `asset://${val.replace(/\\/g, "/")}`;
-                    } else {
-                        imgSrc = `data:image/png;base64,${val}`;
-                    }
-                    html += `
-                    <tr style="cursor: default" data-clip-index="${i}" data-vindex="${vIndex}" id="tr${vIndex}">
-                        <td class="td_content">
-                            <img class="image" loading="lazy" src="${imgSrc}" alt="clip image" />
-                        </td>
-                        <td class="td_index">${numBadge}</td>
-                    </tr>`;
-                } else {
-                    let displayStr = item.DisplayValue || "";
-                    if (typeof wechatEmojis !== "undefined") {
-                        displayStr = displayStr.replace(/\[.*?\]/g, (match) => {
-                            if (wechatEmojis[match]) {
-                                return `<img src="${wechatEmojis[match]}" style="width:20px;height:20px;vertical-align:-4px;margin:0 2px;" alt="${match}" />`;
-                            }
-                            return match;
-                        });
-                    }
-
-                    html += `
-                    <tr style="cursor: default" data-clip-index="${i}" data-vindex="${vIndex}" id="tr${vIndex}">
-                        <td class="td_content">${displayStr}</td>
-                        <td class="td_index">${numBadge}</td>
-                    </tr>`;
-                }
             }
         }
 
         this.state.filteredIndices = filtered;
+
+        const renderLimit = Math.min(filtered.length, this.state.renderedCount);
+        let html = "";
+
+        for (let vIndex = 0; vIndex < renderLimit; vIndex++) {
+            const i = filtered[vIndex];
+            const item = clips[i];
+            if (!item) continue;
+
+            let numBadge = "";
+            if (vIndex < 9) {
+                numBadge = `<u>${vIndex + 1}</u>`;
+            } else if (vIndex < 35) {
+                numBadge = `<u>${String.fromCharCode(55 + (vIndex + 1))}</u>`;
+            } else {
+                numBadge = `${vIndex + 1}`;
+            }
+
+            if (item.Type === "image") {
+                const val = item.ClipValue || "";
+                let imgSrc = "";
+                if (val.startsWith("assets/") || val.startsWith("assets\\")) {
+                    imgSrc = `asset://${val.replace(/\\/g, "/")}`;
+                } else {
+                    imgSrc = `data:image/png;base64,${val}`;
+                }
+                html += `
+                <tr style="cursor: default" data-clip-index="${i}" data-vindex="${vIndex}" id="tr${vIndex}">
+                    <td class="td_content">
+                        <img class="image" loading="lazy" src="${imgSrc}" alt="clip image" />
+                    </td>
+                    <td class="td_index">${numBadge}</td>
+                </tr>`;
+            } else {
+                let displayStr = item.DisplayValue || "";
+                if (typeof wechatEmojis !== "undefined") {
+                    displayStr = displayStr.replace(/\[.*?\]/g, (match) => {
+                        if (wechatEmojis[match]) {
+                            return `<img src="${wechatEmojis[match]}" style="width:20px;height:20px;vertical-align:-4px;margin:0 2px;" alt="${match}" />`;
+                        }
+                        return match;
+                    });
+                }
+
+                html += `
+                <tr style="cursor: default" data-clip-index="${i}" data-vindex="${vIndex}" id="tr${vIndex}">
+                    <td class="td_content">${displayStr}</td>
+                    <td class="td_index">${numBadge}</td>
+                </tr>`;
+            }
+        }
 
         if (filtered.length === 0) {
             html = `<tr style="cursor: default"><td class="td_content" style="cursor: default; height: 36px; text-align: center; color: var(--text-muted);">无记录</td></tr>`;
@@ -597,9 +638,18 @@ const ClipApp = {
         if (this.state.selectIndex >= filtered.length) {
             this.state.selectIndex = Math.max(0, filtered.length - 1);
         }
-        if (filtered.length > 0) {
+        if (filtered.length > 0 && this.state.selectIndex < renderLimit) {
             this.highlightRow(this.state.selectIndex);
         }
+    },
+
+    /**
+     * 滚动或键盘越界时懒加载追加下一批 DOM 节点
+     */
+    loadMore() {
+        if (this.state.renderedCount >= this.state.filteredIndices.length) return;
+        this.state.renderedCount = Math.min(this.state.filteredIndices.length, this.state.renderedCount + this.state.pageSize);
+        this.displayData(false);
     },
 
     /**
@@ -609,9 +659,9 @@ const ClipApp = {
         if (!obj) return;
         const clips = this.state.clips;
 
-        // 排重已有条目
+        // 排重已有条目 (优先匹配唯一 Id，再匹配 ClipValue)
         for (let i = 0; i < clips.length; i++) {
-            if (clips[i] && clips[i].ClipValue === obj.ClipValue) {
+            if (clips[i] && ((obj.Id && clips[i].Id === obj.Id) || clips[i].ClipValue === obj.ClipValue)) {
                 clips.splice(i, 1);
                 break;
             }
@@ -625,7 +675,7 @@ const ClipApp = {
             clips.length = this.state.maxRecords;
         }
 
-        this.displayData();
+        this.displayData(true);
     },
 
     /**
@@ -662,7 +712,7 @@ const ClipApp = {
     },
 
     /**
-     * 窗口隐藏时在后台静默重置状态
+     * 窗口隐藏时在后台静默重置状态并回收内存
      */
     hide() {
         this.state.rangeStartVIndex = -1;
@@ -678,8 +728,21 @@ const ClipApp = {
             this.dom.content.scrollTop = 0;
         }
 
+        // 缩减回初始首屏渲染数量，释放滚动产生的额外 DOM 与图片纹理
+        if (this.state.renderedCount > this.state.pageSize) {
+            this.state.renderedCount = this.state.pageSize;
+            this.displayData(false);
+        }
+
         if (this.state.clips.length > 0) {
             this.updateSelection(0, false);
+        }
+
+        // 主动触发 V8 GC 回收垃圾
+        if (typeof window.gc === "function") {
+            try {
+                window.gc();
+            } catch (e) { }
         }
     },
 
@@ -708,7 +771,7 @@ const ClipApp = {
         if (this.dom.searchInput.value !== "") {
             this.dom.searchInput.value = "";
             this.state.searchValue = "";
-            this.displayData();
+            this.displayData(true);
         }
         if (this.dom.content) {
             this.dom.content.focus();
@@ -716,7 +779,7 @@ const ClipApp = {
     },
 
     /**
-     * 粘贴单条
+     * 粘贴单条 (仅发送 Id，杜绝大对象跨进程往返序列化)
      */
     pasteValue(index) {
         const item = this.state.clips[index];
@@ -726,12 +789,12 @@ const ClipApp = {
         this.state.clips.splice(index, 1);
         this.state.clips.unshift(item);
 
-        this.postMessage("PasteValue|" + encodeURIComponent(JSON.stringify(item)));
-        this.displayData();
+        this.postMessage("PasteValue|" + (item.Id || ""));
+        this.displayData(true);
     },
 
     /**
-     * 设入剪贴板但不执行粘贴
+     * 设入剪贴板但不执行粘贴 (仅发送 Id)
      */
     setToClipboard(index) {
         const item = this.state.clips[index];
@@ -740,12 +803,12 @@ const ClipApp = {
         this.state.clips.splice(index, 1);
         this.state.clips.unshift(item);
 
-        this.postMessage("SetToClipBoard|" + encodeURIComponent(JSON.stringify(item)));
-        this.displayData();
+        this.postMessage("SetToClipBoard|" + (item.Id || ""));
+        this.displayData(true);
     },
 
     /**
-     * 离散多项粘贴 (Ctrl 多选)
+     * 离散多项粘贴 (Ctrl 多选) - 仅发送逗号分隔的 Id 列表
      */
     pasteMultiValue() {
         const list = this.state.multiIndexList;
@@ -769,12 +832,12 @@ const ClipApp = {
             this.state.clips.unshift(clipList[j]);
         }
 
-        this.postMessage("PasteValueList|" + encodeURIComponent(JSON.stringify(clipList)));
-        this.displayData();
+        this.postMessage("PasteValueList|" + clipList.map((c) => c.Id).join(","));
+        this.displayData(true);
     },
 
     /**
-     * 范围连续粘贴 (Shift 范围多选) - 严格基于当前可见过滤列表进行范围提取
+     * 范围连续粘贴 (Shift 范围多选) - 严格基于当前可见过滤列表进行范围提取，仅发送 Id 列表
      */
     pasteValueByRange(startVIndex, endVIndex) {
         const filtered = this.state.filteredIndices;
@@ -819,8 +882,8 @@ const ClipApp = {
             this.state.clips.unshift(clipList[j]);
         }
 
-        this.postMessage("PasteValueList|" + encodeURIComponent(JSON.stringify(clipList)));
-        this.displayData();
+        this.postMessage("PasteValueList|" + clipList.map((c) => c.Id).join(","));
+        this.displayData(true);
     },
 
     /**

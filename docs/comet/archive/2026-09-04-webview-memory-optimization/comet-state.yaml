@@ -1,0 +1,156 @@
+schema: comet.native.v4
+name: webview-memory-optimization
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: webview-memory-optimization
+    operation: create
+    source: specs/webview-memory-optimization/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "Scenario: 后台静默时自动修剪进程工作集内存 - GIVEN ClipOne 与 WebView2 正在运行且窗口处于隐藏状态 -
+      WHEN 窗口隐藏超过空闲延迟阈值（如 3 秒） - THEN ClipOne 主进程及关联的 msedgewebview2.exe
+      进程物理工作集内存（Working Set）被自动修剪，总物理内存占用大幅下降至 30MB
+      以下，且按快捷键唤出窗口时仍能毫秒级即时展示且无白屏或闪烁"
+    result: passed
+    reason:
+      text: 后台静默 3 秒后延迟修剪主进程与子进程工作集，唤起时取消定时器，GC 先行，Chromium 参数精简
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "Scenario: 前端列表按需分批渲染 - GIVEN 剪贴板历史中存在多条记录（最多 300 条） - WHEN 用户打开剪贴板窗口或搜索过滤
+      - THEN 前端优先渲染可见视口及首屏条目（如 25 条），随滚动接近底部时自动追加渲染后续条目，避免一次性生成上千个 DOM 节点与显存纹理"
+    result: passed
+    reason:
+      text: 前端首屏分批渲染 25 条，滚动近底 loadMore，上下按键越界自动扩充，hide 时恢复 25 条并调用 window.gc
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "Scenario: 粘贴与设置剪贴板基于 ID 交互 - GIVEN 用户在前端选中某条历史记录并触发粘贴或复制 - WHEN 前端向 C#
+      宿主发送 IPC 消息 - THEN 前端仅发送条目 Id，C# 宿主根据 Id 从本地存储中检索完整数据并写入系统剪贴板，彻底杜绝大文本在 IPC
+      与 V8 堆中的全量序列化往返"
+    result: passed
+    reason:
+      text: 前端仅发送条目 Id，C# 后端通过 GetClipById 检索完整原数据写入剪贴板，BatchPaste 浅拷贝无污染，GetWebClip
+        截断超大内容
+      truncated: false
+  - id: A4
+    source: specs/webview-memory-optimization/spec.md
+    text: 后台静默时自动修剪进程工作集内存 GIVEN ClipOne 与 WebView2 正在运行且窗口处于隐藏状态 WHEN
+      窗口隐藏超过空闲延迟阈值（如 3 秒） THEN ClipOne 主进程及关联的 msedgewebview2.exe
+      进程物理工作集内存（Working Set）被自动修剪，总物理内存占用大幅下降至 30MB
+      以下，且按快捷键唤出窗口时仍能毫秒级即时展示且无白屏或闪烁
+    result: passed
+    reason:
+      text: 符合 spec 场景：后台静默时自动修剪进程工作集内存
+      truncated: false
+  - id: A5
+    source: specs/webview-memory-optimization/spec.md
+    text: 前端列表按需分批渲染 GIVEN 剪贴板历史中存在多条记录（最多 300 条） WHEN 用户打开剪贴板窗口或搜索过滤 THEN
+      前端优先渲染可见视口及首屏条目（如 25 条），随滚动接近底部时自动追加渲染后续条目，避免一次性生成上千个 DOM 节点与显存纹理
+    result: passed
+    reason:
+      text: 符合 spec 场景：前端列表按需分批渲染
+      truncated: false
+  - id: A6
+    source: specs/webview-memory-optimization/spec.md
+    text: 粘贴与设置剪贴板基于 ID 交互 GIVEN 用户在前端选中某条历史记录并触发粘贴或复制 WHEN 前端向 C# 宿主发送 IPC 消息 THEN
+      前端仅发送条目 Id，C# 宿主根据 Id 从本地存储中检索完整数据并写入系统剪贴板，彻底杜绝大文本在 IPC 与 V8 堆中的全量序列化往返
+    result: passed
+    reason:
+      text: 符合 spec 场景：粘贴与设置剪贴板基于 ID 交互
+      truncated: false
+builder_handoff:
+  candidate_id: 8e2deac2-c8bd-490f-b2ae-b3e8f9563637
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:a5bf888b-c7db-4236-b815-e44b2782d956
+  iteration: 1
+  summary:
+    text: 全面实现 WebView2 内存与显存深度优化，修复复核提出的 5 项隐患并通过 Release 构建
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+  checks:
+    - name:
+        text: dotnet-build-release
+        truncated: false
+      result: passed
+      note:
+        text: Release 配置编译通过，0 警告 0 错误，Native AOT 兼容
+        truncated: false
+  checks_truncated: false
+  known_limits: []
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 独立复核员审查发现的 5 项问题（BatchPaste 引用污染、disable-features 覆盖、GC/EmptyWorkingSet
+        顺序、updateSelection 越界懒加载、DisplayValue 截断保护）已全部修复并通过测试
+      truncated: false
+    reviewer_execution_ref: subagent-0ce30998-c4ba-4f1d-9601-32e320ddf844
+  submitted_at: 2026-09-04T06:33:38.489Z
+blockers: []
+verification:
+  candidate_id: 8e2deac2-c8bd-490f-b2ae-b3e8f9563637
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:6d66e88e-4ccb-48f0-a7ec-f97fff6969fa
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks: []
+  summary:
+    text: 独立验收员逐项核对 A1~A6，代码实现严谨完备，全部 6 项验收场景通过
+    truncated: false
+  risks: []
+  risks_truncated: false
+  completed_at: 2026-09-04T06:36:36.154Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 独立验收员逐项核对 A1~A6，代码实现严谨完备，全部 6 项验收场景通过
+      truncated: false
+    completed_at: 2026-09-04T06:36:36.154Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-04T06:23:47.863Z

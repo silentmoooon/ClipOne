@@ -152,6 +152,52 @@ namespace ClipOne.service
             }
         }
 
+        public ClipModel? GetClipById(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            lock (_lock)
+            {
+                return _history.FirstOrDefault(c => string.Equals(c.Id, id, StringComparison.OrdinalIgnoreCase));
+            }
+        }
+
+        public List<ClipModel> GetWebHistory()
+        {
+            lock (_lock)
+            {
+                var result = new List<ClipModel>(_history.Count);
+                for (int i = 0; i < _history.Count; i++)
+                {
+                    result.Add(GetWebClip(_history[i]));
+                }
+                return result;
+            }
+        }
+
+        public static ClipModel GetWebClip(ClipModel clip)
+        {
+            // If text is huge, truncate ClipValue and DisplayValue to 1000 chars for webview display & search.
+            // The full text remains untouched in storage and is fetched by Id upon paste.
+            bool isImage = string.Equals(clip.Type, "image", StringComparison.OrdinalIgnoreCase);
+            bool needTruncateValue = !isImage && !string.IsNullOrEmpty(clip.ClipValue) && clip.ClipValue.Length > 1000;
+            bool needTruncateDisplay = !isImage && !string.IsNullOrEmpty(clip.DisplayValue) && clip.DisplayValue.Length > 1000;
+
+            if (needTruncateValue || needTruncateDisplay)
+            {
+                return new ClipModel
+                {
+                    Id = clip.Id,
+                    DeviceId = clip.DeviceId,
+                    Timestamp = clip.Timestamp,
+                    Type = clip.Type,
+                    DisplayValue = needTruncateDisplay ? clip.DisplayValue.Substring(0, 1000) + "..." : clip.DisplayValue,
+                    ClipValue = needTruncateValue ? clip.ClipValue.Substring(0, 1000) : clip.ClipValue,
+                    NeedOverride = clip.NeedOverride
+                };
+            }
+            return clip;
+        }
+
         public void ReloadAllHistory()
         {
             lock (_lock)

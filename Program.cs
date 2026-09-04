@@ -90,6 +90,40 @@ namespace ClipOne
         [DllImport("user32.dll")]
         private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        private struct PROCESSENTRY32
+        {
+            public uint dwSize;
+            public uint cntUsage;
+            public uint th32ProcessID;
+            public IntPtr th32DefaultHeapID;
+            public uint th32ModuleID;
+            public uint cntThreads;
+            public uint th32ParentProcessID;
+            public int pcPriClassBase;
+            public uint dwFlags;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+            public string szExeFile;
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr CreateToolhelp32Snapshot(uint dwFlags, uint th32ProcessID);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        private static extern bool Process32First(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        private static extern bool Process32Next(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool CloseHandle(IntPtr hObject);
+
+        [DllImport("psapi.dll")]
+        private static extern int EmptyWorkingSet(IntPtr hProcess);
+
+        private const uint TH32CS_SNAPPROCESS = 0x00000002;
+        private static Timer? _trimMemoryTimer;
+
         private const uint INPUT_KEYBOARD = 1;
         private const uint KEYEVENTF_KEYUP = 0x0002;
         private const ushort VK_F12 = 0x7B;
@@ -100,10 +134,15 @@ namespace ClipOne
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
-            // Configure WebView2 to avoid throttling background rendering and occlusion
+            // Configure WebView2 to avoid background hang while trimming memory and redundant services
             Environment.SetEnvironmentVariable(
                 "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
-                "--disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-features=CalculateNativeWinOcclusion"
+                "--disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding " +
+                "--renderer-process-limit=1 " +
+                "--disable-features=CalculateNativeWinOcclusion,Translate,OptimizationHints,MediaRouter,DialMediaRouteProvider,InterestFeedContentSuggestions " +
+                "--disable-extensions --disable-component-update --disable-speech-api --disable-sync " +
+                "--disk-cache-size=10485760 --media-cache-size=5242880 " +
+                "--js-flags=\"--max-old-space-size=64 --expose-gc\""
             );
 
             // Global exception logging
@@ -267,10 +306,14 @@ namespace ClipOne
             if (dpi == 0) dpi = 96;
             _windowWidth = (int)(BaseWindowWidth * dpi / 96);
             _windowHeight = (int)(BaseWindowHeight * dpi / 96);
+
+            // Schedule initial background memory trim 5 seconds after startup
+            ScheduleMemoryTrim(5000);
         }
 
         private static bool OnWindowClosing(object? sender, EventArgs e)
         {
+            CancelMemoryTrim();
             if (_msgWindow != null)
             {
                 WinAPIHelper.RemoveClipboardFormatListener(_msgWindow.Handle);
@@ -303,7 +346,8 @@ namespace ClipOne
                             }
                             else
                             {
-                                string json = JsonSerializer.Serialize(clip, ClipJsonContext.Default.ClipModel);
+                                var webClip = StorageService.GetWebClip(clip);
+                                string json = JsonSerializer.Serialize(webClip, ClipJsonContext.Default.ClipModel);
                                 _window.SendWebMessage("{\"type\": \"add\", \"data\": " + json + "}");
                             }
 
@@ -402,6 +446,7 @@ namespace ClipOne
 
         private static void ShowPopupWindow()
         {
+            CancelMemoryTrim();
             if (_window == null || _hWnd == IntPtr.Zero) return;
 
             _activityWindow = WinAPIHelper.GetForegroundWindow();
@@ -451,6 +496,7 @@ namespace ClipOne
 
         private static void ShowWebTrayMenu(int cursorX, int cursorY)
         {
+            CancelMemoryTrim();
             if (_window == null || _hWnd == IntPtr.Zero || _config == null) return;
 
             _trayCursorX = cursorX;
@@ -528,7 +574,106 @@ namespace ClipOne
                 {
                     WinAPIHelper.SetForegroundWindow(_activityWindow);
                 }
+
+                // Schedule background working set trim
+                ScheduleMemoryTrim(3000);
             }
+        }
+
+        private static void ScheduleMemoryTrim(int delayMs = 3000)
+        {
+            _trimMemoryTimer?.Dispose();
+            _trimMemoryTimer = new Timer(_ =>
+            {
+                TrimProcessMemory();
+            }, null, delayMs, Timeout.Infinite);
+        }
+
+        private static void CancelMemoryTrim()
+        {
+            _trimMemoryTimer?.Dispose();
+            _trimMemoryTimer = null;
+        }
+
+        private static void TrimProcessMemory()
+        {
+            try
+            {
+                // Run GC before trimming working set so freed managed memory pages can be pruned
+                GC.Collect(2, GCCollectionMode.Optimized, false, false);
+
+                int currentPid = Environment.ProcessId;
+                using (var current = System.Diagnostics.Process.GetCurrentProcess())
+                {
+                    EmptyWorkingSet(current.Handle);
+                }
+
+                var descendants = GetDescendantProcessIds(currentPid);
+                foreach (int pid in descendants)
+                {
+                    try
+                    {
+                        using var proc = System.Diagnostics.Process.GetProcessById(pid);
+                        EmptyWorkingSet(proc.Handle);
+                    }
+                    catch { }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.WriteLine($"TrimProcessMemory error: {ex.Message}");
+            }
+        }
+
+        private static List<int> GetDescendantProcessIds(int parentPid)
+        {
+            var result = new List<int>();
+            var parentToChildren = new Dictionary<int, List<int>>();
+
+            IntPtr hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+            if (hSnap == IntPtr.Zero || hSnap == new IntPtr(-1)) return result;
+
+            try
+            {
+                var pe = new PROCESSENTRY32();
+                pe.dwSize = (uint)Marshal.SizeOf<PROCESSENTRY32>();
+
+                if (Process32First(hSnap, ref pe))
+                {
+                    do
+                    {
+                        int ppid = (int)pe.th32ParentProcessID;
+                        int pid = (int)pe.th32ProcessID;
+                        if (!parentToChildren.TryGetValue(ppid, out var list))
+                        {
+                            list = new List<int>();
+                            parentToChildren[ppid] = list;
+                        }
+                        list.Add(pid);
+                    } while (Process32Next(hSnap, ref pe));
+                }
+            }
+            finally
+            {
+                CloseHandle(hSnap);
+            }
+
+            var queue = new Queue<int>();
+            queue.Enqueue(parentPid);
+            while (queue.Count > 0)
+            {
+                int curr = queue.Dequeue();
+                if (parentToChildren.TryGetValue(curr, out var kids))
+                {
+                    foreach (int kid in kids)
+                    {
+                        result.Add(kid);
+                        queue.Enqueue(kid);
+                    }
+                }
+            }
+
+            return result;
         }
 
         private static void OpenDevTools()
@@ -687,7 +832,7 @@ namespace ClipOne
         private static void SendHistoryToWeb()
         {
             if (_storageService == null || _window == null) return;
-            var history = _storageService.GetHistory();
+            var history = _storageService.GetWebHistory();
             string historyJson = JsonSerializer.Serialize(history, ClipJsonContext.Default.ListClipModel);
             _window.SendWebMessage("{\"type\": \"history\", \"data\": " + historyJson + "}");
         }
@@ -714,8 +859,16 @@ namespace ClipOne
                     DiyHide();
                     if (!string.IsNullOrEmpty(payload))
                     {
-                        string decoded = Uri.UnescapeDataString(payload);
-                        var clip = JsonSerializer.Deserialize(decoded, ClipJsonContext.Default.ClipModel);
+                        ClipModel? clip = null;
+                        if (!payload.StartsWith("{") && !payload.StartsWith("%7B"))
+                        {
+                            clip = _storageService?.GetClipById(payload);
+                        }
+                        else
+                        {
+                            string decoded = Uri.UnescapeDataString(payload);
+                            clip = JsonSerializer.Deserialize(decoded, ClipJsonContext.Default.ClipModel);
+                        }
                         if (clip != null)
                         {
                             SinglePaste(clip);
@@ -727,9 +880,18 @@ namespace ClipOne
                     DiyHide();
                     if (!string.IsNullOrEmpty(payload))
                     {
-                        string decoded = Uri.UnescapeDataString(payload);
-                        var list = JsonSerializer.Deserialize(decoded, ClipJsonContext.Default.ListClipModel);
-                        if (list != null)
+                        List<ClipModel>? list = null;
+                        if (!payload.StartsWith("[") && !payload.StartsWith("%5B"))
+                        {
+                            var ids = payload.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                            list = ids.Select(id => _storageService?.GetClipById(id)).Where(c => c != null).Select(c => c!).ToList();
+                        }
+                        else
+                        {
+                            string decoded = Uri.UnescapeDataString(payload);
+                            list = JsonSerializer.Deserialize(decoded, ClipJsonContext.Default.ListClipModel);
+                        }
+                        if (list != null && list.Count > 0)
                         {
                             BatchPaste(list);
                         }
@@ -740,8 +902,16 @@ namespace ClipOne
                     DiyHide();
                     if (!string.IsNullOrEmpty(payload))
                     {
-                        string decoded = Uri.UnescapeDataString(payload);
-                        var clip = JsonSerializer.Deserialize(decoded, ClipJsonContext.Default.ClipModel);
+                        ClipModel? clip = null;
+                        if (!payload.StartsWith("{") && !payload.StartsWith("%7B"))
+                        {
+                            clip = _storageService?.GetClipById(payload);
+                        }
+                        else
+                        {
+                            string decoded = Uri.UnescapeDataString(payload);
+                            clip = JsonSerializer.Deserialize(decoded, ClipJsonContext.Default.ClipModel);
+                        }
                         if (clip != null && _clipService != null)
                         {
                             _clipService.SetValueToClipboard(clip);
@@ -905,11 +1075,23 @@ namespace ClipOne
             for (int i = 0; i < clipList.Count; i++)
             {
                 var clip = clipList[i];
-                if (i != clipList.Count - 1 && !clip.ClipValue.EndsWith("\n") && !clip.ClipValue.EndsWith("\r\n"))
+                var clipToPaste = clip;
+                if (string.Equals(clip.Type, ClipService.TEXT_TYPE, StringComparison.OrdinalIgnoreCase) &&
+                    i != clipList.Count - 1 && !clip.ClipValue.EndsWith("\n") && !clip.ClipValue.EndsWith("\r\n"))
                 {
-                    clip.ClipValue += "\r\n";
+                    clipToPaste = new ClipModel
+                    {
+                        Id = clip.Id,
+                        DeviceId = clip.DeviceId,
+                        Timestamp = clip.Timestamp,
+                        Type = clip.Type,
+                        ClipValue = clip.ClipValue + "\r\n",
+                        DisplayValue = clip.DisplayValue,
+                        PlainText = clip.PlainText,
+                        NeedOverride = clip.NeedOverride
+                    };
                 }
-                _clipService.SetValueToClipboard(clip);
+                _clipService.SetValueToClipboard(clipToPaste);
                 Thread.Sleep(30);
                 KeyboardKit.Keyboard.SendPaste();
                 Thread.Sleep(80);
