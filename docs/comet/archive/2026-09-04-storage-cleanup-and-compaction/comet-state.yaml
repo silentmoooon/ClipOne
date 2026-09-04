@@ -1,0 +1,144 @@
+schema: comet.native.v4
+name: storage-cleanup-and-compaction
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: storage-cleanup
+    operation: create
+    source: specs/storage-cleanup/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "Scenario: 点击清空后文件内容彻底清空 - WHEN 用户在托盘或界面触发清空操作 - THEN 界面历史即时清空，且
+      events.jsonl 文件内容被直接物理清空为 0 字节，重新加载后不再恢复旧数据。"
+    result: passed
+    reason:
+      text: ClearHistory 在 lock 保护下清空内存并将本地所有设备的 events.jsonl 物理截断为 0 字节，重新加载后历史为空
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "Scenario: 手动删除与超量数据自动压缩 - WHEN 用户手动删除条目或复制新条目导致记录数超过最大限制（如 300 条） - THEN
+      触发文件压缩（Compaction），events.jsonl 文件中被删除及溢出范围的历史数据被彻底丢弃，文件体积收敛。"
+    result: passed
+    reason:
+      text: 手动删除与超量淘汰均累积废弃计数并在 Compaction 时物理重写去除被删除和超量的数据，文件体积收敛
+      truncated: false
+  - id: A3
+    source: specs/storage-cleanup/spec.md
+    text: 彻底清空所有设备的历史存储文件 GIVEN ClipOne 正在运行且本地 data/devices 目录下存在一个或多个设备的
+      events.jsonl 文件 WHEN 用户在界面或托盘菜单触发清空（ClearHistory） THEN ClipOne 将本地
+      data/devices 目录下所有存在的 events.jsonl 文件直接物理清空为 0 字节 AND ClipOne
+      清空内存中的历史记录列表并在前端渲染空列表 AND 当再次调用重新加载（ReloadAllHistory）或重启应用时，历史记录保持为空
+    result: passed
+    reason:
+      text: ClearHistory 递归查找 data/devices 目录下所有设备的 *.jsonl 并全部清空为 0 字节
+      truncated: false
+  - id: A4
+    source: specs/storage-cleanup/spec.md
+    text: 阈值与生命周期触发日志压缩 GIVEN 当前设备的 events.jsonl 累积了已删除条目或超过最大记录数（300 条）的废弃历史 WHEN
+      废弃行数达到阈值（>= 30 条），或应用启动加载（ReloadAllHistory）及退出（Dispose）时 THEN ClipOne 执行
+      Compaction 物理重写当前设备的 events.jsonl AND 仅将当前属于该设备的最新有效条目（且最多 300
+      条）写回文件，彻底丢弃墓碑记录与超量历史 AND 文件体积显著收敛
+    result: passed
+    reason:
+      text: 废弃计数达到阈值 >= 30、启动加载 ReloadAllHistory 及退出 Dispose 时均自动触发 Compaction 物理重写
+      truncated: false
+builder_handoff:
+  candidate_id: bc40aaf7-df03-4318-b713-146929a02ac3
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:0b8e089d-4825-4f1f-bdbb-ac836ae3de10
+  iteration: 1
+  summary:
+    text: 实现 StorageService.ClearHistory 物理清空本地所有设备
+      events.jsonl，并实现阈值（>=30条）及启动/退出时自动日志压缩（Compaction）
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+  checks:
+    - name:
+        text: dotnet build -c Release
+        truncated: false
+      result: passed
+      note:
+        text: Release 模式编译成功，0 警告 0 错误
+        truncated: false
+    - name:
+        text: StorageService compaction & clear verification
+        truncated: false
+      result: passed
+      note:
+        text: 验证了清空时文件置 0 字节、超量与删除时自动 Compaction 成功收敛至有效记录
+        truncated: false
+  checks_truncated: false
+  known_limits: []
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 复核确认 StorageService 代码正确实现物理清空与 Compaction 机制，线程安全，无内存泄漏，符合 .NET 10 Native
+        AOT 标准
+      truncated: false
+    reviewer_execution_ref: exec-review-cleanup-01
+  submitted_at: 2026-09-04T02:18:10.127Z
+blockers: []
+verification:
+  candidate_id: bc40aaf7-df03-4318-b713-146929a02ac3
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:9324d0c4-cc0d-47ea-8f87-25dc529aba70
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks: []
+  summary:
+    text: 全部 4 项验收场景已通过独立验证审查，源码实现完整且逻辑正确
+    truncated: false
+  risks: []
+  risks_truncated: false
+  completed_at: 2026-09-04T02:21:34.543Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 全部 4 项验收场景已通过独立验证审查，源码实现完整且逻辑正确
+      truncated: false
+    completed_at: 2026-09-04T02:21:34.543Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-04T02:08:37.092Z

@@ -188,6 +188,7 @@ namespace ClipOne
                 .SetContextMenuEnabled(true)
                 .SetDevToolsEnabled(true)
                 .SetLocation(new Point(-10000, -10000))
+                .RegisterCustomSchemeHandler("asset", AssetSchemeHandler)
                 .RegisterWebMessageReceivedHandler(OnWebMessageReceived);
 
             _window.WindowCreated += OnWindowCreated;
@@ -197,6 +198,35 @@ namespace ClipOne
             _window.Load(fullHtmlPath);
 
             _window.WaitForClose();
+        }
+
+        private static Stream AssetSchemeHandler(object sender, string scheme, string url, out string contentType)
+        {
+            contentType = "application/octet-stream";
+            try
+            {
+                string prefix = "asset://";
+                string rawPath = url.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                    ? url.Substring(prefix.Length)
+                    : url;
+                rawPath = Uri.UnescapeDataString(rawPath).TrimStart('/', '\\');
+
+                string syncRoot = _storageService?.SyncRootDirectory ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data");
+                string filePath = Path.Combine(syncRoot, rawPath);
+
+                if (File.Exists(filePath))
+                {
+                    contentType = rawPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ? "image/png" :
+                                  rawPath.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) || rawPath.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ? "image/jpeg" :
+                                  "image/bmp";
+                    return new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.WriteLine($"Custom scheme asset error: {ex.Message}");
+            }
+            return new MemoryStream();
         }
 
         private static void OnWindowCreated(object? sender, EventArgs e)
@@ -251,6 +281,7 @@ namespace ClipOne
             }
 
             _trayManager?.Dispose();
+            _storageService?.Dispose();
             _mutex?.Dispose();
             return false;
         }

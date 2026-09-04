@@ -10,7 +10,7 @@
     <MinimumPlatformVersion>10.0.26100.0</MinimumPlatformVersion>
     <SupportedOSPlatformVersion>10.0.26100.0</SupportedOSPlatformVersion>
     <IsPublishable>True</IsPublishable>
-    <Version>6.5.0</Version>
+    <Version>6.6.0</Version>
     <PublishAot>true</PublishAot>
     <InvariantGlobalization>false</InvariantGlobalization>
     <!-- 极限裁剪与 AOT 体积优化配置 -->

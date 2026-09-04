@@ -551,10 +551,17 @@ const ClipApp = {
                 }
 
                 if (item.Type === "image") {
+                    const val = item.ClipValue || "";
+                    let imgSrc = "";
+                    if (val.startsWith("assets/") || val.startsWith("assets\\")) {
+                        imgSrc = `asset://${val.replace(/\\/g, "/")}`;
+                    } else {
+                        imgSrc = `data:image/png;base64,${val}`;
+                    }
                     html += `
                     <tr style="cursor: default" data-clip-index="${i}" data-vindex="${vIndex}" id="tr${vIndex}">
                         <td class="td_content">
-                            <img class="image" loading="lazy" src="data:image/png;base64,${item.ClipValue}" alt="clip image" />
+                            <img class="image" loading="lazy" src="${imgSrc}" alt="clip image" />
                         </td>
                         <td class="td_index">${numBadge}</td>
                     </tr>`;

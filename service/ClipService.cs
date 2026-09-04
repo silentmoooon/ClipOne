@@ -478,16 +478,45 @@ namespace ClipOne.service
                     }
                     else if (result.Type == IMAGE_TYPE)
                     {
-                        byte[] bmpBytes = Convert.FromBase64String(result.ClipValue);
-                        byte[] dibBytes = ExtractDibFromBmp(bmpBytes);
-                        SetClipboardRawBytes(WinAPIHelper.CF_DIB, dibBytes);
-
-                        // Preferred DropEffect = 5 (Copy)
-                        SetClipboardRawBytes(FORMAT_DROPEFFECT, new byte[] { 5, 0, 0, 0 });
-
-                        if (!string.IsNullOrEmpty(result.DisplayValue) && File.Exists(result.DisplayValue))
+                        byte[]? bmpBytes = null;
+                        string val = result.ClipValue ?? string.Empty;
+                        if (val.StartsWith("assets/") || val.StartsWith("assets\\"))
                         {
-                            SetClipboardFiles(new string[] { result.DisplayValue });
+                            string syncRoot = GetSyncRoot();
+                            string fullPath = Path.Combine(syncRoot, val);
+                            if (File.Exists(fullPath))
+                            {
+                                bmpBytes = File.ReadAllBytes(fullPath);
+                            }
+                        }
+                        else if (File.Exists(val))
+                        {
+                            bmpBytes = File.ReadAllBytes(val);
+                        }
+
+                        if (bmpBytes == null)
+                        {
+                            try
+                            {
+                                bmpBytes = Convert.FromBase64String(val);
+                            }
+                            catch
+                            {
+                            }
+                        }
+
+                        if (bmpBytes != null && bmpBytes.Length > 0)
+                        {
+                            byte[] dibBytes = ExtractDibFromBmp(bmpBytes);
+                            SetClipboardRawBytes(WinAPIHelper.CF_DIB, dibBytes);
+
+                            // Preferred DropEffect = 5 (Copy)
+                            SetClipboardRawBytes(FORMAT_DROPEFFECT, new byte[] { 5, 0, 0, 0 });
+
+                            if (!string.IsNullOrEmpty(result.DisplayValue) && File.Exists(result.DisplayValue))
+                            {
+                                SetClipboardFiles(new string[] { result.DisplayValue });
+                            }
                         }
                     }
                     else if (result.Type == FILE_TYPE)
@@ -515,6 +544,15 @@ namespace ClipOne.service
         }
 
         #region Helpers
+
+        private string GetSyncRoot()
+        {
+            if (!string.IsNullOrWhiteSpace(config?.SyncFolder) && Directory.Exists(config.SyncFolder))
+            {
+                return config.SyncFolder;
+            }
+            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data");
+        }
 
         private static string GetClipboardUnicodeText()
         {

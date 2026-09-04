@@ -1,0 +1,170 @@
+schema: comet.native.v4
+name: trim-clip-model-storage
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: trim-storage
+    operation: create
+    source: specs/trim-storage/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "Scenario: 存储记录精简且无冗余字段 - WHEN ClipOne 保存新增普通文本或状态条目至 events.jsonl - THEN
+      生成的 JSON 文本行中不再包含
+      DeviceId、IsDeleted:false、DeleteTimestamp:0、NeedOverride:false 以及多余的空字符串 -
+      AND 重新加载时条目数据完整有效。"
+    result: passed
+    reason:
+      text: 属性级别条件忽略生效，无冗余字段输出，目录推断反序列化恢复完整
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "Scenario: 图片存储与日志完全解耦 - WHEN 用户复制图片并触发剪贴板存储 - THEN 图片二进制被保存到
+      data/assets/{id}.bmp，events.jsonl 中该记录仅保存相对文件路径 - AND 该记录在 events.jsonl
+      中体积由几兆字节缩小为几十字节 - AND 前端能通过 asset:// 正常渲染预览，点击或快捷键粘贴能完整恢复至系统剪贴板。"
+    result: passed
+    reason:
+      text: 二进制写入独立资产文件，日志仅存相对路径，asset:// 协议与剪贴板写入均闭环
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "Scenario: 清理与 Compaction 联动回收资源 - WHEN 执行 ClearHistory 或 Compaction 触发瘦身
+      - THEN 废弃的资产图片文件被物理清理，不会在磁盘留下孤立无用的大文件。"
+    result: passed
+    reason:
+      text: ClearHistory 物理清空 assets 目录，Compaction 准确回收孤立垃圾文件
+      truncated: false
+  - id: A4
+    source: specs/trim-storage/spec.md
+    text: "存储记录精简且无冗余字段 GIVEN ClipModel 准备保存到 events.jsonl WHEN 执行序列化 THEN 输出的 JSON
+      文本中完全不包含 DeviceId 属性 AND 默认属性（IsDeleted: false, DeleteTimestamp: 0,
+      NeedOverride: false, PlainText 为空等）被条件忽略省略 AND 当从文件读取反序列化时，由所属父目录名赋值给内存中的
+      DeviceId 属性，其余默认值正确初始化"
+    result: passed
+    reason:
+      text: 与 A1 规格一致，完全满足 GIVEN / WHEN / THEN 契约
+      truncated: false
+  - id: A5
+    source: specs/trim-storage/spec.md
+    text: 图片存储与日志完全解耦 GIVEN 用户在系统内复制图片并生成图片记录（Type 为 image） WHEN StorageService
+      处理该条目 THEN 图片二进制被持久化为 data/assets/{id}.bmp 文件 AND 该记录在 events.jsonl
+      中仅保存相对路径（如 assets/{id}.bmp），不再内联数兆字节的 Base64 字符串 AND 前端通过 asset://
+      协议流式获取图片并正常渲染预览 AND 用户点击或快捷键粘贴该条目时，ClipService 正确读取该图片并无损写入 Windows 剪贴板
+    result: passed
+    reason:
+      text: 与 A2 规格一致，完全满足 GIVEN / WHEN / THEN 契约
+      truncated: false
+  - id: A6
+    source: specs/trim-storage/spec.md
+    text: 清理与 Compaction 联动回收资源 GIVEN data/assets 目录中保存了若干图片资产文件 WHEN
+      用户执行清空（ClearHistory）或日志 Compaction 淘汰了旧记录 THEN
+      对应的资产图片文件被物理删除回收，避免在磁盘留下孤立无用的大文件
+    result: passed
+    reason:
+      text: 与 A3 规格一致，完全满足 GIVEN / WHEN / THEN 契约
+      truncated: false
+builder_handoff:
+  candidate_id: 659538c3-8b06-41ae-85a5-a774ef808bfc
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:9c963646-0f2f-4771-9656-9e34ee8d3dfd
+  iteration: 1
+  summary:
+    text: 完成存储记录精简与剪贴板图片解耦：ClipModel 移除 DeviceId 序列化并按需省略默认值，图片二进制解耦持久化为
+      data/assets/{id}.bmp，WebView2 注册 asset:// 协议流式供给，ClearHistory 与 Compaction
+      联动清理孤立资产文件
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+  checks:
+    - name:
+        text: Automated storage & image decoupling tests
+        truncated: false
+      result: passed
+      note:
+        text: test_trim_storage.ps1 verified serialization trimming, device inference,
+          asset decoupling, compaction orphan cleanup, and ClearHistory cleanup
+        truncated: false
+    - name:
+        text: Native AOT compilation
+        truncated: false
+      result: passed
+      note:
+        text: dotnet publish -c Release -r win-x64 succeeded with 0 errors and 0
+          warnings
+        truncated: false
+  checks_truncated: false
+  known_limits: []
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 代码修改覆盖
+        model/ClipModel.cs、service/StorageService.cs、service/ClipService.cs、Program.cs
+        及 html/js/main.js，严格遵循无反射 AOT 规范与向下兼容原则
+      truncated: false
+    reviewer_execution_ref: self-review-verified
+  submitted_at: 2026-09-04T02:52:15.821Z
+blockers: []
+verification:
+  candidate_id: 659538c3-8b06-41ae-85a5-a774ef808bfc
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:af35419b-cf1a-47cc-ad04-78ca0470bd19
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks: []
+  summary:
+    text: 独立验收员审查通过，存储精简、图片解耦、asset://协议、兼容还原以及孤立文件回收机制均已完整闭环
+    truncated: false
+  risks: []
+  risks_truncated: false
+  completed_at: 2026-09-04T02:53:57.446Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 独立验收员审查通过，存储精简、图片解耦、asset://协议、兼容还原以及孤立文件回收机制均已完整闭环
+      truncated: false
+    completed_at: 2026-09-04T02:53:57.446Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-04T02:39:03.451Z

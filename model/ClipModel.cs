@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace ClipOne.model
 {
@@ -10,8 +11,9 @@ namespace ClipOne.model
         public string Id { get; set; } = Guid.NewGuid().ToString("N");
 
         /// <summary>
-        /// 创建该记录的设备唯一标识
+        /// 创建该记录的设备唯一标识（不写入存储，由分片目录名推断）
         /// </summary>
+        [JsonIgnore]
         public string DeviceId { get; set; } = string.Empty;
 
         /// <summary>
@@ -25,33 +27,43 @@ namespace ClipOne.model
         public string Type { get; set; } = string.Empty;
 
         /// <summary>
-        /// 值, 当为图片类型时, 保存文件路径或 Base64
+        /// 值, 当为图片类型时, 保存资产相对路径（如 assets/xxx.bmp）或旧 Base64
         /// </summary>
         public string ClipValue { get; set; } = string.Empty;
 
         /// <summary>
-        /// 显示的值, 当为图片类型时, 保存 base64 或预览文本
+        /// 显示的值, 当为图片类型时, 保存预览文本或文件名
         /// </summary>
         public string DisplayValue { get; set; } = string.Empty;
+
+        private string? _plainText = null;
 
         /// <summary>
         /// 原始文字, 供 html、QQ、WECHAT 类型使用
         /// </summary>
-        public string PlainText { get; set; } = string.Empty;
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public string? PlainText
+        {
+            get => _plainText;
+            set => _plainText = string.IsNullOrEmpty(value) ? null : value;
+        }
 
         /// <summary>
         /// 如果是复制的网页上的 gif, 则覆盖回剪切板, 方便直接粘贴
         /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool NeedOverride { get; set; }
 
         /// <summary>
         /// 墓碑标记 (是否已软删除)
         /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool IsDeleted { get; set; } = false;
 
         /// <summary>
         /// 删除时间戳 (UTC 毫秒)
         /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public long DeleteTimestamp { get; set; } = 0;
 
         public override bool Equals(object? obj)
