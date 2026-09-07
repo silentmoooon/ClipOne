@@ -89,7 +89,16 @@ namespace ClipOne.util
         public const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
         public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
         public const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+        public const int DWMWA_BORDER_COLOR = 34;
+        public const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
+
+        public const int DWMWCP_DEFAULT = 0;
+        public const int DWMWCP_DONOTROUND = 1;
         public const int DWMWCP_ROUND = 2;
+        public const int DWMWCP_ROUNDSMALL = 3;
+
+        public const uint DWMWA_COLOR_DEFAULT = 0xFFFFFFFF;
+        public const uint DWMWA_COLOR_NONE = 0xFFFFFFFE;
 
         public const uint MF_BYCOMMAND = 0x00000000;
         public const uint MF_BYPOSITION = 0x00000400;

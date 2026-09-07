@@ -1,0 +1,134 @@
+/* Stand 深色主题 */
+:root {
+    --bg-body: #1B1E22;
+    --text-main: #E2E8F0;
+    --text-muted: #94A3B8;
+    --border-color: #2E3642;
+    --border-window: #384352;
+
+    /* 模态弹窗 */
+    --modal-overlay: rgba(0, 0, 0, 0.65);
+    --modal-bg: #21262D;
+    --modal-text: #E2E8F0;
+    --modal-border: #384352;
+    --modal-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    --modal-input-bg: #2C333D;
+    --modal-input-border: #3C4756;
+    --modal-input-text: #FFFFFF;
+
+    /* 按钮 */
+    --btn-cancel-bg: #2C333D;
+    --btn-cancel-text: #E2E8F0;
+    --btn-cancel-border: #3C4756;
+    --btn-cancel-hover: #384352;
+    --btn-primary-bg: #2563EB;
+    --btn-primary-text: #FFFFFF;
+    --btn-primary-hover: #3B82F6;
+
+    /* 托盘菜单 */
+    --tray-bg: rgba(33, 38, 45, 0.98);
+    --tray-text: #E2E8F0;
+    --tray-hover-bg: rgba(96, 165, 250, 0.15);
+    --tray-hover-text: #60A5FA;
+    --tray-divider: #2E3642;
+    --tray-accent: #60A5FA;
+
+    /* 搜索框 */
+    --search-bg: #21262D;
+    --search-border: #3C4756;
+    --search-text: #FFFFFF;
+    --search-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+
+    /* 窗口顶部微光反射 */
+    --window-inner-highlight: rgba(255, 255, 255, 0.12);
+}
+
+* {
+    font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 12.5px;
+}
+
+b {
+    font-weight: 600;
+    font-size: 13px;
+    display: inline-block;
+    margin-bottom: 2px;
+    color: #FFFFFF;
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+}
+
+.content {
+    padding: 2px;
+}
+
+.table_main {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 1px;
+    background: transparent;
+}
+
+tr {
+    background-color: transparent;
+}
+
+td {
+    background-color: #1F242A;
+    border-bottom: 1px solid #272D36;
+    min-height: 34px;
+    vertical-align: middle;
+    transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+
+td:first-child {
+    border-left: 3px solid transparent;
+}
+
+.td_content {
+    cursor: default;
+    padding: 7px 9px !important;
+    line-height: 1.4;
+    word-break: break-all;
+}
+
+.td_index {
+    width: 30px !important;
+    text-align: center !important;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #60A5FA;
+}
+
+img, .image {
+    border-radius: 3px;
+    margin-top: 3px !important;
+}
+
+tr:hover > td {
+    background-color: #28394E !important;
+    border-bottom-color: #384F6C !important;
+    color: #FFFFFF;
+}
+
+tr:hover > td:first-child {
+    border-left: 3px solid #60A5FA !important;
+}
+
+.tr_selected > td {
+    background-color: #28394E !important;
+    border-bottom-color: #384F6C !important;
+    color: #FFFFFF;
+}
+
+.tr_selected > td:first-child {
+    border-left: 3px solid #60A5FA !important;
+}
+
+a {
+    text-decoration: none;
+    color: #60A5FA;
+}

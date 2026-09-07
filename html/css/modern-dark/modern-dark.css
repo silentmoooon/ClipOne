@@ -1,0 +1,131 @@
+/* Modern 深色主题 */
+:root {
+    --bg-body: #1A1A1A;
+    --text-main: #F0F0F0;
+    --text-muted: #999999;
+    --border-color: #2E2E2E;
+    --border-window: #333333;
+
+    /* 模态弹窗 */
+    --modal-overlay: rgba(0, 0, 0, 0.65);
+    --modal-bg: #242424;
+    --modal-text: #F0F0F0;
+    --modal-border: #333333;
+    --modal-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --modal-input-bg: #303030;
+    --modal-input-border: #444444;
+    --modal-input-text: #FFFFFF;
+
+    /* 按钮 */
+    --btn-cancel-bg: #333333;
+    --btn-cancel-text: #F0F0F0;
+    --btn-cancel-border: #444444;
+    --btn-cancel-hover: #404040;
+    --btn-primary-bg: #0078D7;
+    --btn-primary-text: #FFFFFF;
+    --btn-primary-hover: #106EBE;
+
+    /* 托盘菜单 */
+    --tray-bg: rgba(32, 32, 32, 0.98);
+    --tray-text: #F0F0F0;
+    --tray-hover-bg: rgba(58, 150, 221, 0.15);
+    --tray-hover-text: #3A96DD;
+    --tray-divider: #333333;
+    --tray-accent: #3A96DD;
+
+    /* 搜索框 */
+    --search-bg: #242424;
+    --search-border: #3E3E3E;
+    --search-text: #FFFFFF;
+    --search-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+
+    /* 窗口顶部微光反射 */
+    --window-inner-highlight: rgba(255, 255, 255, 0.12);
+}
+
+* {
+    font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 13px;
+}
+
+b {
+    font-weight: 600;
+    font-size: 13.5px;
+    display: inline-block;
+    margin-bottom: 3px;
+    color: #FFFFFF;
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+}
+
+.content {
+    padding: 0;
+}
+
+.table_main {
+    width: 100%;
+    border-collapse: collapse;
+    background: transparent;
+}
+
+tr {
+    background-color: transparent;
+}
+
+td {
+    background-color: #1A1A1A;
+    border-bottom: 1px solid #282828;
+    min-height: 40px;
+    vertical-align: middle;
+    transition: background-color 0.1s ease;
+}
+
+td:first-child {
+    border-left: 3.5px solid transparent;
+}
+
+.td_content {
+    cursor: default;
+    padding: 9px 12px !important;
+    line-height: 1.45;
+    word-break: break-all;
+}
+
+.td_index {
+    width: 32px !important;
+    text-align: center !important;
+    font-size: 12px;
+    font-weight: 600;
+    color: #3A96DD;
+}
+
+img, .image {
+    border-radius: 2px;
+    margin-top: 4px !important;
+}
+
+tr:hover > td {
+    background-color: #223242 !important;
+    color: #FFFFFF;
+}
+
+tr:hover > td:first-child {
+    border-left: 3.5px solid #3A96DD !important;
+}
+
+.tr_selected > td {
+    background-color: #223242 !important;
+    color: #FFFFFF;
+}
+
+.tr_selected > td:first-child {
+    border-left: 3.5px solid #3A96DD !important;
+}
+
+a {
+    text-decoration: none;
+    color: #3A96DD;
+}

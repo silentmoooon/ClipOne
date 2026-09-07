@@ -293,13 +293,11 @@ namespace ClipOne
                 -10000, -10000, BaseWindowWidth, BaseWindowHeight,
                 WinAPIHelper.SWP_NOACTIVATE | WinAPIHelper.SWP_SHOWWINDOW);
 
-            // DWM Round Corners
-            try
+            // DWM Round Corners & Refined Border Styling
+            if (_config != null)
             {
-                int cornerPreference = WinAPIHelper.DWMWCP_ROUND;
-                WinAPIHelper.DwmSetWindowAttribute(_hWnd, WinAPIHelper.DWMWA_WINDOW_CORNER_PREFERENCE, ref cornerPreference, sizeof(int));
+                DarkModeHelper.ApplyTheme(_hWnd, _config.ThemeMode);
             }
-            catch { }
 
             // Compute DPI-scaled window size (base size defined in logical 96dpi pixels)
             uint dpi = WinAPIHelper.GetDpiForWindow(_hWnd);
@@ -1113,6 +1111,10 @@ namespace ClipOne
             if (_msgWindow != null)
             {
                 DarkModeHelper.ApplyTheme(_msgWindow.Handle, _config.ThemeMode);
+            }
+            if (_hWnd != IntPtr.Zero)
+            {
+                DarkModeHelper.ApplyTheme(_hWnd, _config.ThemeMode);
             }
 
             string baseHtmlDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "html");

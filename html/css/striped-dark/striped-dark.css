@@ -1,0 +1,134 @@
+/* Striped 深色主题 */
+:root {
+    --bg-body: #0F141A;
+    --text-main: #E2E8F0;
+    --text-muted: #94A3B8;
+    --border-color: #242D38;
+    --border-window: #2E3A48;
+
+    /* 模态弹窗 */
+    --modal-overlay: rgba(0, 0, 0, 0.65);
+    --modal-bg: #18202A;
+    --modal-text: #E2E8F0;
+    --modal-border: #2E3A48;
+    --modal-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    --modal-input-bg: #222C38;
+    --modal-input-border: #334152;
+    --modal-input-text: #FFFFFF;
+
+    /* 按钮 */
+    --btn-cancel-bg: #222C38;
+    --btn-cancel-text: #E2E8F0;
+    --btn-cancel-border: #334152;
+    --btn-cancel-hover: #2C3947;
+    --btn-primary-bg: #0284C7;
+    --btn-primary-text: #FFFFFF;
+    --btn-primary-hover: #0369A1;
+
+    /* 托盘菜单 */
+    --tray-bg: rgba(24, 32, 42, 0.98);
+    --tray-text: #E2E8F0;
+    --tray-hover-bg: rgba(56, 189, 248, 0.15);
+    --tray-hover-text: #38BDF8;
+    --tray-divider: #263240;
+    --tray-accent: #38BDF8;
+
+    /* 搜索框 */
+    --search-bg: #18202A;
+    --search-border: #334152;
+    --search-text: #FFFFFF;
+    --search-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+
+    /* 窗口顶部微光反射 */
+    --window-inner-highlight: rgba(255, 255, 255, 0.12);
+}
+
+* {
+    font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 13px;
+}
+
+b {
+    font-weight: 600;
+    font-size: 13.5px;
+    display: inline-block;
+    margin-bottom: 3px;
+    color: #FFFFFF;
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+}
+
+.content {
+    padding: 0;
+}
+
+.table_main {
+    width: 100%;
+    border-collapse: collapse;
+    background: transparent;
+}
+
+td {
+    border-bottom: 1px solid #1E2733;
+    min-height: 38px;
+    vertical-align: middle;
+    transition: background-color 0.12s ease;
+}
+
+td:first-child {
+    border-left: 3.5px solid transparent;
+}
+
+tbody > tr:nth-child(even) > td {
+    background-color: #141A22;
+}
+
+tbody > tr:nth-child(odd) > td {
+    background-color: #1B232D;
+}
+
+.td_content {
+    cursor: default;
+    padding: 8px 10px !important;
+    line-height: 1.45;
+    word-break: break-all;
+}
+
+.td_index {
+    width: 32px !important;
+    text-align: center !important;
+    font-size: 12px;
+    font-weight: 600;
+    color: #7DD3FC;
+}
+
+img, .image {
+    border-radius: 4px;
+    margin-top: 4px !important;
+}
+
+tr:hover > td {
+    background-color: #1E3A5F !important;
+    color: #FFFFFF;
+}
+
+tr:hover > td:first-child {
+    border-left: 3.5px solid #38BDF8 !important;
+}
+
+.tr_selected > td {
+    background-color: #1E3A5F !important;
+    color: #FFFFFF;
+}
+
+.tr_selected > td:first-child {
+    border-left: 3.5px solid #38BDF8 !important;
+}
+
+a {
+    text-decoration: none;
+    color: #38BDF8;
+}

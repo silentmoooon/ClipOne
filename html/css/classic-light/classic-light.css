@@ -1,0 +1,129 @@
+/* Classic 浅色主题 */
+:root {
+    --bg-body: #EEF3F9;
+    --text-main: #243342;
+    --text-muted: #63788E;
+    --border-color: #D3DFEE;
+    --border-window: #A5C2E8;
+
+    /* 模态弹窗 */
+    --modal-overlay: rgba(0, 0, 0, 0.35);
+    --modal-bg: #FFFFFF;
+    --modal-text: #243342;
+    --modal-border: #C3D5EB;
+    --modal-shadow: 0 8px 24px rgba(36, 51, 66, 0.15);
+    --modal-input-bg: #F5F8FC;
+    --modal-input-border: #C3D5EB;
+    --modal-input-text: #243342;
+
+    /* 按钮 */
+    --btn-cancel-bg: #E8EEF5;
+    --btn-cancel-text: #36495C;
+    --btn-cancel-border: #CAD8E8;
+    --btn-cancel-hover: #DCE5F0;
+    --btn-primary-bg: #3B78BA;
+    --btn-primary-text: #FFFFFF;
+    --btn-primary-hover: #2E639E;
+
+    /* 托盘菜单 */
+    --tray-bg: rgba(247, 250, 253, 0.98);
+    --tray-text: #243342;
+    --tray-hover-bg: #E4EFF9;
+    --tray-hover-text: #235A94;
+    --tray-divider: #DCE5F0;
+    --tray-accent: #3B78BA;
+
+    /* 搜索框 */
+    --search-bg: #FFFFFF;
+    --search-border: #BDD2EB;
+    --search-text: #243342;
+    --search-shadow: 0 2px 8px rgba(36, 51, 66, 0.1);
+}
+
+* {
+    font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 13px;
+}
+
+b {
+    font-weight: 600;
+    font-size: 13.5px;
+    display: inline-block;
+    margin-bottom: 3px;
+    color: #1E334A;
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+}
+
+.content {
+    padding: 4px;
+}
+
+.table_main {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: transparent;
+}
+
+tr {
+    background-color: transparent;
+}
+
+td {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #DCE6F2;
+    min-height: 38px;
+    vertical-align: middle;
+    transition: background-color 0.12s ease;
+}
+
+td:first-child {
+    border-left: 3px solid transparent;
+}
+
+.td_content {
+    cursor: default;
+    padding: 8px 10px !important;
+    line-height: 1.45;
+    word-break: break-all;
+}
+
+.td_index {
+    width: 32px !important;
+    text-align: center !important;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5C748E;
+}
+
+img, .image {
+    border-radius: 4px;
+    margin-top: 4px !important;
+}
+
+tr:hover > td {
+    background-color: #DDE9F8 !important;
+    color: #162B40;
+}
+
+tr:hover > td:first-child {
+    border-left: 3px solid #3B78BA !important;
+}
+
+.tr_selected > td {
+    background-color: #DDE9F8 !important;
+    color: #162B40;
+}
+
+.tr_selected > td:first-child {
+    border-left: 3px solid #3B78BA !important;
+}
+
+a {
+    text-decoration: none;
+    color: #3B78BA;
+}

@@ -1,0 +1,132 @@
+/* Classic 深色主题 */
+:root {
+    --bg-body: #161D26;
+    --text-main: #DCE5EE;
+    --text-muted: #7E93A8;
+    --border-color: #243140;
+    --border-window: #2E4057;
+
+    /* 模态弹窗 */
+    --modal-overlay: rgba(0, 0, 0, 0.65);
+    --modal-bg: #1B2430;
+    --modal-text: #E0E8F0;
+    --modal-border: #2E4057;
+    --modal-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    --modal-input-bg: #232E3D;
+    --modal-input-border: #354A63;
+    --modal-input-text: #FFFFFF;
+
+    /* 按钮 */
+    --btn-cancel-bg: #2A384A;
+    --btn-cancel-text: #DCE5EE;
+    --btn-cancel-border: #3B4F69;
+    --btn-cancel-hover: #33445A;
+    --btn-primary-bg: #4688D0;
+    --btn-primary-text: #FFFFFF;
+    --btn-primary-hover: #3777BE;
+
+    /* 托盘菜单 */
+    --tray-bg: rgba(22, 29, 38, 0.98);
+    --tray-text: #DCE5EE;
+    --tray-hover-bg: #243345;
+    --tray-hover-text: #FFFFFF;
+    --tray-divider: #273444;
+    --tray-accent: #5B9BE6;
+
+    /* 搜索框 */
+    --search-bg: #1B2430;
+    --search-border: #354A63;
+    --search-text: #FFFFFF;
+    --search-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+
+    /* 窗口顶部微光反射 */
+    --window-inner-highlight: rgba(255, 255, 255, 0.12);
+}
+
+* {
+    font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 13px;
+}
+
+b {
+    font-weight: 600;
+    font-size: 13.5px;
+    display: inline-block;
+    margin-bottom: 3px;
+    color: #FFFFFF;
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+}
+
+.content {
+    padding: 4px;
+}
+
+.table_main {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: transparent;
+}
+
+tr {
+    background-color: transparent;
+}
+
+td {
+    background-color: #1B232E;
+    border-bottom: 1px solid #243140;
+    min-height: 38px;
+    vertical-align: middle;
+    transition: background-color 0.12s ease;
+}
+
+td:first-child {
+    border-left: 3px solid transparent;
+}
+
+.td_content {
+    cursor: default;
+    padding: 8px 10px !important;
+    line-height: 1.45;
+    word-break: break-all;
+}
+
+.td_index {
+    width: 32px !important;
+    text-align: center !important;
+    font-size: 12px;
+    font-weight: 600;
+    color: #7C96B3;
+}
+
+img, .image {
+    border-radius: 4px;
+    margin-top: 4px !important;
+}
+
+tr:hover > td {
+    background-color: #26364A !important;
+    color: #FFFFFF;
+}
+
+tr:hover > td:first-child {
+    border-left: 3px solid #5B9BE6 !important;
+}
+
+.tr_selected > td {
+    background-color: #26364A !important;
+    color: #FFFFFF;
+}
+
+.tr_selected > td:first-child {
+    border-left: 3px solid #5B9BE6 !important;
+}
+
+a {
+    text-decoration: none;
+    color: #5B9BE6;
+}

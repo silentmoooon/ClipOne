@@ -1,0 +1,131 @@
+/* Striped 浅色主题 */
+:root {
+    --bg-body: #F8FAFC;
+    --text-main: #1E293B;
+    --text-muted: #64748B;
+    --border-color: #E2E8F0;
+    --border-window: #CBD5E1;
+
+    /* 模态弹窗 */
+    --modal-overlay: rgba(0, 0, 0, 0.35);
+    --modal-bg: #FFFFFF;
+    --modal-text: #1E293B;
+    --modal-border: #E2E8F0;
+    --modal-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    --modal-input-bg: #F1F5F9;
+    --modal-input-border: #CBD5E1;
+    --modal-input-text: #1E293B;
+
+    /* 按钮 */
+    --btn-cancel-bg: #F1F5F9;
+    --btn-cancel-text: #334155;
+    --btn-cancel-border: #CBD5E1;
+    --btn-cancel-hover: #E2E8F0;
+    --btn-primary-bg: #0284C7;
+    --btn-primary-text: #FFFFFF;
+    --btn-primary-hover: #0369A1;
+
+    /* 托盘菜单 */
+    --tray-bg: rgba(255, 255, 255, 0.98);
+    --tray-text: #1E293B;
+    --tray-hover-bg: #E0F2FE;
+    --tray-hover-text: #0284C7;
+    --tray-divider: #E2E8F0;
+    --tray-accent: #0284C7;
+
+    /* 搜索框 */
+    --search-bg: #FFFFFF;
+    --search-border: #CBD5E1;
+    --search-text: #1E293B;
+    --search-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+* {
+    font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 13px;
+}
+
+b {
+    font-weight: 600;
+    font-size: 13.5px;
+    display: inline-block;
+    margin-bottom: 3px;
+    color: #0F172A;
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+}
+
+.content {
+    padding: 0;
+}
+
+.table_main {
+    width: 100%;
+    border-collapse: collapse;
+    background: transparent;
+}
+
+td {
+    border-bottom: 1px solid #E2E8F0;
+    min-height: 38px;
+    vertical-align: middle;
+    transition: background-color 0.12s ease;
+}
+
+td:first-child {
+    border-left: 3.5px solid transparent;
+}
+
+tbody > tr:nth-child(even) > td {
+    background-color: #FFFFFF;
+}
+
+tbody > tr:nth-child(odd) > td {
+    background-color: #F1F5F9;
+}
+
+.td_content {
+    cursor: default;
+    padding: 8px 10px !important;
+    line-height: 1.45;
+    word-break: break-all;
+}
+
+.td_index {
+    width: 32px !important;
+    text-align: center !important;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+}
+
+img, .image {
+    border-radius: 4px;
+    margin-top: 4px !important;
+}
+
+tr:hover > td {
+    background-color: #DBEAFE !important;
+    color: #0F172A;
+}
+
+tr:hover > td:first-child {
+    border-left: 3.5px solid #0284C7 !important;
+}
+
+.tr_selected > td {
+    background-color: #DBEAFE !important;
+    color: #0F172A;
+}
+
+.tr_selected > td:first-child {
+    border-left: 3.5px solid #0284C7 !important;
+}
+
+a {
+    text-decoration: none;
+    color: #0284C7;
+}

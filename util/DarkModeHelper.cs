@@ -153,6 +153,20 @@ namespace ClipOne.util
                     SetWindowTheme(hWnd, isDark ? "DarkMode_Explorer" : "Explorer", null);
                 }
                 catch { }
+
+                // 2.1 Configure DWM Window Corners & Refined Border Color
+                try
+                {
+                    int cornerPreference = WinAPIHelper.DWMWCP_ROUND;
+                    WinAPIHelper.DwmSetWindowAttribute(hWnd, WinAPIHelper.DWMWA_WINDOW_CORNER_PREFERENCE, ref cornerPreference, sizeof(int));
+
+                    // Soft refined border color (COLORREF: 0x00BBGGRR)
+                    // Light mode: 0x00E8E4E1 (soft subtle slate gray #E1E4E8)
+                    // Dark mode:  0x00423A36 (soft subtle dark slate #363A42)
+                    int borderColor = isDark ? 0x00423A36 : 0x00E8E4E1;
+                    WinAPIHelper.DwmSetWindowAttribute(hWnd, WinAPIHelper.DWMWA_BORDER_COLOR, ref borderColor, sizeof(int));
+                }
+                catch { }
             }
 
             // 3. Flush UxTheme Menu Theme cache

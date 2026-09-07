@@ -1,0 +1,128 @@
+/* Modern 浅色主题 */
+:root {
+    --bg-body: #FFFFFF;
+    --text-main: #1A1A1A;
+    --text-muted: #707070;
+    --border-color: #E5E5E5;
+    --border-window: #D1D5DB;
+
+    /* 模态弹窗 */
+    --modal-overlay: rgba(0, 0, 0, 0.35);
+    --modal-bg: #FFFFFF;
+    --modal-text: #1A1A1A;
+    --modal-border: #E5E5E5;
+    --modal-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    --modal-input-bg: #F7F7F7;
+    --modal-input-border: #D1D1D1;
+    --modal-input-text: #1A1A1A;
+
+    /* 按钮 */
+    --btn-cancel-bg: #F0F0F0;
+    --btn-cancel-text: #333333;
+    --btn-cancel-border: #D1D1D1;
+    --btn-cancel-hover: #E5E5E5;
+    --btn-primary-bg: #0078D7;
+    --btn-primary-text: #FFFFFF;
+    --btn-primary-hover: #106EBE;
+
+    /* 托盘菜单 */
+    --tray-bg: rgba(255, 255, 255, 0.98);
+    --tray-text: #1A1A1A;
+    --tray-hover-bg: #EDF5FD;
+    --tray-hover-text: #0078D7;
+    --tray-divider: #E5E5E5;
+    --tray-accent: #0078D7;
+
+    /* 搜索框 */
+    --search-bg: #FFFFFF;
+    --search-border: #D1D1D1;
+    --search-text: #1A1A1A;
+    --search-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+* {
+    font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 13px;
+}
+
+b {
+    font-weight: 600;
+    font-size: 13.5px;
+    display: inline-block;
+    margin-bottom: 3px;
+    color: #000000;
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+}
+
+.content {
+    padding: 0;
+}
+
+.table_main {
+    width: 100%;
+    border-collapse: collapse;
+    background: transparent;
+}
+
+tr {
+    background-color: transparent;
+}
+
+td {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #EFEFEF;
+    min-height: 40px;
+    vertical-align: middle;
+    transition: background-color 0.1s ease;
+}
+
+td:first-child {
+    border-left: 3.5px solid transparent;
+}
+
+.td_content {
+    cursor: default;
+    padding: 9px 12px !important;
+    line-height: 1.45;
+    word-break: break-all;
+}
+
+.td_index {
+    width: 32px !important;
+    text-align: center !important;
+    font-size: 12px;
+    font-weight: 600;
+    color: #0078D7;
+}
+
+img, .image {
+    border-radius: 2px;
+    margin-top: 4px !important;
+}
+
+tr:hover > td {
+    background-color: #EDF5FD !important;
+    color: #000000;
+}
+
+tr:hover > td:first-child {
+    border-left: 3.5px solid #0078D7 !important;
+}
+
+.tr_selected > td {
+    background-color: #EDF5FD !important;
+    color: #000000;
+}
+
+.tr_selected > td:first-child {
+    border-left: 3.5px solid #0078D7 !important;
+}
+
+a {
+    text-decoration: none;
+    color: #0078D7;
+}
